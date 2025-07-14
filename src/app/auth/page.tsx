@@ -5,6 +5,7 @@ import AuthenticationInput from "@/components/AuthenticationInput";
 import PasswordInput from "@/components/PasswordInput";
 import { useForm } from "react-hook-form";
 import { paths } from "@/lib/paths";
+import { showError, showSuccess } from "@/lib/toast";
 
 const AuthPage = () => {
   const searchParams = useSearchParams();
@@ -79,7 +80,7 @@ const AuthPage = () => {
       // Redirect to dashboard
       router.push(paths.list.students);
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -110,14 +111,13 @@ const AuthPage = () => {
       }
 
       // Show success message and switch to sign-in mode
-      setError(""); // Clear any previous errors
-      alert(
+      showSuccess(
         "Account created successfully! Please sign in with your credentials."
       );
       resetUp(); // Reset the signup form
       handleSwitch("sign-in"); // Switch to sign-in mode
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -145,12 +145,6 @@ const AuthPage = () => {
             <h2 className="text-3xl font-bold text-center">
               {mode === "sign-in" ? "Sign In" : "Sign Up"}
             </h2>
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {error}
-              </div>
-            )}
 
             {mode === "sign-in" ? (
               <>
