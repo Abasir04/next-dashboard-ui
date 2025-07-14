@@ -1,6 +1,6 @@
-import { role } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
+import { getCurrentUserRole } from "@/lib/dataService";
 
 const menuItems = [
   {
@@ -117,7 +117,9 @@ const menuItems = [
   },
 ];
 
-const Menu = () => {
+const Menu = async () => {
+  const role = await getCurrentUserRole();
+
   return (
     <div className="mt-4 text-sm">
       {menuItems.map((i) => (

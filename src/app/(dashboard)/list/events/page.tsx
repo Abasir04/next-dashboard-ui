@@ -2,7 +2,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { eventsData, role } from "@/lib/data";
+import { getEventsData, getCurrentUserRole } from "@/lib/dataService";
 import Image from "next/image";
 
 type Event = {
@@ -44,7 +44,9 @@ const columns = [
   },
 ];
 
-const EventListPage = () => {
+const EventListPage = async () => {
+  const role = await getCurrentUserRole();
+  const eventsData = await getEventsData();
   const renderRow = (item: Event) => (
     <tr
       key={item.id}

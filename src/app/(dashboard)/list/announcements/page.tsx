@@ -2,7 +2,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { announcementsData, role } from "@/lib/data";
+import { getAnnouncementsData, getCurrentUserRole } from "@/lib/dataService";
 import Image from "next/image";
 
 type Announcement = {
@@ -32,7 +32,9 @@ const columns = [
   },
 ];
 
-const AnnouncementListPage = () => {
+const AnnouncementListPage = async () => {
+  const role = await getCurrentUserRole();
+  const announcementsData = await getAnnouncementsData();
   const renderRow = (item: Announcement) => (
     <tr
       key={item.id}

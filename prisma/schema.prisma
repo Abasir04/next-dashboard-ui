@@ -1,0 +1,293 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      Role     @default(TEACHER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  teacher   Teacher?
+  student   Student?
+  parent    Parent?
+
+  @@map("users")
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+  PARENT
+  ADMIN
+}
+
+model Teacher {
+  id         Int      @id @default(autoincrement())
+  teacherId  String   @unique
+  name       String
+  email      String   @unique
+  photo      String?
+  phone      String
+  address    String
+  userId     Int      @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjects   TeacherSubject[]
+  classes    TeacherClass[]
+  lessons    Lesson[]
+  exams      Exam[]
+  assignments Assignment[]
+  results    Result[]
+
+  @@map("teachers")
+}
+
+model Student {
+  id        Int      @id @default(autoincrement())
+  studentId String   @unique
+  name      String
+  email     String   @unique
+  photo     String?
+  phone     String
+  grade     Int
+  classId   Int
+  address   String
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id])
+  parentStudents ParentStudent[]
+  results   Result[]
+
+  @@map("students")
+}
+
+model Parent {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String
+  address   String
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students  ParentStudent[]
+
+  @@map("parents")
+}
+
+model ParentStudent {
+  id       Int @id @default(autoincrement())
+  parentId Int
+  studentId Int
+
+  // Relations
+  parent   Parent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student  Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, studentId])
+  @@map("parent_students")
+}
+
+model Subject {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  teachers  TeacherSubject[]
+  lessons   Lesson[]
+  exams     Exam[]
+  assignments Assignment[]
+  results   Result[]
+
+  @@map("subjects")
+}
+
+model TeacherSubject {
+  id        Int @id @default(autoincrement())
+  teacherId Int
+  subjectId Int
+
+  // Relations
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, subjectId])
+  @@map("teacher_subjects")
+}
+
+model Class {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  capacity   Int
+  grade      Int
+  supervisor String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  students   Student[]
+  teachers   TeacherClass[]
+  lessons    Lesson[]
+  exams      Exam[]
+  assignments Assignment[]
+  events     Event[]
+  announcements Announcement[]
+  results    Result[]
+
+  @@map("classes")
+}
+
+model TeacherClass {
+  id        Int @id @default(autoincrement())
+  teacherId Int
+  classId   Int
+
+  // Relations
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, classId])
+  @@map("teacher_classes")
+}
+
+model Lesson {
+  id        Int      @id @default(autoincrement())
+  subjectId Int
+  classId   Int
+  teacherId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@map("lessons")
+}
+
+model Exam {
+  id        Int      @id @default(autoincrement())
+  subjectId Int
+  classId   Int
+  teacherId Int
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  results   Result[]
+
+  @@map("exams")
+}
+
+model Assignment {
+  id        Int      @id @default(autoincrement())
+  subjectId Int
+  classId   Int
+  teacherId Int
+  dueDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@map("assignments")
+}
+
+model Result {
+  id        Int      @id @default(autoincrement())
+  subjectId Int
+  classId   Int
+  teacherId Int
+  studentId Int
+  examId    Int?
+  date      DateTime
+  type      String   // "exam" or "assignment"
+  score     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exam      Exam?   @relation(fields: [examId], references: [id], onDelete: SetNull)
+
+  @@map("results")
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  title     String
+  classId   Int
+  date      DateTime
+  startTime String
+  endTime   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@map("events")
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  classId   Int
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@map("announcements")
+}
+
+model CalendarEvent {
+  id        Int      @id @default(autoincrement())
+  title     String
+  allDay    Boolean  @default(false)
+  start     DateTime
+  end       DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("calendar_events")
+}

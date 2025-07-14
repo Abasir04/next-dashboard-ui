@@ -2,23 +2,37 @@
 
 import { Calendar, momentLocalizer, View, Views } from "react-big-calendar";
 import moment from "moment";
-import { calendarEvents } from "@/lib/data";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const localizer = momentLocalizer(moment);
 
 const BigCalendar = () => {
   const [view, setView] = useState<View>(Views.WORK_WEEK);
+  const [events, setEvents] = useState([]);
 
   const handleOnChangeView = (selectedView: View) => {
     setView(selectedView);
   };
 
+  // Fetch calendar events on component mount
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch("/api/calendar-events");
+        const data = await response.json();
+        setEvents(data);
+      } catch (error) {
+        console.error("Error fetching calendar events:", error);
+      }
+    };
+    fetchEvents();
+  }, []);
+
   return (
     <Calendar
       localizer={localizer}
-      events={calendarEvents}
+      events={events}
       startAccessor="start"
       endAccessor="end"
       views={["work_week", "day"]}

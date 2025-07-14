@@ -2,7 +2,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { lessonsData, role } from "@/lib/data";
+import { getLessonsData, getCurrentUserRole } from "@/lib/dataService";
 import Image from "next/image";
 
 type Lesson = {
@@ -32,7 +32,9 @@ const columns = [
   },
 ];
 
-const LessonListPage = () => {
+const LessonListPage = async () => {
+  const role = await getCurrentUserRole();
+  const lessonsData = await getLessonsData();
   const renderRow = (item: Lesson) => (
     <tr
       key={item.id}

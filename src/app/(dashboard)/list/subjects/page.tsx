@@ -2,7 +2,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role, subjectsData } from "@/lib/data";
+import { getCurrentUserRole, getSubjectsData } from "@/lib/dataService";
 import Image from "next/image";
 
 type Subject = {
@@ -27,7 +27,9 @@ const columns = [
   },
 ];
 
-const SubjectListPage = () => {
+const SubjectListPage = async () => {
+  const role = await getCurrentUserRole();
+  const subjectsData = await getSubjectsData();
   const renderRow = (item: Subject) => (
     <tr
       key={item.id}
