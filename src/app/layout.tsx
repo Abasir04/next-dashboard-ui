@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import dynamic from "next/dynamic";
+const ClientBackButton = dynamic(
+  () => import("@/components/ClientBackButton"),
+  { ssr: false }
+);
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -9,6 +14,7 @@ export const metadata: Metadata = {
   title: "Ui Dev Lecturer Dashboard",
   description: "Next.js Lecturer Dashboard Management System",
 };
+
 
 export default function RootLayout({
   children,
@@ -27,6 +33,7 @@ export default function RootLayout({
         }}
       >
         <Toaster position="top-center" reverseOrder={false} />
+        <ClientBackButton showOn={"/auth"} backTo={"/"}/>
         {children}
       </body>
     </html>
