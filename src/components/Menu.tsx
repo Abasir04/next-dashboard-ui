@@ -1,93 +1,86 @@
-import Image from "next/image";
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { getCurrentUserRole } from "@/lib/dataService";
+import { paths } from "@/lib/paths";
+import {
+  FaHome,
+  FaUser,
+  FaUsers,
+  FaChalkboardTeacher,
+  FaBook,
+  FaClipboardList,
+  FaCalendarAlt,
+  FaEnvelope,
+  FaUserCircle,
+  FaCog,
+  FaSignOutAlt,
+  FaCheckCircle,
+} from "react-icons/fa";
+import { useEffect, useState } from "react";
 
 const menuItems = [
   {
     title: "MENU",
     items: [
       {
-        icon: "/home.png",
         label: "Home",
-        href: "/",
+        href: paths.home,
+        icon: FaHome,
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
-        icon: "/teacher.png",
         label: "Teachers",
-        href: "/list/teachers",
+        href: paths.list.teachers,
+        icon: FaUser,
         visible: ["admin", "teacher"],
       },
       {
-        icon: "/student.png",
         label: "Students",
-        href: "/list/students",
+        href: paths.list.students,
+        icon: FaUsers,
         visible: ["admin", "teacher"],
       },
       {
-        icon: "/parent.png",
-        label: "Parents",
-        href: "/list/parents",
-        visible: ["admin", "teacher"],
-      },
-      {
-        icon: "/subject.png",
         label: "Subjects",
-        href: "/list/subjects",
+        href: paths.list.subjects,
+        icon: FaBook,
         visible: ["admin"],
       },
       {
-        icon: "/class.png",
         label: "Classes",
-        href: "/list/classes",
+        href: paths.list.classes,
+        icon: FaChalkboardTeacher,
         visible: ["admin", "teacher"],
       },
       {
-        icon: "/lesson.png",
         label: "Lessons",
-        href: "/list/lessons",
+        href: paths.list.lessons,
+        icon: FaBook,
         visible: ["admin", "teacher"],
       },
       {
-        icon: "/exam.png",
-        label: "Exams",
-        href: "/list/exams",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/assignment.png",
         label: "Assignments",
-        href: "/list/assignments",
+        href: paths.list.assignments,
+        icon: FaClipboardList,
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
-        icon: "/result.png",
-        label: "Results",
-        href: "/list/results",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/attendance.png",
         label: "Attendance",
-        href: "/list/attendance",
+        href: paths.list.attendance,
+        icon: FaCheckCircle,
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
-        icon: "/calendar.png",
         label: "Events",
-        href: "/list/events",
+        href: paths.list.events,
+        icon: FaCalendarAlt,
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
-        icon: "/message.png",
         label: "Messages",
-        href: "/list/messages",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/announcement.png",
-        label: "Announcements",
-        href: "/list/announcements",
+        href: paths.list.messages,
+        icon: FaEnvelope,
         visible: ["admin", "teacher", "student", "parent"],
       },
     ],
@@ -96,53 +89,98 @@ const menuItems = [
     title: "OTHER",
     items: [
       {
-        icon: "/profile.png",
         label: "Profile",
-        href: "/profile",
+        href: paths.profile,
+        icon: FaUserCircle,
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
-        icon: "/setting.png",
         label: "Settings",
-        href: "/settings",
+        href: paths.settings,
+        icon: FaCog,
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
-        icon: "/logout.png",
         label: "Logout",
-        href: "/logout",
+        href: paths.logout,
+        icon: FaSignOutAlt,
         visible: ["admin", "teacher", "student", "parent"],
       },
     ],
   },
 ];
 
-const Menu = async () => {
-  const role = await getCurrentUserRole();
+const Menu = () => {
+  const pathname = usePathname();
+  const [role, setRole] = useState<string>("");
+
+  useEffect(() => {
+    (async () => {
+      const r = await getCurrentUserRole();
+      setRole(r);
+    })();
+  }, []);
+
+  const menuSection = menuItems[0].items.filter((item) =>
+    item.visible.includes(role)
+  );
+  const otherSection = menuItems[1].items.filter((item) =>
+    item.visible.includes(role)
+  );
+
+  const isActive = (href: string) => {
+    // Exact match or startsWith for subpages
+    return pathname === href || (href !== "/" && pathname.startsWith(href));
+  };
 
   return (
-    <div className="mt-4 text-sm">
-      {menuItems.map((i) => (
-        <div className="flex flex-col gap-2" key={i.title}>
-          <span className="hidden lg:block text-gray-400 font-light my-4">
-            {i.title}
+    <div className="flex flex-col flex-1 min-h-0 p-2">
+      <span className="hidden lg:block text-black font-semibold my-2">
+        MENU
+      </span>
+      <div className="flex-1 min-h-0 overflow-auto">
+        {menuSection.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {menuSection.map((item) => (
+              <Link
+                href={item.href}
+                key={item.label}
+                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
+                  ${
+                    isActive(item.href)
+                      ? "bg-primary text-white"
+                      : "text-black hover:bg-primary hover:text-white"
+                  }`}
+              >
+                <item.icon size={20} />
+                <span className="hidden lg:block">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+      {otherSection.length > 0 && (
+        <div className="flex flex-col gap-2 pb-2 pt-2">
+          <span className="hidden lg:block text-black font-semibold my-2">
+            OTHER
           </span>
-          {i.items.map((item) => {
-            if (item.visible.includes(role)) {
-              return (
-                <Link
-                  href={item.href}
-                  key={item.label}
-                  className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-lamaSkyLight"
-                >
-                  <Image src={item.icon} alt="" width={20} height={20} />
-                  <span className="hidden lg:block">{item.label}</span>
-                </Link>
-              );
-            }
-          })}
+          {otherSection.map((item) => (
+            <Link
+              href={item.href}
+              key={item.label}
+              className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
+                ${
+                  isActive(item.href)
+                    ? "bg-primary text-white"
+                    : "text-black hover:bg-primary hover:text-white"
+                }`}
+            >
+              <item.icon size={20} />
+              <span className="hidden lg:block">{item.label}</span>
+            </Link>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 };

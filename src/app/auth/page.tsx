@@ -78,7 +78,7 @@ const AuthPage = () => {
       }
 
       // Redirect to dashboard
-      router.push(paths.list.students);
+      router.push(paths.home);
     } catch (err: any) {
       showError(err.message);
     } finally {

@@ -1,7 +1,7 @@
 // Centralized path configuration for the application
 export const paths = {
   // Public routes
-  home: "/",
+  landing: "/",
   auth: "/auth",
 
   // Dashboard routes
@@ -12,6 +12,7 @@ export const paths = {
     parent: "/parent",
   },
 
+  home: "/home",
   // List pages
   list: {
     students: "/list/students",
@@ -25,7 +26,14 @@ export const paths = {
     results: "/list/results",
     events: "/list/events",
     announcements: "/list/announcements",
+    attendance: "/list/attendance",
+    messages: "/list/messages",
   },
+
+  // Standalone pages
+  profile: "/profile",
+  settings: "/settings",
+  logout: "/logout",
 
   // Dynamic routes
   dynamic: {
@@ -76,6 +84,9 @@ export const getPageTitle = (path: string): string => {
     [paths.list.results]: "Results",
     [paths.list.events]: "Events",
     [paths.list.announcements]: "Announcements",
+    [paths.profile]: "Profile",
+    [paths.settings]: "Settings",
+    [paths.logout]: "Logout",
   };
 
   return pathMap[path] || "Page";
