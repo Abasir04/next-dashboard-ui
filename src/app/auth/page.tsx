@@ -6,6 +6,8 @@ import PasswordInput from "@/components/PasswordInput";
 import { useForm } from "react-hook-form";
 import { paths } from "@/lib/paths";
 import { showError, showSuccess } from "@/lib/toast";
+import SignIn from "./components/signin";
+import SignUp from "./components/signup";
 
 const AuthPage = () => {
   const searchParams = useSearchParams();
@@ -23,24 +25,6 @@ const AuthPage = () => {
     setMode(initialMode);
   }, [initialMode]);
 
-  // Sign In form
-  const {
-    register: registerIn,
-    handleSubmit: handleSubmitIn,
-    formState: { errors: errorsIn },
-    reset: resetIn,
-  } = useForm();
-
-  // Sign Up form
-  const {
-    register: registerUp,
-    handleSubmit: handleSubmitUp,
-    formState: { errors: errorsUp },
-    watch,
-    reset: resetUp,
-  } = useForm();
-  const passwordValue = watch("password");
-
   const handleSwitch = (to: "sign-in" | "sign-up") => {
     setIsSliding(true);
     setIsContentTransitioning(true);
@@ -55,77 +39,9 @@ const AuthPage = () => {
     }, 700);
   };
 
-  const handleSignIn = async (data: any) => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(paths.api.auth.signin, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Sign in failed");
-      }
-
-      // Redirect to dashboard
-      router.push(paths.home);
-    } catch (err: any) {
-      showError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignUp = async (data: any) => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(paths.api.auth.signup, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Sign up failed");
-      }
-
-      // Show success message and switch to sign-in mode
-      showSuccess(
-        "Account created successfully! Please sign in with your credentials."
-      );
-      resetUp(); // Reset the signup form
-      handleSwitch("sign-in"); // Switch to sign-in mode
-    } catch (err: any) {
-      showError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="flex w-full max-w-4xl h-[600px] rounded-lg overflow-hidden relative">
+      <div className="flex w-full max-w-4xl h-[650px] rounded-lg overflow-hidden relative">
         {/* Form Side */}
         <div
           className={`flex flex-1 items-center justify-center bg-transparent absolute top-0 left-0 h-full w-1/2 z-10 transition-transform duration-500 ${
@@ -133,107 +49,29 @@ const AuthPage = () => {
           }`}
           style={{ willChange: "transform" }}
         >
-          <form
+          <div
             className="bg-white/30 backdrop-blur-md rounded shadow-md border border-white/40 w-full h-full flex flex-col justify-center space-y-2 p-8 px-14"
             style={{ boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)" }}
-            onSubmit={
-              mode === "sign-in"
-                ? handleSubmitIn(handleSignIn)
-                : handleSubmitUp(handleSignUp)
-            }
           >
             <h2 className="text-3xl font-bold text-center">
               {mode === "sign-in" ? "Sign In" : "Sign Up"}
             </h2>
-
             {mode === "sign-in" ? (
-              <>
-                <AuthenticationInput
-                  name="email"
-                  label="Email"
-                  placeholder="Enter your email"
-                  register={registerIn}
-                  errors={errorsIn}
-                />
-                <PasswordInput
-                  name="password"
-                  label="Password"
-                  placeholder="Enter your password"
-                  register={registerIn}
-                  rules={{ required: "Password is required" }}
-                  errors={errorsIn}
-                />
-                <div>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full mt-5 bg-primary text-white py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? "Signing In..." : "Sign In"}
-                  </button>
-                </div>
-              </>
+              <SignIn
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                setError={setError}
+                onSuccess={() => {}}
+              />
             ) : (
-              <>
-                <AuthenticationInput
-                  name="firstName"
-                  label="First Name"
-                  placeholder="Enter your first name"
-                  register={registerUp}
-                  errors={errorsUp}
-                />
-                <AuthenticationInput
-                  name="lastName"
-                  label="Last Name"
-                  placeholder="Enter your last name"
-                  register={registerUp}
-                  errors={errorsUp}
-                />
-                <AuthenticationInput
-                  name="email"
-                  label="Email"
-                  placeholder="Enter your email"
-                  register={registerUp}
-                  errors={errorsUp}
-                />
-                <PasswordInput
-                  name="password"
-                  label="Password"
-                  placeholder="Enter your password"
-                  register={registerUp}
-                  rules={{
-                    required: "Password is required",
-                    minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters long",
-                    },
-                  }}
-                  errors={errorsUp}
-                />
-                <PasswordInput
-                  name="confirmPassword"
-                  label="Confirm Password"
-                  placeholder="Confirm your password"
-                  register={registerUp}
-                  rules={{
-                    required: "Confirm password is required",
-                    validate: (value: string) =>
-                      value === passwordValue || "Passwords do not match",
-                  }}
-                  errors={errorsUp}
-                />
-                <div>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full mt-5 bg-primary text-white py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? "Signing Up..." : "Sign Up"}
-                  </button>
-                </div>
-              </>
+              <SignUp
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                setError={setError}
+                onSuccess={() => handleSwitch("sign-in")}
+              />
             )}
-          </form>
+          </div>
         </div>
         {/* Artistic Image Side */}
         <div

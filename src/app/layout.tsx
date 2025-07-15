@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import dynamic from "next/dynamic";
+import { paths } from "@/lib/paths";
+
 const ClientBackButton = dynamic(
   () => import("@/components/ClientBackButton"),
   { ssr: false }
@@ -33,7 +35,7 @@ export default function RootLayout({
         }}
       >
         <Toaster position="top-center" reverseOrder={false} />
-        <ClientBackButton showOn={"/auth"} backTo={"/"}/>
+        <ClientBackButton showOn={paths.auth} backTo={paths.landing}/>
         {children}
       </body>
     </html>

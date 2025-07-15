@@ -15,9 +15,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (password.length < 6) {
+    // Email regex validation
+    const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters long" },
+        { error: "Invalid email address" },
+        { status: 400 }
+      );
+    }
+
+    // Password validation: at least 6 chars and at least one symbol
+    const symbolRegex = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
+    if (password.length < 6 || !symbolRegex.test(password)) {
+      return NextResponse.json(
+        {
+          error:
+            "Password must be at least 6 characters long and contain at least one symbol",
+        },
         { status: 400 }
       );
     }
@@ -56,7 +70,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Signup error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

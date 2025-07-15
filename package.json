@@ -1,5 +1,5 @@
 {
-  "name": "lama-dev-next-dashboard",
+  "name": "lecturer-next-dashboard",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -16,6 +16,7 @@
     "@hookform/resolvers": "^3.9.0",
     "@prisma/client": "^6.11.1",
     "@types/react-big-calendar": "^1.8.9",
+    "antd": "^5.26.5",
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
