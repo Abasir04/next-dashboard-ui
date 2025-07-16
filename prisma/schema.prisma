@@ -10,32 +10,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- User and Role ---
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
   firstName String
   lastName  String
-  role      Role     @default(TEACHER)
+  role      Role     @default(LECTURER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  teacher   Teacher?
-  student   Student?
+  lecturer   Lecturer?
+  student    Student?
 
   @@map("users")
 }
 
 enum Role {
-  TEACHER
+  LECTURER
   STUDENT
   ADMIN
 }
 
-model Teacher {
+// --- Lecturer ---
+model Lecturer {
   id         Int      @id @default(autoincrement())
-  teacherId  String   @unique
+  lecturerId String   @unique
   name       String
   email      String   @unique
   photo      String?
@@ -47,68 +49,18 @@ model Teacher {
 
   // Relations
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subjects   TeacherSubject[]
-  classes    TeacherClass[]
+  lecturerCourses LecturerCourse[]
+  lecturerLevels LecturerLevel[]
   lessons    Lesson[]
   exams      Exam[]
   assignments Assignment[]
   results    Result[]
 
-  @@map("teachers")
+  @@map("lecturers")
 }
 
-model Student {
-  id        Int      @id @default(autoincrement())
-  studentId String   @unique
-  name      String
-  email     String   @unique
-  photo     String?
-  phone     String
-  grade     Int
-  classId   Int
-  address   String
-  userId    Int      @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  class     Class    @relation(fields: [classId], references: [id])
-  results   Result[]
-
-  @@map("students")
-}
-
-model Subject {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  teachers  TeacherSubject[]
-  lessons   Lesson[]
-  exams     Exam[]
-  assignments Assignment[]
-  results   Result[]
-
-  @@map("subjects")
-}
-
-model TeacherSubject {
-  id        Int @id @default(autoincrement())
-  teacherId Int
-  subjectId Int
-
-  // Relations
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  @@unique([teacherId, subjectId])
-  @@map("teacher_subjects")
-}
-
-model Class {
+// --- Level ---
+model Level {
   id         Int      @id @default(autoincrement())
   name       String   @unique
   capacity   Int
@@ -119,7 +71,7 @@ model Class {
 
   // Relations
   students   Student[]
-  teachers   TeacherClass[]
+  lecturerLevels LecturerLevel[]
   lessons    Lesson[]
   exams      Exam[]
   assignments Assignment[]
@@ -127,78 +79,136 @@ model Class {
   announcements Announcement[]
   results    Result[]
 
-  @@map("classes")
+  @@map("levels")
 }
 
-model TeacherClass {
-  id        Int @id @default(autoincrement())
-  teacherId Int
-  classId   Int
-
-  // Relations
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-
-  @@unique([teacherId, classId])
-  @@map("teacher_classes")
-}
-
-model Lesson {
+// --- Course ---
+model Course {
   id        Int      @id @default(autoincrement())
-  subjectId Int
-  classId   Int
-  teacherId Int
+  name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  lecturerCourses LecturerCourse[]
+  lessons   Lesson[]
+  exams     Exam[]
+  assignments Assignment[]
+  results   Result[]
+
+  @@map("courses")
+}
+
+// --- Join Tables ---
+model LecturerCourse {
+  id        Int @id @default(autoincrement())
+  lecturerId Int
+  courseId   Int
+
+  // Relations
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([lecturerId, courseId])
+  @@map("lecturer_courses")
+}
+
+model LecturerLevel {
+  id        Int @id @default(autoincrement())
+  lecturerId Int
+  levelId    Int
+
+  // Relations
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@unique([lecturerId, levelId])
+  @@map("lecturer_levels")
+}
+
+// --- Student ---
+model Student {
+  id        Int      @id @default(autoincrement())
+  studentId String   @unique
+  name      String
+  email     String   @unique
+  photo     String?
+  phone     String
+  grade     Int
+  levelId   Int
+  address   String
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level     Level    @relation(fields: [levelId], references: [id])
+  results   Result[]
+
+  @@map("students")
+}
+
+// --- Lesson ---
+model Lesson {
+  id        Int      @id @default(autoincrement())
+  courseId  Int
+  levelId   Int
+  lecturerId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 
   @@map("lessons")
 }
 
+// --- Exam ---
 model Exam {
   id        Int      @id @default(autoincrement())
-  subjectId Int
-  classId   Int
-  teacherId Int
+  courseId  Int
+  levelId   Int
+  lecturerId Int
   date      DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   results   Result[]
 
   @@map("exams")
 }
 
+// --- Assignment ---
 model Assignment {
   id        Int      @id @default(autoincrement())
-  subjectId Int
-  classId   Int
-  teacherId Int
+  courseId  Int
+  levelId   Int
+  lecturerId Int
   dueDate   DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 
   @@map("assignments")
 }
 
+// --- Result ---
 model Result {
   id        Int      @id @default(autoincrement())
-  subjectId Int
-  classId   Int
-  teacherId Int
+  courseId  Int
+  levelId   Int
+  lecturerId Int
   studentId Int
   examId    Int?
   date      DateTime
@@ -208,19 +218,20 @@ model Result {
   updatedAt DateTime @updatedAt
 
   // Relations
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  exam      Exam?   @relation(fields: [examId], references: [id], onDelete: SetNull)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exam      Exam?    @relation(fields: [examId], references: [id], onDelete: SetNull)
 
   @@map("results")
 }
 
+// --- Event ---
 model Event {
   id        Int      @id @default(autoincrement())
   title     String
-  classId   Int
+  levelId   Int
   date      DateTime
   startTime String
   endTime   String
@@ -228,25 +239,27 @@ model Event {
   updatedAt DateTime @updatedAt
 
   // Relations
-  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
   @@map("events")
 }
 
+// --- Announcement ---
 model Announcement {
   id        Int      @id @default(autoincrement())
   title     String
-  classId   Int
+  levelId   Int
   date      DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
   @@map("announcements")
 }
 
+// --- CalendarEvent ---
 model CalendarEvent {
   id        Int      @id @default(autoincrement())
   title     String

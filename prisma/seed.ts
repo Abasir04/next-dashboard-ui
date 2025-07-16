@@ -25,9 +25,9 @@ async function main() {
   await prisma.class.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create subjects
-  console.log("📚 Creating subjects...");
-  const subjects = [
+  // Create courses
+  console.log("📚 Creating courses...");
+  const courses = [
     { name: "Math" },
     { name: "English" },
     { name: "Physics" },
@@ -42,13 +42,13 @@ async function main() {
     { name: "Spanish" },
   ];
 
-  const createdSubjects = await Promise.all(
-    subjects.map((subject) => prisma.subject.create({ data: subject }))
+  const createdCourses = await Promise.all(
+    courses.map((course) => prisma.course.create({ data: course }))
   );
 
-  // Create classes
-  console.log("🏫 Creating classes...");
-  const classes = [
+  // Create levels
+  console.log("🏫 Creating levels...");
+  const levels = [
     { name: "1A", capacity: 20, grade: 1, supervisor: "Joseph Padilla" },
     { name: "2B", capacity: 22, grade: 2, supervisor: "Blake Joseph" },
     { name: "3C", capacity: 20, grade: 3, supervisor: "Tom Bennett" },
@@ -61,15 +61,15 @@ async function main() {
     { name: "6D", capacity: 20, grade: 6, supervisor: "Ophelia Marsh" },
   ];
 
-  const createdClasses = await Promise.all(
-    classes.map((cls) => prisma.class.create({ data: cls }))
+  const createdLevels = await Promise.all(
+    levels.map((lvl) => prisma.level.create({ data: lvl }))
   );
 
-  // Create users and teachers
-  console.log("👨‍🏫 Creating teachers...");
-  const teachersData = [
+  // Create users and lecturers
+  console.log("👨‍🏫 Creating lecturers...");
+  const lecturersData = [
     {
-      teacherId: "T001",
+      lecturerId: "T001",
       name: "John Doe",
       email: "john@doe.com",
       photo:
@@ -80,7 +80,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T002",
+      lecturerId: "T002",
       name: "Jane Doe",
       email: "jane@doe.com",
       photo:
@@ -91,7 +91,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T003",
+      lecturerId: "T003",
       name: "Mike Geller",
       email: "mike@geller.com",
       photo:
@@ -102,7 +102,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T004",
+      lecturerId: "T004",
       name: "Jay French",
       email: "jay@gmail.com",
       photo:
@@ -113,7 +113,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T005",
+      lecturerId: "T005",
       name: "Jane Smith",
       email: "jane@gmail.com",
       photo:
@@ -124,7 +124,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T006",
+      lecturerId: "T006",
       name: "Anna Santiago",
       email: "anna@gmail.com",
       photo:
@@ -135,7 +135,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T007",
+      lecturerId: "T007",
       name: "Allen Black",
       email: "allen@black.com",
       photo:
@@ -146,7 +146,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T008",
+      lecturerId: "T008",
       name: "Ophelia Castro",
       email: "ophelia@castro.com",
       photo:
@@ -157,7 +157,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T009",
+      lecturerId: "T009",
       name: "Derek Briggs",
       email: "derek@briggs.com",
       photo:
@@ -168,7 +168,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      teacherId: "T010",
+      lecturerId: "T010",
       name: "John Glover",
       email: "john@glover.com",
       photo:
@@ -181,58 +181,58 @@ async function main() {
   ];
 
   const hashedPassword = await bcrypt.hash("password123", 12);
-  const createdTeachers = [];
+  const createdLecturers = [];
 
-  for (const teacherData of teachersData) {
+  for (const lecturerData of lecturersData) {
     const user = await prisma.user.create({
       data: {
-        email: teacherData.email,
+        email: lecturerData.email,
         password: hashedPassword,
-        firstName: teacherData.name.split(" ")[0],
-        lastName: teacherData.name.split(" ")[1] || "",
-        role: "TEACHER",
+        firstName: lecturerData.name.split(" ")[0],
+        lastName: lecturerData.name.split(" ")[1] || "",
+        role: "LECTURER",
       },
     });
 
-    const teacher = await prisma.teacher.create({
+    const lecturer = await prisma.lecturer.create({
       data: {
-        teacherId: teacherData.teacherId,
-        name: teacherData.name,
-        email: teacherData.email,
-        photo: teacherData.photo,
-        phone: teacherData.phone,
-        address: teacherData.address,
+        lecturerId: lecturerData.lecturerId,
+        name: lecturerData.name,
+        email: lecturerData.email,
+        photo: lecturerData.photo,
+        phone: lecturerData.phone,
+        address: lecturerData.address,
         userId: user.id,
       },
     });
 
-    // Create teacher-subject relationships
-    for (const subjectName of teacherData.subjects) {
-      const subject = createdSubjects.find((s) => s.name === subjectName);
+    // Create lecturer-subject relationships
+    for (const subjectName of lecturerData.subjects) {
+      const subject = createdCourses.find((s) => s.name === subjectName);
       if (subject) {
-        await prisma.teacherSubject.create({
+        await prisma.lecturerSubject.create({
           data: {
-            teacherId: teacher.id,
+            lecturerId: lecturer.id,
             subjectId: subject.id,
           },
         });
       }
     }
 
-    // Create teacher-class relationships
-    for (const className of teacherData.classes) {
-      const classObj = createdClasses.find((c) => c.name === className);
+    // Create lecturer-class relationships
+    for (const className of lecturerData.classes) {
+      const classObj = createdLevels.find((c) => c.name === className);
       if (classObj) {
-        await prisma.teacherClass.create({
+        await prisma.lecturerClass.create({
           data: {
-            teacherId: teacher.id,
+            lecturerId: lecturer.id,
             classId: classObj.id,
           },
         });
       }
     }
 
-    createdTeachers.push(teacher);
+    createdLecturers.push(lecturer);
   }
 
   // Create users and students
@@ -353,7 +353,7 @@ async function main() {
   const createdStudents = [];
 
   for (const studentData of studentsData) {
-    const classObj = createdClasses.find((c) => c.name === studentData.class);
+    const classObj = createdLevels.find((c) => c.name === studentData.class);
     if (!classObj) continue;
 
     const user = await prisma.user.create({
@@ -513,9 +513,9 @@ async function main() {
   ];
 
   for (const lessonData of lessonsData) {
-    const subject = createdSubjects.find((s) => s.name === lessonData.subject);
-    const classObj = createdClasses.find((c) => c.name === lessonData.class);
-    const teacher = createdTeachers.find((t) => t.name === lessonData.teacher);
+    const subject = createdCourses.find((s) => s.name === lessonData.subject);
+    const classObj = createdLevels.find((c) => c.name === lessonData.class);
+    const teacher = createdLecturers.find((t) => t.name === lessonData.teacher);
 
     if (subject && classObj && teacher) {
       await prisma.lesson.create({
@@ -584,9 +584,9 @@ async function main() {
   ];
 
   for (const examData of examsData) {
-    const subject = createdSubjects.find((s) => s.name === examData.subject);
-    const classObj = createdClasses.find((c) => c.name === examData.class);
-    const teacher = createdTeachers.find((t) => t.name === examData.teacher);
+    const subject = createdCourses.find((s) => s.name === examData.subject);
+    const classObj = createdLevels.find((c) => c.name === examData.class);
+    const teacher = createdLecturers.find((t) => t.name === examData.teacher);
 
     if (subject && classObj && teacher) {
       await prisma.exam.create({
@@ -666,13 +666,11 @@ async function main() {
   ];
 
   for (const assignmentData of assignmentsData) {
-    const subject = createdSubjects.find(
+    const subject = createdCourses.find(
       (s) => s.name === assignmentData.subject
     );
-    const classObj = createdClasses.find(
-      (c) => c.name === assignmentData.class
-    );
-    const teacher = createdTeachers.find(
+    const classObj = createdLevels.find((c) => c.name === assignmentData.class);
+    const teacher = createdLecturers.find(
       (t) => t.name === assignmentData.teacher
     );
 
@@ -691,10 +689,10 @@ async function main() {
   // Create results
   console.log("📊 Creating results...");
   for (const student of createdStudents) {
-    for (const subject of createdSubjects.slice(0, 5)) {
+    for (const subject of createdCourses.slice(0, 5)) {
       // First 5 subjects
-      const classObj = createdClasses.find((c) => c.name === student.class);
-      const teacher = createdTeachers[0]; // Use first teacher
+      const classObj = createdLevels.find((c) => c.name === student.class);
+      const teacher = createdLecturers[0]; // Use first lecturer
 
       if (classObj && teacher) {
         await prisma.result.create({
@@ -788,7 +786,7 @@ async function main() {
   ];
 
   for (const eventData of eventsData) {
-    const classObj = createdClasses.find((c) => c.name === eventData.class);
+    const classObj = createdLevels.find((c) => c.name === eventData.class);
     if (classObj) {
       await prisma.event.create({
         data: {
@@ -818,7 +816,7 @@ async function main() {
   ];
 
   for (const announcementData of announcementsData) {
-    const classObj = createdClasses.find(
+    const classObj = createdLevels.find(
       (c) => c.name === announcementData.class
     );
     if (classObj) {
@@ -905,9 +903,9 @@ async function main() {
 
   console.log("✅ Database seeding completed successfully!");
   console.log(`📊 Created:
-  - ${createdSubjects.length} subjects
-  - ${createdClasses.length} classes
-  - ${createdTeachers.length} teachers
+  - ${createdCourses.length} courses
+  - ${createdLevels.length} levels
+  - ${createdLecturers.length} lecturers
   - ${createdStudents.length} students
   - ${createdParents.length} parents
   - Multiple lessons, exams, assignments, results, events, announcements, and calendar events

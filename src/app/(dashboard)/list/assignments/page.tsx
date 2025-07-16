@@ -9,22 +9,22 @@ type Assignment = {
   id: number;
   subject: string;
   class: string;
-  teacher: string;
+  lecturer: string;
   dueDate: string;
 };
 
 const columns = [
   {
-    header: "Subject Name",
+    header: "Course Name",
     accessor: "name",
   },
   {
-    header: "Class",
+    header: "Level",
     accessor: "class",
   },
   {
-    header: "Teacher",
-    accessor: "teacher",
+    header: "Lecturer",
+    accessor: "lecturer",
     className: "hidden md:table-cell",
   },
   {
@@ -48,7 +48,7 @@ const AssignmentListPage = async () => {
     >
       <td className="flex items-center gap-4 p-4">{item.subject}</td>
       <td>{item.class}</td>
-      <td className="hidden md:table-cell">{item.teacher}</td>
+      <td className="hidden md:table-cell">{item.lecturer}</td>
       <td className="hidden md:table-cell">{item.dueDate}</td>
       <td>
         <div className="flex items-center gap-2">

@@ -7,10 +7,10 @@ export const getCurrentUserRole = async (): Promise<string> => {
   return "admin";
 };
 
-// Teachers data
-export const getTeachersData = async () => {
+// Lecturers data
+export const getLecturersData = async () => {
   try {
-    const teachers = await prisma.teacher.findMany({
+    const lecturers = await prisma.lecturer.findMany({
       include: {
         user: {
           select: {
@@ -19,32 +19,74 @@ export const getTeachersData = async () => {
             email: true,
           },
         },
-        subjects: {
+        courses: {
           include: {
-            subject: true,
+            course: true,
           },
         },
-        classes: {
+        levels: {
           include: {
-            class: true,
+            level: true,
           },
         },
       },
     });
 
-    return teachers.map((teacher) => ({
-      id: teacher.id,
-      teacherId: teacher.teacherId,
-      name: teacher.name,
-      email: teacher.email,
-      photo: teacher.photo || "",
-      phone: teacher.phone,
-      subjects: teacher.subjects.map((ts) => ts.subject.name),
-      classes: teacher.classes.map((tc) => tc.class.name),
-      address: teacher.address,
+    return lecturers.map((lecturer) => ({
+      id: lecturer.id,
+      lecturerId: lecturer.lecturerId,
+      name: lecturer.name,
+      email: lecturer.email,
+      photo: lecturer.photo || "",
+      phone: lecturer.phone,
+      courses: lecturer.courses.map((lc) => lc.course.name),
+      levels: lecturer.levels.map((ll) => ll.level.name),
+      address: lecturer.address,
     }));
   } catch (error) {
-    console.error("Error fetching teachers:", error);
+    console.error("Error fetching lecturers:", error);
+    return [];
+  }
+};
+
+// Courses data
+export const getCoursesData = async () => {
+  try {
+    const courses = await prisma.course.findMany({
+      include: {
+        lecturers: {
+          include: {
+            lecturer: true,
+          },
+        },
+      },
+    });
+
+    return courses.map((course) => ({
+      id: course.id,
+      name: course.name,
+      lecturers: course.lecturers.map((lc) => lc.lecturer.name),
+    }));
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    return [];
+  }
+};
+
+// Levels data
+export const getLevelsData = async () => {
+  try {
+    const levels = await prisma.level.findMany();
+
+    return levels.map((lvl) => ({
+      id: lvl.id,
+      name: lvl.name,
+      capacity: lvl.capacity,
+      grade: lvl.grade,
+      supervisor: lvl.supervisor,
+    }));
+  } catch (error) {
+    console.error("Error fetching levels:", error);
     return [];
   }
 };
@@ -121,9 +163,9 @@ export const getSubjectsData = async () => {
   try {
     const subjects = await prisma.subject.findMany({
       include: {
-        teachers: {
+        lecturers: {
           include: {
-            teacher: true,
+            lecturer: true,
           },
         },
       },
@@ -132,7 +174,7 @@ export const getSubjectsData = async () => {
     return subjects.map((subject) => ({
       id: subject.id,
       name: subject.name,
-      teachers: subject.teachers.map((ts) => ts.teacher.name),
+      lecturers: subject.lecturers.map((ts) => ts.lecturer.name),
     }));
   } catch (error) {
     console.error("Error fetching subjects:", error);
@@ -163,17 +205,17 @@ export const getLessonsData = async () => {
   try {
     const lessons = await prisma.lesson.findMany({
       include: {
-        subject: true,
-        class: true,
-        teacher: true,
+        course: true,
+        level: true,
+        lecturer: true,
       },
     });
 
     return lessons.map((lesson) => ({
       id: lesson.id,
-      subject: lesson.subject.name,
-      class: lesson.class.name,
-      teacher: lesson.teacher.name,
+      course: lesson.course.name,
+      level: lesson.level.name,
+      lecturer: lesson.lecturer.name,
     }));
   } catch (error) {
     console.error("Error fetching lessons:", error);
@@ -186,17 +228,17 @@ export const getExamsData = async () => {
   try {
     const exams = await prisma.exam.findMany({
       include: {
-        subject: true,
-        class: true,
-        teacher: true,
+        course: true,
+        level: true,
+        lecturer: true,
       },
     });
 
     return exams.map((exam) => ({
       id: exam.id,
-      subject: exam.subject.name,
-      class: exam.class.name,
-      teacher: exam.teacher.name,
+      course: exam.course.name,
+      level: exam.level.name,
+      lecturer: exam.lecturer.name,
       date: exam.date.toISOString().split("T")[0],
     }));
   } catch (error) {
@@ -210,17 +252,17 @@ export const getAssignmentsData = async () => {
   try {
     const assignments = await prisma.assignment.findMany({
       include: {
-        subject: true,
-        class: true,
-        teacher: true,
+        course: true,
+        level: true,
+        lecturer: true,
       },
     });
 
     return assignments.map((assignment) => ({
       id: assignment.id,
-      subject: assignment.subject.name,
-      class: assignment.class.name,
-      teacher: assignment.teacher.name,
+      course: assignment.course.name,
+      level: assignment.level.name,
+      lecturer: assignment.lecturer.name,
       dueDate: assignment.dueDate.toISOString().split("T")[0],
     }));
   } catch (error) {
@@ -234,18 +276,18 @@ export const getResultsData = async () => {
   try {
     const results = await prisma.result.findMany({
       include: {
-        subject: true,
-        class: true,
-        teacher: true,
+        course: true,
+        level: true,
+        lecturer: true,
         student: true,
       },
     });
 
     return results.map((result) => ({
       id: result.id,
-      subject: result.subject.name,
-      class: result.class.name,
-      teacher: result.teacher.name,
+      course: result.course.name,
+      level: result.level.name,
+      lecturer: result.lecturer.name,
       student: result.student.name,
       date: result.date.toISOString().split("T")[0],
       type: result.type,
@@ -262,14 +304,14 @@ export const getEventsData = async () => {
   try {
     const events = await prisma.event.findMany({
       include: {
-        class: true,
+        level: true,
       },
     });
 
     return events.map((event) => ({
       id: event.id,
       title: event.title,
-      class: event.class.name,
+      level: event.level.name,
       date: event.date.toISOString().split("T")[0],
       startTime: event.startTime,
       endTime: event.endTime,
@@ -285,14 +327,14 @@ export const getAnnouncementsData = async () => {
   try {
     const announcements = await prisma.announcement.findMany({
       include: {
-        class: true,
+        level: true,
       },
     });
 
     return announcements.map((announcement) => ({
       id: announcement.id,
       title: announcement.title,
-      class: announcement.class.name,
+      level: announcement.level.name,
       date: announcement.date.toISOString().split("T")[0],
     }));
   } catch (error) {

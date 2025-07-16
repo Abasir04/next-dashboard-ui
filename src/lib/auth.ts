@@ -50,7 +50,7 @@ export async function createUser(userData: {
         password: hashedPassword,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        role: (userData.role as any) || "TEACHER",
+        role: (userData.role as any) || "LECTURER",
       },
       select: {
         id: true,

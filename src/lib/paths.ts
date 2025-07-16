@@ -7,7 +7,7 @@ export const paths = {
   // Dashboard routes
   dashboard: {
     admin: "/admin",
-    teacher: "/teacher",
+    lecturer: "/lecturer",
     student: "/student",
     parent: "/parent",
   },
@@ -16,10 +16,10 @@ export const paths = {
   // List pages
   list: {
     students: "/list/students",
-    teachers: "/list/teachers",
+    lecturers: "/list/lecturers",
     parents: "/list/parents",
-    classes: "/list/classes",
-    subjects: "/list/subjects",
+    levels: "/list/levels",
+    courses: "/list/courses",
     lessons: "/list/lessons",
     exams: "/list/exams",
     assignments: "/list/assignments",
@@ -38,7 +38,7 @@ export const paths = {
   // Dynamic routes
   dynamic: {
     student: (id: string) => `/list/students/${id}`,
-    teacher: (id: string) => `/list/teachers/${id}`,
+    lecturer: (id: string) => `/list/lecturers/${id}`,
   },
 
   // API routes
@@ -70,14 +70,14 @@ export const getPageTitle = (path: string): string => {
     [paths.home]: "Home",
     [paths.auth]: "Authentication",
     [paths.dashboard.admin]: "Admin Dashboard",
-    [paths.dashboard.teacher]: "Teacher Dashboard",
+    [paths.dashboard.lecturer]: "Lecturer Dashboard",
     [paths.dashboard.student]: "Student Dashboard",
     [paths.dashboard.parent]: "Parent Dashboard",
     [paths.list.students]: "Students",
-    [paths.list.teachers]: "Teachers",
+    [paths.list.lecturers]: "Lecturers",
     [paths.list.parents]: "Parents",
-    [paths.list.classes]: "Classes",
-    [paths.list.subjects]: "Subjects",
+    [paths.list.levels]: "Levels",
+    [paths.list.courses]: "Courses",
     [paths.list.lessons]: "Lessons",
     [paths.list.exams]: "Exams",
     [paths.list.assignments]: "Assignments",
