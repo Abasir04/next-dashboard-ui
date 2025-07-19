@@ -7,23 +7,23 @@ import Image from "next/image";
 
 type Lesson = {
   id: number;
-  subject: string;
-  class: string;
-  teacher: string;
+  course: string;
+  level: string;
+  lecturer: string;
 };
 
 const columns = [
   {
-    header: "Subject Name",
-    accessor: "name",
+    header: "Course Name",
+    accessor: "course",
   },
   {
-    header: "Class",
-    accessor: "class",
+    header: "Level",
+    accessor: "level",
   },
   {
-    header: "Teacher",
-    accessor: "teacher",
+    header: "Lecturer",
+    accessor: "lecturer",
     className: "hidden md:table-cell",
   },
   {
@@ -40,9 +40,9 @@ const LessonListPage = async () => {
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
-      <td className="flex items-center gap-4 p-4">{item.subject}</td>
-      <td>{item.class}</td>
-      <td className="hidden md:table-cell">{item.teacher}</td>
+      <td className="flex items-center gap-4 p-4">{item.course}</td>
+      <td>{item.level}</td>
+      <td className="hidden md:table-cell">{item.lecturer}</td>
       <td>
         <div className="flex items-center gap-2">
           {role === "admin" && (

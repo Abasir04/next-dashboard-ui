@@ -19,16 +19,6 @@ export const getLecturersData = async () => {
             email: true,
           },
         },
-        courses: {
-          include: {
-            course: true,
-          },
-        },
-        levels: {
-          include: {
-            level: true,
-          },
-        },
       },
     });
 
@@ -39,9 +29,8 @@ export const getLecturersData = async () => {
       email: lecturer.email,
       photo: lecturer.photo || "",
       phone: lecturer.phone,
-      courses: lecturer.courses.map((lc) => lc.course.name),
-      levels: lecturer.levels.map((ll) => ll.level.name),
       address: lecturer.address,
+      // Add more fields as needed
     }));
   } catch (error) {
     console.error("Error fetching lecturers:", error);
@@ -52,20 +41,10 @@ export const getLecturersData = async () => {
 // Courses data
 export const getCoursesData = async () => {
   try {
-    const courses = await prisma.course.findMany({
-      include: {
-        lecturers: {
-          include: {
-            lecturer: true,
-          },
-        },
-      },
-    });
-
+    const courses = await prisma.course.findMany();
     return courses.map((course) => ({
       id: course.id,
       name: course.name,
-      lecturers: course.lecturers.map((lc) => lc.lecturer.name),
     }));
   } catch (error) {
     console.error("Error fetching courses:", error);
@@ -77,7 +56,6 @@ export const getCoursesData = async () => {
 export const getLevelsData = async () => {
   try {
     const levels = await prisma.level.findMany();
-
     return levels.map((lvl) => ({
       id: lvl.id,
       name: lvl.name,
@@ -103,7 +81,7 @@ export const getStudentsData = async () => {
             email: true,
           },
         },
-        class: true,
+        level: true,
       },
     });
 
@@ -115,87 +93,11 @@ export const getStudentsData = async () => {
       photo: student.photo || "",
       phone: student.phone,
       grade: student.grade,
-      class: student.class.name,
+      level: student.level?.name,
       address: student.address,
     }));
   } catch (error) {
     console.error("Error fetching students:", error);
-    return [];
-  }
-};
-
-// Parents data
-export const getParentsData = async () => {
-  try {
-    const parents = await prisma.parent.findMany({
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        students: {
-          include: {
-            student: true,
-          },
-        },
-      },
-    });
-
-    return parents.map((parent) => ({
-      id: parent.id,
-      name: parent.name,
-      email: parent.email,
-      students: parent.students.map((ps) => ps.student.name),
-      phone: parent.phone,
-      address: parent.address,
-    }));
-  } catch (error) {
-    console.error("Error fetching parents:", error);
-    return [];
-  }
-};
-
-// Subjects data
-export const getSubjectsData = async () => {
-  try {
-    const subjects = await prisma.subject.findMany({
-      include: {
-        lecturers: {
-          include: {
-            lecturer: true,
-          },
-        },
-      },
-    });
-
-    return subjects.map((subject) => ({
-      id: subject.id,
-      name: subject.name,
-      lecturers: subject.lecturers.map((ts) => ts.lecturer.name),
-    }));
-  } catch (error) {
-    console.error("Error fetching subjects:", error);
-    return [];
-  }
-};
-
-// Classes data
-export const getClassesData = async () => {
-  try {
-    const classes = await prisma.class.findMany();
-
-    return classes.map((cls) => ({
-      id: cls.id,
-      name: cls.name,
-      capacity: cls.capacity,
-      grade: cls.grade,
-      supervisor: cls.supervisor,
-    }));
-  } catch (error) {
-    console.error("Error fetching classes:", error);
     return [];
   }
 };

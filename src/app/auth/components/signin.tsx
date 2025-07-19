@@ -43,8 +43,14 @@ const SignIn = ({
       if (!response.ok) {
         throw new Error(result.error || "Sign in failed");
       }
-      if (onSuccess) onSuccess();
-      router.push(paths.home);
+      // After sign in, fetch user profile
+      const profileRes = await fetch("/api/auth/me");
+      const profile = await profileRes.json();
+      if (!profile?.user?.title || !profile?.user?.role) {
+        router.push("/auth?mode=user-details");
+      } else {
+        router.push(paths.home);
+      }
     } catch (err: any) {
       showError(err.message);
     } finally {
@@ -69,7 +75,7 @@ const SignIn = ({
         label="Password"
         placeholder="Enter your password"
         register={register}
-        rules={{ }}
+        rules={{}}
         errors={errors}
       />
       <div>

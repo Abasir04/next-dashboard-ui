@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName } = body;
+    const { email, password, firstName, lastName, title, role } = body;
 
     // Validation
     if (!email || !password || !firstName || !lastName) {
@@ -54,7 +54,67 @@ export async function POST(request: NextRequest) {
       password,
       firstName,
       lastName,
+      title,
+      role,
     });
+
+    // Add to role table
+    if (role.toLowerCase() === "lecturer") {
+      await prisma.lecturer.create({
+        data: {
+          lecturerId: `L${user.id}`,
+          name: `${firstName} ${lastName}`,
+          email,
+          photo: null,
+          phone: "",
+          address: "",
+          userId: user.id,
+          title,
+          role,
+        },
+      });
+    } else if (role.toLowerCase() === "student") {
+      const level = await prisma.level.findFirst();
+      if (!level) {
+        return NextResponse.json(
+          { error: "No level exists. Please contact admin." },
+          { status: 400 }
+        );
+      }
+      try {
+        await prisma.student.create({
+          data: {
+            studentId: `S${user.id}`,
+            name: `${firstName} ${lastName}`,
+            email,
+            photo: null,
+            phone: "",
+            grade: 1,
+            levelId: level.id,
+            address: "",
+            userId: user.id,
+            title,
+            role,
+          },
+        });
+      } catch (err) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to create student. Please check required fields and level.",
+          },
+          { status: 500 }
+        );
+      }
+    } else if (role.toLowerCase() === "admin") {
+      await prisma.admin.create({
+        data: {
+          userId: user.id,
+          title,
+          role,
+        },
+      });
+    }
 
     return NextResponse.json(
       {

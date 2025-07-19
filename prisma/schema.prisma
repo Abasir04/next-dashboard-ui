@@ -17,6 +17,7 @@ model User {
   password  String
   firstName String
   lastName  String
+  title     String
   role      Role     @default(LECTURER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -24,6 +25,7 @@ model User {
   // Relations
   lecturer   Lecturer?
   student    Student?
+  admin      Admin?
 
   @@map("users")
 }
@@ -44,6 +46,8 @@ model Lecturer {
   phone      String
   address    String
   userId     Int      @unique
+  title      String
+  role       String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -138,6 +142,8 @@ model Student {
   levelId   Int
   address   String
   userId    Int      @unique
+  title     String
+  role      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -270,4 +276,18 @@ model CalendarEvent {
   updatedAt DateTime @updatedAt
 
   @@map("calendar_events")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  title     String
+  role      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
 }

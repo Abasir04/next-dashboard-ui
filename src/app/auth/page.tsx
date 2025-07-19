@@ -1,20 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import AuthenticationInput from "@/components/AuthenticationInput";
-import PasswordInput from "@/components/PasswordInput";
-import { useForm } from "react-hook-form";
-import { paths } from "@/lib/paths";
-import { showError, showSuccess } from "@/lib/toast";
 import SignIn from "./components/signin";
 import SignUp from "./components/signup";
+import UserDetails from "./components/UserDetails"
+import { paths } from "@/lib/paths";
 
 const AuthPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialMode =
-    (searchParams.get("mode") as "sign-in" | "sign-up") || "sign-in";
-  const [mode, setMode] = useState<"sign-in" | "sign-up">(initialMode);
+    (searchParams.get("mode") as "sign-in" | "sign-up" | "user-details") ||
+    "sign-in";
+  const [mode, setMode] = useState<"sign-in" | "sign-up" | "user-details">(
+    initialMode as any
+  );
   const [isSliding, setIsSliding] = useState(false);
   const [isContentTransitioning, setIsContentTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,10 +22,10 @@ const AuthPage = () => {
 
   // Update mode when URL changes
   useEffect(() => {
-    setMode(initialMode);
+    setMode(initialMode as any);
   }, [initialMode]);
 
-  const handleSwitch = (to: "sign-in" | "sign-up") => {
+  const handleSwitch = (to: "sign-in" | "sign-up" | "user-details") => {
     setIsSliding(true);
     setIsContentTransitioning(true);
     setError(""); // Clear errors when switching
@@ -37,6 +37,26 @@ const AuthPage = () => {
       setMode(to);
       setIsContentTransitioning(false);
     }, 700);
+  };
+
+  const handleSignUpSuccess = () => {
+    router.push("/auth?mode=sign-in");
+    setMode("sign-in");
+  };
+
+  const handleUserDetailsComplete = async (data: any) => {
+    // Save user details to backend (no email, just title and role)
+    const res = await fetch("/api/auth/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: data.title, role: data.role }),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      return result.error || "Failed to update user details";
+    }
+    localStorage.setItem("userDetailsComplete", "true");
+    router.push(paths.home);
   };
 
   return (
@@ -54,21 +74,27 @@ const AuthPage = () => {
             style={{ boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)" }}
           >
             <h2 className="text-3xl font-bold text-center">
-              {mode === "sign-in" ? "Sign In" : "Sign Up"}
+              {mode === "sign-in"
+                ? "Sign In"
+                : mode === "sign-up"
+                ? "Sign Up"
+                : "User Details"}
             </h2>
-            {mode === "sign-in" ? (
+            {mode === "user-details" ? (
+              <UserDetails onComplete={handleUserDetailsComplete} />
+            ) : mode === "sign-in" ? (
               <SignIn
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}
                 setError={setError}
-                onSuccess={() => {}}
+                onSuccess={() => router.push("/")}
               />
             ) : (
               <SignUp
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}
                 setError={setError}
-                onSuccess={() => handleSwitch("sign-in")}
+                onSuccess={handleSignUpSuccess}
               />
             )}
           </div>

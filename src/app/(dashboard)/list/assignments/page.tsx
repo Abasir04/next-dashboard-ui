@@ -7,8 +7,8 @@ import Image from "next/image";
 
 type Assignment = {
   id: number;
-  subject: string;
-  class: string;
+  course: string;
+  level: string;
   lecturer: string;
   dueDate: string;
 };
@@ -16,11 +16,11 @@ type Assignment = {
 const columns = [
   {
     header: "Course Name",
-    accessor: "name",
+    accessor: "course",
   },
   {
     header: "Level",
-    accessor: "class",
+    accessor: "level",
   },
   {
     header: "Lecturer",
@@ -46,8 +46,8 @@ const AssignmentListPage = async () => {
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
-      <td className="flex items-center gap-4 p-4">{item.subject}</td>
-      <td>{item.class}</td>
+      <td className="flex items-center gap-4 p-4">{item.course}</td>
+      <td>{item.level}</td>
       <td className="hidden md:table-cell">{item.lecturer}</td>
       <td className="hidden md:table-cell">{item.dueDate}</td>
       <td>

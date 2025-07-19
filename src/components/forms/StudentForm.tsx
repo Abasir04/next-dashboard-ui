@@ -5,6 +5,16 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import InputField from "../InputField";
 import Image from "next/image";
+import DropSelect from "../DropSelect";
+
+const titleOptions = [
+  { label: "Mr", value: "mr" },
+  { label: "Mrs", value: "mrs" },
+  { label: "Miss", value: "miss" },
+  { label: "Dr", value: "dr" },
+  { label: "Prof", value: "prof" },
+];
+const roleOptions = [{ label: "Student", value: "student" }];
 
 const schema = z.object({
   username: z
@@ -23,6 +33,8 @@ const schema = z.object({
   birthday: z.date({ message: "Birthday is required!" }),
   sex: z.enum(["male", "female"], { message: "Sex is required!" }),
   img: z.instanceof(File, { message: "Image is required" }),
+  title: z.string().min(1, { message: "Title is required!" }),
+  role: z.string().min(1, { message: "Role is required!" }),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -38,6 +50,7 @@ const StudentForm = ({
     register,
     handleSubmit,
     formState: { errors },
+    control,
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
   });
@@ -154,6 +167,22 @@ const StudentForm = ({
             </p>
           )}
         </div>
+        <DropSelect
+          name="title"
+          label="Title"
+          placeholder="Select your title"
+          control={control}
+          options={titleOptions}
+          errors={errors}
+        />
+        <DropSelect
+          name="role"
+          label="Role"
+          placeholder="Select your role"
+          control={control}
+          options={roleOptions}
+          errors={errors}
+        />
       </div>
       <button className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}

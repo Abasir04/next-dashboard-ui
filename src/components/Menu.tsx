@@ -53,12 +53,12 @@ const menuItems = [
         icon: FaChalkboardTeacher,
         visible: ["admin", "lecturer"],
       },
-      {
-        label: "Lessons",
-        href: paths.list.lessons,
-        icon: FaBook,
-        visible: ["admin", "lecturer"],
-      },
+      // {
+      //   label: "Lessons",
+      //   href: paths.list.lessons,
+      //   icon: FaBook,
+      //   visible: ["admin", "lecturer"],
+      // },
       {
         label: "Assignments",
         href: paths.list.assignments,
@@ -71,12 +71,12 @@ const menuItems = [
         icon: FaCheckCircle,
         visible: ["admin", "lecturer", "student", "parent"],
       },
-      {
-        label: "Events",
-        href: paths.list.events,
-        icon: FaCalendarAlt,
-        visible: ["admin", "lecturer", "student", "parent"],
-      },
+      // {
+      //   label: "Events",
+      //   href: paths.list.events,
+      //   icon: FaCalendarAlt,
+      //   visible: ["admin", "lecturer", "student", "parent"],
+      // },
       {
         label: "Messages",
         href: paths.list.messages,

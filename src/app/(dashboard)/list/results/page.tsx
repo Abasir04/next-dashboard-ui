@@ -7,9 +7,9 @@ import Image from "next/image";
 
 type Result = {
   id: number;
-  subject: string;
-  class: string;
-  teacher: string;
+  course: string;
+  level: string;
+  lecturer: string;
   student: string;
   type: "exam" | "assignment";
   date: string;
@@ -18,8 +18,8 @@ type Result = {
 
 const columns = [
   {
-    header: "Subject Name",
-    accessor: "name",
+    header: "Course Name",
+    accessor: "course",
   },
   {
     header: "Student",
@@ -31,13 +31,13 @@ const columns = [
     className: "hidden md:table-cell",
   },
   {
-    header: "Teacher",
-    accessor: "teacher",
+    header: "Lecturer",
+    accessor: "lecturer",
     className: "hidden md:table-cell",
   },
   {
-    header: "Class",
-    accessor: "class",
+    header: "Level",
+    accessor: "level",
     className: "hidden md:table-cell",
   },
   {
@@ -59,11 +59,11 @@ const ResultListPage = async () => {
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
-      <td className="flex items-center gap-4 p-4">{item.subject}</td>
+      <td className="flex items-center gap-4 p-4">{item.course}</td>
       <td>{item.student}</td>
       <td className="hidden md:table-cell">{item.score}</td>
-      <td className="hidden md:table-cell">{item.teacher}</td>
-      <td className="hidden md:table-cell">{item.class}</td>
+      <td className="hidden md:table-cell">{item.lecturer}</td>
+      <td className="hidden md:table-cell">{item.level}</td>
       <td className="hidden md:table-cell">{item.date}</td>
       <td>
         <div className="flex items-center gap-2">

@@ -35,7 +35,7 @@ const DropSelect: FC<SelectProps> = ({
   return (
     <div className="flex flex-col w-full">
       {label && (
-        <label htmlFor={name} className="text-sm pb-2 text-gray-900">
+        <label htmlFor={name} className="text-sm pb-1 text-gray-900">
           {label}
         </label>
       )}
@@ -44,7 +44,7 @@ const DropSelect: FC<SelectProps> = ({
         name={name}
         render={({ field }) => (
           <div
-            className={`border border-gray-300 rounded py-1 ${
+            className={` bg-white border border-gray-300 rounded py-1 ${
               wrapperClassName || ""
             }`}
           >

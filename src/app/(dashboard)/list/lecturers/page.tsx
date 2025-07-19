@@ -29,16 +29,6 @@ const columns = [
     className: "hidden md:table-cell",
   },
   {
-    header: "Subjects",
-    accessor: "subjects",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Classes",
-    accessor: "classes",
-    className: "hidden md:table-cell",
-  },
-  {
     header: "Phone",
     accessor: "phone",
     className: "hidden lg:table-cell",
@@ -77,8 +67,6 @@ const LecturerListPage = async () => {
         </div>
       </td>
       <td className="hidden md:table-cell">{item.lecturerId}</td>
-      <td className="hidden md:table-cell">{item.subjects.join(",")}</td>
-      <td className="hidden md:table-cell">{item.classes.join(",")}</td>
       <td className="hidden md:table-cell">{item.phone}</td>
       <td className="hidden md:table-cell">{item.address}</td>
       <td>

@@ -16,9 +16,6 @@ export async function GET(
       case "lecturer":
         count = await prisma.lecturer.count();
         break;
-      case "parent":
-        count = await prisma.parent.count();
-        break;
       case "staff":
         // For staff, we'll count users with ADMIN role
         count = await prisma.user.count({

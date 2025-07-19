@@ -15,14 +15,10 @@ async function main() {
   await prisma.assignment.deleteMany();
   await prisma.exam.deleteMany();
   await prisma.lesson.deleteMany();
-  await prisma.teacherClass.deleteMany();
-  await prisma.teacherSubject.deleteMany();
-  await prisma.parentStudent.deleteMany();
   await prisma.student.deleteMany();
-  await prisma.teacher.deleteMany();
-  await prisma.parent.deleteMany();
-  await prisma.subject.deleteMany();
-  await prisma.class.deleteMany();
+  await prisma.lecturer.deleteMany();
+  await prisma.course.deleteMany();
+  await prisma.level.deleteMany();
   await prisma.user.deleteMany();
 
   // Create courses
@@ -191,6 +187,7 @@ async function main() {
         firstName: lecturerData.name.split(" ")[0],
         lastName: lecturerData.name.split(" ")[1] || "",
         role: "LECTURER",
+        title: "mr",
       },
     });
 
@@ -203,6 +200,8 @@ async function main() {
         phone: lecturerData.phone,
         address: lecturerData.address,
         userId: user.id,
+        title: "mr",
+        role: "lecturer",
       },
     });
 
@@ -210,12 +209,7 @@ async function main() {
     for (const subjectName of lecturerData.subjects) {
       const subject = createdCourses.find((s) => s.name === subjectName);
       if (subject) {
-        await prisma.lecturerSubject.create({
-          data: {
-            lecturerId: lecturer.id,
-            subjectId: subject.id,
-          },
-        });
+        // This block is removed as per the edit hint.
       }
     }
 
@@ -223,12 +217,7 @@ async function main() {
     for (const className of lecturerData.classes) {
       const classObj = createdLevels.find((c) => c.name === className);
       if (classObj) {
-        await prisma.lecturerClass.create({
-          data: {
-            lecturerId: lecturer.id,
-            classId: classObj.id,
-          },
-        });
+        // This block is removed as per the edit hint.
       }
     }
 
@@ -355,7 +344,7 @@ async function main() {
   for (const studentData of studentsData) {
     const classObj = createdLevels.find((c) => c.name === studentData.class);
     if (!classObj) continue;
-
+    // Use levelId instead of classId
     const user = await prisma.user.create({
       data: {
         email: studentData.email,
@@ -363,9 +352,9 @@ async function main() {
         firstName: studentData.name.split(" ")[0],
         lastName: studentData.name.split(" ")[1] || "",
         role: "STUDENT",
+        title: "mr",
       },
     });
-
     const student = await prisma.student.create({
       data: {
         studentId: studentData.studentId,
@@ -374,127 +363,15 @@ async function main() {
         photo: studentData.photo,
         phone: studentData.phone,
         grade: studentData.grade,
-        classId: classObj.id,
+        levelId: classObj.id,
         address: studentData.address,
         userId: user.id,
+        title: "mr",
+        role: "student",
       },
     });
 
     createdStudents.push(student);
-  }
-
-  // Create users and parents
-  console.log("👨‍👩‍👧‍👦 Creating parents...");
-  const parentsData = [
-    {
-      name: "John Doe",
-      students: ["John Doe"],
-      email: "john.parent@doe.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Jane Doe",
-      students: ["Jane Doe"],
-      email: "jane.parent@doe.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Mike Geller",
-      students: ["Mike Geller"],
-      email: "mike.parent@geller.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Jay French",
-      students: ["Jay French"],
-      email: "jay.parent@gmail.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Jane Smith",
-      students: ["Jane Smith"],
-      email: "jane.parent@gmail.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Anna Santiago",
-      students: ["Anna Santiago"],
-      email: "anna.parent@gmail.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Allen Black",
-      students: ["Allen Black"],
-      email: "allen.parent@black.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Ophelia Castro",
-      students: ["Ophelia Castro"],
-      email: "ophelia.parent@castro.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "Derek Briggs",
-      students: ["Derek Briggs"],
-      email: "derek.parent@briggs.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-    {
-      name: "John Glover",
-      students: ["John Glover"],
-      email: "john.parent@glover.com",
-      phone: "1234567890",
-      address: "123 Main St, Anytown, USA",
-    },
-  ];
-
-  const createdParents = [];
-
-  for (const parentData of parentsData) {
-    const user = await prisma.user.create({
-      data: {
-        email: parentData.email,
-        password: hashedPassword,
-        firstName: parentData.name.split(" ")[0],
-        lastName: parentData.name.split(" ")[1] || "",
-        role: "PARENT",
-      },
-    });
-
-    const parent = await prisma.parent.create({
-      data: {
-        name: parentData.name,
-        email: parentData.email,
-        phone: parentData.phone,
-        address: parentData.address,
-        userId: user.id,
-      },
-    });
-
-    // Create parent-student relationships
-    for (const studentName of parentData.students) {
-      const student = createdStudents.find((s) => s.name === studentName);
-      if (student) {
-        await prisma.parentStudent.create({
-          data: {
-            parentId: parent.id,
-            studentId: student.id,
-          },
-        });
-      }
-    }
-
-    createdParents.push(parent);
   }
 
   // Create lessons
@@ -514,15 +391,14 @@ async function main() {
 
   for (const lessonData of lessonsData) {
     const subject = createdCourses.find((s) => s.name === lessonData.subject);
-    const classObj = createdLevels.find((c) => c.name === lessonData.class);
+    const levelObj = createdLevels.find((c) => c.name === lessonData.class);
     const teacher = createdLecturers.find((t) => t.name === lessonData.teacher);
-
-    if (subject && classObj && teacher) {
+    if (subject && levelObj && teacher) {
       await prisma.lesson.create({
         data: {
-          subjectId: subject.id,
-          classId: classObj.id,
-          teacherId: teacher.id,
+          courseId: subject.id,
+          levelId: levelObj.id,
+          lecturerId: teacher.id,
         },
       });
     }
@@ -585,15 +461,14 @@ async function main() {
 
   for (const examData of examsData) {
     const subject = createdCourses.find((s) => s.name === examData.subject);
-    const classObj = createdLevels.find((c) => c.name === examData.class);
+    const levelObj = createdLevels.find((c) => c.name === examData.class);
     const teacher = createdLecturers.find((t) => t.name === examData.teacher);
-
-    if (subject && classObj && teacher) {
+    if (subject && levelObj && teacher) {
       await prisma.exam.create({
         data: {
-          subjectId: subject.id,
-          classId: classObj.id,
-          teacherId: teacher.id,
+          courseId: subject.id,
+          levelId: levelObj.id,
+          lecturerId: teacher.id,
           date: new Date(examData.date),
         },
       });
@@ -669,17 +544,17 @@ async function main() {
     const subject = createdCourses.find(
       (s) => s.name === assignmentData.subject
     );
-    const classObj = createdLevels.find((c) => c.name === assignmentData.class);
+    const levelObj = createdLevels.find((c) => c.name === assignmentData.class);
     const teacher = createdLecturers.find(
       (t) => t.name === assignmentData.teacher
     );
 
-    if (subject && classObj && teacher) {
+    if (subject && levelObj && teacher) {
       await prisma.assignment.create({
         data: {
-          subjectId: subject.id,
-          classId: classObj.id,
-          teacherId: teacher.id,
+          courseId: subject.id,
+          levelId: levelObj.id,
+          lecturerId: teacher.id,
           dueDate: new Date(assignmentData.dueDate),
         },
       });
@@ -689,21 +564,19 @@ async function main() {
   // Create results
   console.log("📊 Creating results...");
   for (const student of createdStudents) {
-    for (const subject of createdCourses.slice(0, 5)) {
-      // First 5 subjects
-      const classObj = createdLevels.find((c) => c.name === student.class);
-      const teacher = createdLecturers[0]; // Use first lecturer
-
-      if (classObj && teacher) {
+    for (const course of createdCourses.slice(0, 5)) {
+      const levelObj = createdLevels.find((c) => c.id === student.levelId);
+      const lecturer = createdLecturers[0];
+      if (levelObj && lecturer) {
         await prisma.result.create({
           data: {
-            subjectId: subject.id,
-            classId: classObj.id,
-            teacherId: teacher.id,
+            courseId: course.id,
+            levelId: levelObj.id,
+            lecturerId: lecturer.id,
             studentId: student.id,
             date: new Date("2025-01-01"),
             type: "exam",
-            score: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
+            score: Math.floor(Math.random() * 30) + 70,
           },
         });
       }
@@ -786,12 +659,12 @@ async function main() {
   ];
 
   for (const eventData of eventsData) {
-    const classObj = createdLevels.find((c) => c.name === eventData.class);
-    if (classObj) {
+    const levelObj = createdLevels.find((c) => c.name === eventData.class);
+    if (levelObj) {
       await prisma.event.create({
         data: {
           title: eventData.title,
-          classId: classObj.id,
+          levelId: levelObj.id,
           date: new Date(eventData.date),
           startTime: eventData.startTime,
           endTime: eventData.endTime,
@@ -816,14 +689,14 @@ async function main() {
   ];
 
   for (const announcementData of announcementsData) {
-    const classObj = createdLevels.find(
+    const levelObj = createdLevels.find(
       (c) => c.name === announcementData.class
     );
-    if (classObj) {
+    if (levelObj) {
       await prisma.announcement.create({
         data: {
           title: announcementData.title,
-          classId: classObj.id,
+          levelId: levelObj.id,
           date: new Date(announcementData.date),
         },
       });
@@ -907,7 +780,6 @@ async function main() {
   - ${createdLevels.length} levels
   - ${createdLecturers.length} lecturers
   - ${createdStudents.length} students
-  - ${createdParents.length} parents
   - Multiple lessons, exams, assignments, results, events, announcements, and calendar events
   `);
 }

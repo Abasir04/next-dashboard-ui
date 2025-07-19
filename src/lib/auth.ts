@@ -38,7 +38,8 @@ export async function createUser(userData: {
   password: string;
   firstName: string;
   lastName: string;
-  role?: string;
+  title: string;
+  role: string;
 }) {
   try {
     console.log("Creating user:", userData.email);
@@ -50,6 +51,7 @@ export async function createUser(userData: {
         password: hashedPassword,
         firstName: userData.firstName,
         lastName: userData.lastName,
+        title: userData.title,
         role: (userData.role as any) || "LECTURER",
       },
       select: {
@@ -57,6 +59,7 @@ export async function createUser(userData: {
         email: true,
         firstName: true,
         lastName: true,
+        title: true,
         role: true,
         createdAt: true,
       },

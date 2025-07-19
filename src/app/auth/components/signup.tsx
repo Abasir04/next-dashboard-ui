@@ -46,7 +46,7 @@ const SignUp = ({
         throw new Error(result.error || "Sign up failed");
       }
       showSuccess(
-        "Account created successfully! Please sign in with your credentials."
+        "Account created successfully! Please sign in with your credientials."
       );
       reset();
       if (onSuccess) onSuccess();
