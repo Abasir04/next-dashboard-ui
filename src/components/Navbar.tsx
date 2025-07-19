@@ -7,6 +7,7 @@ const Navbar = () => {
   const [user, setUser] = useState<{
     firstName?: string;
     lastName?: string;
+    title?: string;
     role?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +21,7 @@ const Navbar = () => {
         setUser({
           firstName: data.user.firstName,
           lastName: data.user.lastName,
+          title: data.user.title,
           role: data.user.role,
         });
       } catch (err) {
@@ -31,13 +33,16 @@ const Navbar = () => {
     fetchUser();
   }, []);
 
+  const capitalize = (str?: string) =>
+    str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
   const getDisplayName = () => {
     if (loading) return "...";
     if (!user || !user.firstName) return "Guest";
-    // If lastName is missing, just show firstName
+    const title = capitalize(user.title);
     return user.lastName
-      ? `${user.firstName} ${user.lastName}`
-      : user.firstName;
+      ? `${title} ${user.firstName} ${user.lastName}`.trim()
+      : `${title} ${user.firstName}`.trim();
   };
 
   const getDisplayRole = () => {

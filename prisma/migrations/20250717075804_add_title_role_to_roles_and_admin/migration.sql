@@ -1,21 +1,19 @@
--- Set default values for existing rows before altering tables
+-- AlterTable
+ALTER TABLE `lecturers` ADD COLUMN `role` VARCHAR(191) NOT NULL,
+    ADD COLUMN `title` VARCHAR(191) NOT NULL;
+
+ALTER TABLE `students` ADD COLUMN `role` VARCHAR(191) NOT NULL,
+    ADD COLUMN `title` VARCHAR(191) NOT NULL;
+
+ALTER TABLE `users` MODIFY `title` VARCHAR(191) NOT NULL;
+
+-- Set default values for existing rows after altering tables
 UPDATE users SET title = 'mr' WHERE title IS NULL;
 UPDATE users SET role = 'student' WHERE role IS NULL;
 UPDATE lecturers SET title = 'mr' WHERE title IS NULL;
 UPDATE lecturers SET role = 'lecturer' WHERE role IS NULL;
 UPDATE students SET title = 'mr' WHERE title IS NULL;
 UPDATE students SET role = 'student' WHERE role IS NULL;
-
--- AlterTable
-ALTER TABLE `lecturers` ADD COLUMN `role` VARCHAR(191) NOT NULL,
-    ADD COLUMN `title` VARCHAR(191) NOT NULL;
-
--- AlterTable
-ALTER TABLE `students` ADD COLUMN `role` VARCHAR(191) NOT NULL,
-    ADD COLUMN `title` VARCHAR(191) NOT NULL;
-
--- AlterTable
-ALTER TABLE `users` MODIFY `title` VARCHAR(191) NOT NULL;
 
 -- CreateTable
 CREATE TABLE `admins` (

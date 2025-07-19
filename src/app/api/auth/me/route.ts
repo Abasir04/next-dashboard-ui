@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         email: true,
         firstName: true,
         lastName: true,
+        title: true,
         role: true,
         createdAt: true,
       },
@@ -82,9 +83,9 @@ export async function PATCH(request: NextRequest) {
     }
     const user = await prisma.user.update({
       where: { id: payload.userId },
-      data: { 
-        title, 
-        role: role.toLowerCase() as Role // Ensure correct enum type
+      data: {
+        title,
+        role: role.toLowerCase() as Role, // Ensure correct enum type
       },
     });
     return NextResponse.json({ user });

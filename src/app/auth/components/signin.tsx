@@ -46,11 +46,7 @@ const SignIn = ({
       // After sign in, fetch user profile
       const profileRes = await fetch("/api/auth/me");
       const profile = await profileRes.json();
-      if (!profile?.user?.title || !profile?.user?.role) {
-        router.push("/auth?mode=user-details");
-      } else {
-        router.push(paths.home);
-      }
+      router.push(paths.home);
     } catch (err: any) {
       showError(err.message);
     } finally {

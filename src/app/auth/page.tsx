@@ -3,18 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import SignIn from "./components/signin";
 import SignUp from "./components/signup";
-import UserDetails from "./components/UserDetails"
 import { paths } from "@/lib/paths";
 
 const AuthPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialMode =
-    (searchParams.get("mode") as "sign-in" | "sign-up" | "user-details") ||
-    "sign-in";
-  const [mode, setMode] = useState<"sign-in" | "sign-up" | "user-details">(
-    initialMode as any
-  );
+    (searchParams.get("mode") as "sign-in" | "sign-up") || "sign-in";
+  const [mode, setMode] = useState<"sign-in" | "sign-up">(initialMode as any);
   const [isSliding, setIsSliding] = useState(false);
   const [isContentTransitioning, setIsContentTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +21,7 @@ const AuthPage = () => {
     setMode(initialMode as any);
   }, [initialMode]);
 
-  const handleSwitch = (to: "sign-in" | "sign-up" | "user-details") => {
+  const handleSwitch = (to: "sign-in" | "sign-up") => {
     setIsSliding(true);
     setIsContentTransitioning(true);
     setError(""); // Clear errors when switching
@@ -44,21 +40,6 @@ const AuthPage = () => {
     setMode("sign-in");
   };
 
-  const handleUserDetailsComplete = async (data: any) => {
-    // Save user details to backend (no email, just title and role)
-    const res = await fetch("/api/auth/me", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: data.title, role: data.role }),
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      return result.error || "Failed to update user details";
-    }
-    localStorage.setItem("userDetailsComplete", "true");
-    router.push(paths.home);
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="flex w-full max-w-4xl h-[650px] rounded-lg overflow-hidden relative">
@@ -74,15 +55,9 @@ const AuthPage = () => {
             style={{ boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)" }}
           >
             <h2 className="text-3xl font-bold text-center">
-              {mode === "sign-in"
-                ? "Sign In"
-                : mode === "sign-up"
-                ? "Sign Up"
-                : "User Details"}
+              {mode === "sign-in" ? "Sign In" : "Sign Up"}
             </h2>
-            {mode === "user-details" ? (
-              <UserDetails onComplete={handleUserDetailsComplete} />
-            ) : mode === "sign-in" ? (
+            {mode === "sign-in" ? (
               <SignIn
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}
