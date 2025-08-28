@@ -41,6 +41,7 @@ const SignUp = ({
       title: "",
       role: "",
     },
+    mode: "onTouched",
   });
   const {
     register,
@@ -75,6 +76,20 @@ const SignUp = ({
   };
 
   const handleSignUp = async (data: any) => {
+    // Validate step 2 fields for required title and role
+    if (!data.title) {
+      setError("Title is required");
+      methods.setError("title", {
+        type: "manual",
+        message: "Title is required",
+      });
+      return;
+    }
+    if (!data.role) {
+      setError("Role is required");
+      methods.setError("role", { type: "manual", message: "Role is required" });
+      return;
+    }
     setIsLoading(true);
     setError("");
     try {
@@ -89,7 +104,7 @@ const SignUp = ({
           email: data.email,
           password: data.password,
           title: data.title,
-          role: data.role.toUpperCase(), // ensure enum value
+          role: data.role.toUpperCase(),
         }),
       });
       const result = await response.json();
@@ -114,7 +129,7 @@ const SignUp = ({
         onSubmit={
           step === 1 ? handleSubmit(handleNext) : handleSubmit(handleSignUp)
         }
-        className="flex flex-col space-y-2 w-full h-full justify-center"
+        className="flex flex-col w-full h-full justify-center"
       >
         {step === 1 ? (
           <>
@@ -181,7 +196,7 @@ const SignUp = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-5 bg-primary text-white py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-8 bg-primary text-white py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
