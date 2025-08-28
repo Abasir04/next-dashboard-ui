@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import AuthenticationInput from "@/components/AuthenticationInput";
@@ -102,6 +101,9 @@ const ProfilePage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
           title: data.title,
           role: data.role,
         }),
@@ -189,7 +191,7 @@ const ProfilePage = () => {
               },
             }}
             errors={errors}
-            disabled={true} // Email cannot be changed
+            disabled={!isEditing}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

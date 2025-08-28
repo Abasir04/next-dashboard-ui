@@ -45,8 +45,8 @@ const DropSelect: FC<SelectProps> = ({
         render={({ field }) => (
           <div
             className={` bg-white border border-gray-300 rounded py-1 ${
-              wrapperClassName || ""
-            }`}
+              disabled ? "opacity-60 cursor-not-allowed" : ""
+            } ${wrapperClassName || ""}`}
           >
             <Select
               className="w-full custom-select"
@@ -58,6 +58,7 @@ const DropSelect: FC<SelectProps> = ({
               }}
               placeholder={placeholder}
               variant="borderless"
+              disabled={disabled}
             />
           </div>
         )}
