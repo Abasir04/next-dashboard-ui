@@ -1,10 +1,18 @@
 import { prisma } from "./prisma";
 
-// Get current user role (you'll need to implement this based on your auth system)
-export const getCurrentUserRole = async (): Promise<string> => {
-  // This should be implemented based on your authentication system
-  // For now, returning a default role
-  return "admin";
+// Get current user data
+export const getCurrentUser = async () => {
+  try {
+    const response = await fetch("/api/auth/me");
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+    const data = await response.json();
+    return data.user;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
 };
 
 // Lecturers data

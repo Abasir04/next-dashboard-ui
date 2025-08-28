@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getCurrentUserRole } from "@/lib/dataService";
+// Remove the problematic import
 import { paths } from "@/lib/paths";
 import {
   FaHome,
@@ -18,6 +18,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import LogoutModal from "./LogoutModal";
 
 const menuItems = [
   {
@@ -113,12 +114,29 @@ const menuItems = [
 const Menu = () => {
   const pathname = usePathname();
   const [role, setRole] = useState<string>("");
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      const r = await getCurrentUserRole();
-      setRole(r);
-    })();
+    const fetchUserRole = async () => {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (response.ok) {
+          const data = await response.json();
+          // Convert role to lowercase to match menu visibility checks
+          setRole(data.user.role.toLowerCase());
+        } else {
+          setRole("");
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+        setRole("");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserRole();
   }, []);
 
   const menuSection = menuItems[0].items.filter((item) =>
@@ -132,6 +150,28 @@ const Menu = () => {
     // Exact match or startsWith for subpages
     return pathname === href || (href !== "/" && pathname.startsWith(href));
   };
+
+  const handleLogoutClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLogoutModalOpen(true);
+  };
+
+  // Show loading state while fetching user role
+  if (isLoading) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 p-2">
+        <span className="hidden lg:block text-black font-semibold my-2">
+          MENU
+        </span>
+        <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 min-h-0 p-2">
@@ -164,23 +204,42 @@ const Menu = () => {
           <span className="hidden lg:block text-black font-semibold my-2">
             OTHER
           </span>
-          {otherSection.map((item) => (
-            <Link
-              href={item.href}
-              key={item.label}
-              className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
-                ${
-                  isActive(item.href)
-                    ? "bg-primary text-white"
-                    : "text-black hover:bg-primary hover:text-white"
-                }`}
-            >
-              <item.icon size={20} />
-              <span className="hidden lg:block">{item.label}</span>
-            </Link>
-          ))}
+          {otherSection.map((item) => {
+            if (item.label === "Logout") {
+              return (
+                <button
+                  key={item.label}
+                  onClick={handleLogoutClick}
+                  className="flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors text-black hover:bg-primary hover:text-white w-full"
+                >
+                  <item.icon size={20} />
+                  <span className="hidden lg:block">{item.label}</span>
+                </button>
+              );
+            }
+            return (
+              <Link
+                href={item.href}
+                key={item.label}
+                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
+                  ${
+                    isActive(item.href)
+                      ? "bg-primary text-white"
+                      : "text-black hover:bg-primary hover:text-white"
+                  }`}
+              >
+                <item.icon size={20} />
+                <span className="hidden lg:block">{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
       )}
+
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
     </div>
   );
 };

@@ -62,7 +62,7 @@ const AuthPage = () => {
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}
                 setError={setError}
-                onSuccess={() => router.push("/")}
+                onSuccess={() => router.push("/home")}
               />
             ) : (
               <SignUp
