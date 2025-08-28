@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import AuthenticationInput from "@/components/AuthenticationInput";
 import DropSelect from "@/components/DropSelect";
@@ -54,11 +54,7 @@ const ProfilePage = () => {
     },
   });
 
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       const response = await fetch("/api/auth/me");
       if (!response.ok) throw new Error("Failed to fetch profile");
@@ -76,7 +72,11 @@ const ProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setValue]);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
 
   const handleEdit = () => {
     setIsEditing(true);

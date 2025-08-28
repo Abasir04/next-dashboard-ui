@@ -7,6 +7,7 @@ interface InputProps {
   rules?: object;
   register: UseFormRegister<any>;
   errors?: FieldErrors;
+  disabled?: boolean;
 }
 const AuthenticationInput: FC<InputProps> = ({
   name,
@@ -15,6 +16,7 @@ const AuthenticationInput: FC<InputProps> = ({
   rules,
   register,
   errors,
+  disabled = false,
 }): JSX.Element => {
   return (
     <div className="flex flex-col w-full">
@@ -25,9 +27,10 @@ const AuthenticationInput: FC<InputProps> = ({
         {...register(name, rules)}
         name={name}
         placeholder={placeholder}
+        disabled={disabled}
         className={`flex text-dark text-base rounded p-3 shadow-sm border-2 ${
           errors?.[name] ? "border-red-500" : "border-gray-300"
-        }`}
+        } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
       />
       {errors?.[name] && (
         <p className="text-red-500 text-sm mt-1">
