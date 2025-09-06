@@ -46,7 +46,7 @@ const menuItems = [
         label: "Courses",
         href: paths.list.courses,
         icon: FaBook,
-        visible: ["admin"],
+        visible: ["admin", "lecturer"],
       },
       {
         label: "Levels",

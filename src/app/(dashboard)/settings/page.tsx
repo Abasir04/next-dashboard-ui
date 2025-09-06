@@ -11,12 +11,12 @@ interface User {
   firstName: string;
   lastName: string;
   title: string;
-  role: string;
   createdAt: string;
 }
 
 const SettingsPage = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,6 +47,7 @@ const SettingsPage = () => {
       if (!response.ok) throw new Error("Failed to fetch profile");
       const data = await response.json();
       setUser(data.user);
+      setRole(data.user?.role?.toLowerCase() || "");
     } catch (error) {
       showError("Failed to load profile");
     } finally {
@@ -131,7 +132,7 @@ const SettingsPage = () => {
               </div>
               <div>
                 <span className="font-medium text-gray-600">Role:</span>
-                <p className="text-gray-800 capitalize">{user.role}</p>
+                <p className="text-gray-800 capitalize">{role}</p>
               </div>
               <div>
                 <span className="font-medium text-gray-600">Member since:</span>

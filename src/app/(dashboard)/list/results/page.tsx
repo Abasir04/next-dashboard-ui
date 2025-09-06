@@ -2,7 +2,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { getResultsData, getCurrentUserRole } from "@/lib/dataService";
+import { getResultsData, getCurrentUserRole } from "@/lib/serverDataService";
 import Image from "next/image";
 
 type Result = {
@@ -67,13 +67,12 @@ const ResultListPage = async () => {
       <td className="hidden md:table-cell">{item.date}</td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" ||
-            (role === "teacher" && (
-              <>
-                <FormModal table="result" type="update" data={item} />
-                <FormModal table="result" type="delete" id={item.id} />
-              </>
-            ))}
+          {role === "admin" || role === "lecturer" ? (
+            <>
+              <FormModal table="result" type="update" data={item} />
+              <FormModal table="result" type="delete" id={item.id} />
+            </>
+          ) : null}
         </div>
       </td>
     </tr>
@@ -93,10 +92,9 @@ const ResultListPage = async () => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" ||
-              (role === "teacher" && (
-                <FormModal table="result" type="create" />
-              ))}
+            {(role === "admin" || role === "lecturer") && (
+              <FormModal table="result" type="create" />
+            )}
           </div>
         </div>
       </div>

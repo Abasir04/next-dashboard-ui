@@ -2,11 +2,12 @@ import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalender";
 import FormModal from "@/components/FormModal";
 import Performance from "@/components/Performance";
-import { role } from "@/lib/data";
+import { getCurrentUserRole } from "@/lib/serverDataService";
 import Image from "next/image";
 import Link from "next/link";
 
-const SingleLecturerPage = () => {
+const SingleLecturerPage = async () => {
+  const role = await getCurrentUserRole();
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
       {/* LEFT */}
@@ -27,7 +28,7 @@ const SingleLecturerPage = () => {
             <div className="w-2/3 flex flex-col justify-between gap-4">
               <div className="flex items-center gap-4">
                 <h1 className="text-xl font-semibold">Leonard Snyder</h1>
-                {role === "admin" && (
+                {(role === "admin" || role === "lecturer") && (
                   <FormModal
                     table="lecturer"
                     type="update"
