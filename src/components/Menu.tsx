@@ -28,13 +28,13 @@ const menuItems = [
         label: "Home",
         href: paths.home,
         icon: FaHome,
-        visible: ["admin", "lecturer", "student", "parent"],
+        visible: ["admin", "lecturer"],
       },
       {
         label: "Lecturers",
         href: paths.list.lecturers,
         icon: FaUser,
-        visible: ["admin", "lecturer"],
+        visible: ["admin"],
       },
       {
         label: "Students",

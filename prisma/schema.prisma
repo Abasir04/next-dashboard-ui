@@ -53,6 +53,7 @@ model Lecturer {
 
   // Relations
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses    Course[]
   lecturerCourses LecturerCourse[]
   lecturerLevels LecturerLevel[]
   lessons    Lesson[]
@@ -88,17 +89,21 @@ model Level {
 
 // --- Course ---
 model Course {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  code       String   @unique
+  level      Int      // 100, 200, 300, 400, 500, 600
+  lecturerId Int      // Auto-assigned to creating lecturer
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   lecturerCourses LecturerCourse[]
-  lessons   Lesson[]
-  exams     Exam[]
+  lessons    Lesson[]
+  exams      Exam[]
   assignments Assignment[]
-  results   Result[]
+  results    Result[]
 
   @@map("courses")
 }

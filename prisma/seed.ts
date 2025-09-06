@@ -24,22 +24,35 @@ async function main() {
   // Create courses
   console.log("📚 Creating courses...");
   const courses = [
-    { name: "Math" },
-    { name: "English" },
-    { name: "Physics" },
-    { name: "Chemistry" },
-    { name: "Biology" },
-    { name: "History" },
-    { name: "Geography" },
-    { name: "Art" },
-    { name: "Music" },
-    { name: "Literature" },
-    { name: "Geometry" },
-    { name: "Spanish" },
+    { name: "Math", code: "MATH101", level: 100 },
+    { name: "English", code: "ENG101", level: 100 },
+    { name: "Physics", code: "PHYS101", level: 100 },
+    { name: "Chemistry", code: "CHEM101", level: 100 },
+    { name: "Biology", code: "BIOL101", level: 100 },
+    { name: "History", code: "HIST101", level: 100 },
+    { name: "Geography", code: "GEOG101", level: 100 },
+    { name: "Art", code: "ART101", level: 100 },
+    { name: "Music", code: "MUS101", level: 100 },
+    { name: "Literature", code: "LIT101", level: 100 },
+    { name: "Geometry", code: "MATH201", level: 200 },
+    { name: "Spanish", code: "SPAN101", level: 100 },
   ];
 
+  // Get the first lecturer to assign courses to
+  const firstLecturer = await prisma.lecturer.findFirst();
+  if (!firstLecturer) {
+    throw new Error("No lecturer found to assign courses to");
+  }
+
   const createdCourses = await Promise.all(
-    courses.map((course) => prisma.course.create({ data: course }))
+    courses.map((course) =>
+      prisma.course.create({
+        data: {
+          ...course,
+          lecturerId: firstLecturer.id,
+        },
+      })
+    )
   );
 
   // Create levels
