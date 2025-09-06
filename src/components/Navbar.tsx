@@ -10,6 +10,7 @@ const Navbar = () => {
     title?: string;
     role?: string;
   } | null>(null);
+  const [role, setRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +25,10 @@ const Navbar = () => {
           title: data.user.title,
           role: data.user.role,
         });
+        setRole(data.user?.role?.toLowerCase() || "");
       } catch (err) {
         setUser(null);
+        setRole("");
       } finally {
         setLoading(false);
       }
@@ -47,8 +50,8 @@ const Navbar = () => {
 
   const getDisplayRole = () => {
     if (loading) return "...";
-    if (!user || !user.role) return "Unknown";
-    return user.role;
+    if (!role) return "Unknown";
+    return role.charAt(0).toUpperCase() + role.slice(1);
   };
 
   return (

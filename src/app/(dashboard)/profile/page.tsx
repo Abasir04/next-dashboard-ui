@@ -32,6 +32,7 @@ interface User {
 
 const ProfilePage = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -59,6 +60,7 @@ const ProfilePage = () => {
       if (!response.ok) throw new Error("Failed to fetch profile");
       const data = await response.json();
       setUser(data.user);
+      setRole(data.user?.role?.toLowerCase() || "");
 
       // Set form values
       setValue("firstName", data.user.firstName);
@@ -89,6 +91,7 @@ const ProfilePage = () => {
       setValue("email", user.email);
       setValue("title", user.title);
       setValue("role", user.role);
+      setRole(user.role?.toLowerCase() || "");
     }
   };
 
@@ -116,6 +119,7 @@ const ProfilePage = () => {
 
       const result = await response.json();
       setUser(result.user);
+      setRole(result.user?.role?.toLowerCase() || "");
       setIsEditing(false);
       showSuccess("Profile updated successfully");
     } catch (error: any) {
@@ -243,6 +247,10 @@ const ProfilePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
             <div>
               <span className="font-medium">User ID:</span> {user.id}
+            </div>
+            <div>
+              <span className="font-medium">Role:</span>{" "}
+              <span className="capitalize">{role}</span>
             </div>
             <div>
               <span className="font-medium">Member since:</span>{" "}
