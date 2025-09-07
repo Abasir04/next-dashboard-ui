@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,135 +7,117 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- User and Role ---
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
   password  String
   firstName String
   lastName  String
+  role      Role      @default(LECTURER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   title     String
-  role      Role     @default(LECTURER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  lecturer   Lecturer?
-  student    Student?
-  admin      Admin?
+  admin     Admin?
+  lecturer  Lecturer?
+  student   Student?
 
   @@map("users")
 }
 
-enum Role {
-  LECTURER
-  STUDENT
-  ADMIN
-}
-
-// --- Lecturer ---
 model Lecturer {
-  id         Int      @id @default(autoincrement())
-  lecturerId String   @unique
-  name       String
-  email      String   @unique
-  photo      String?
-  phone      String
-  address    String
-  userId     Int      @unique
-  title      String
-  role       String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relations
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courses    Course[]
-  lecturerCourses LecturerCourse[]
-  lecturerLevels LecturerLevel[]
-  lessons    Lesson[]
-  exams      Exam[]
-  assignments Assignment[]
-  results    Result[]
+  id                Int                      @id @default(autoincrement())
+  lecturerId        String                   @unique
+  name              String
+  email             String                   @unique
+  photo             String?
+  phone             String
+  address           String
+  userId            Int                      @unique
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  role              String
+  title             String
+  assignments       Assignment[]
+  registrationLinks CourseRegistrationLink[]
+  courses           Course[]
+  exams             Exam[]
+  lecturerCourses   LecturerCourse[]
+  lecturerLevels    LecturerLevel[]
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessons           Lesson[]
+  results           Result[]
 
   @@map("lecturers")
 }
 
-// --- Level ---
 model Level {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  capacity   Int
-  grade      Int
-  supervisor String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relations
-  students   Student[]
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  capacity       Int
+  grade          Int
+  supervisor     String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  announcements  Announcement[]
+  assignments    Assignment[]
+  events         Event[]
+  exams          Exam[]
   lecturerLevels LecturerLevel[]
-  lessons    Lesson[]
-  exams      Exam[]
-  assignments Assignment[]
-  events     Event[]
-  announcements Announcement[]
-  results    Result[]
+  lessons        Lesson[]
+  results        Result[]
+  students       Student[]
 
   @@map("levels")
 }
 
-// --- Course ---
 model Course {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  code       String   @unique
-  level      Int      // 100, 200, 300, 400, 500, 600
-  lecturerId Int      // Auto-assigned to creating lecturer
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                Int                      @id @default(autoincrement())
+  name              String                   @unique
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  code              String                   @unique
+  lecturerId        Int
+  level             Int
+  assignments       Assignment[]
+  registrationLinks CourseRegistrationLink[]
+  registrations     CourseRegistration[]
+  lecturer          Lecturer                 @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  exams             Exam[]
+  lecturerCourses   LecturerCourse[]
+  lessons           Lesson[]
+  results           Result[]
 
-  // Relations
-  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-  lecturerCourses LecturerCourse[]
-  lessons    Lesson[]
-  exams      Exam[]
-  assignments Assignment[]
-  results    Result[]
-
+  @@index([lecturerId], map: "courses_lecturerId_fkey")
   @@map("courses")
 }
 
-// --- Join Tables ---
 model LecturerCourse {
-  id        Int @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   lecturerId Int
   courseId   Int
-
-  // Relations
-  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 
   @@unique([lecturerId, courseId])
+  @@index([courseId], map: "lecturer_courses_courseId_fkey")
   @@map("lecturer_courses")
 }
 
 model LecturerLevel {
-  id        Int @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   lecturerId Int
   levelId    Int
-
-  // Relations
   lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
   @@unique([lecturerId, levelId])
+  @@index([levelId], map: "lecturer_levels_levelId_fkey")
   @@map("lecturer_levels")
 }
 
-// --- Student ---
 model Student {
-  id        Int      @id @default(autoincrement())
-  studentId String   @unique
+  id            Int      @id @default(autoincrement())
+  matricNumber  String   @unique
   name      String
   email     String   @unique
   photo     String?
@@ -147,98 +126,98 @@ model Student {
   levelId   Int
   address   String
   userId    Int      @unique
-  title     String
-  role      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  level     Level    @relation(fields: [levelId], references: [id])
+  role      String
+  title     String
   results   Result[]
+  level     Level    @relation(fields: [levelId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([levelId], map: "students_levelId_fkey")
   @@map("students")
 }
 
-// --- Lesson ---
 model Lesson {
-  id        Int      @id @default(autoincrement())
-  courseId  Int
-  levelId   Int
+  id         Int      @id @default(autoincrement())
+  courseId   Int
+  levelId    Int
   lecturerId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
-  // Relations
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-
+  @@index([courseId], map: "lessons_courseId_fkey")
+  @@index([lecturerId], map: "lessons_lecturerId_fkey")
+  @@index([levelId], map: "lessons_levelId_fkey")
   @@map("lessons")
 }
 
-// --- Exam ---
 model Exam {
-  id        Int      @id @default(autoincrement())
-  courseId  Int
-  levelId   Int
+  id         Int      @id @default(autoincrement())
+  courseId   Int
+  levelId    Int
   lecturerId Int
-  date      DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  date       DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  results    Result[]
 
-  // Relations
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-  results   Result[]
-
+  @@index([courseId], map: "exams_courseId_fkey")
+  @@index([lecturerId], map: "exams_lecturerId_fkey")
+  @@index([levelId], map: "exams_levelId_fkey")
   @@map("exams")
 }
 
-// --- Assignment ---
 model Assignment {
-  id        Int      @id @default(autoincrement())
-  courseId  Int
-  levelId   Int
+  id         Int      @id @default(autoincrement())
+  courseId   Int
+  levelId    Int
   lecturerId Int
-  dueDate   DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  dueDate    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
-  // Relations
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-
+  @@index([courseId], map: "assignments_courseId_fkey")
+  @@index([lecturerId], map: "assignments_lecturerId_fkey")
+  @@index([levelId], map: "assignments_levelId_fkey")
   @@map("assignments")
 }
 
-// --- Result ---
 model Result {
-  id        Int      @id @default(autoincrement())
-  courseId  Int
-  levelId   Int
+  id         Int      @id @default(autoincrement())
+  courseId   Int
+  levelId    Int
   lecturerId Int
-  studentId Int
-  examId    Int?
-  date      DateTime
-  type      String   // "exam" or "assignment"
-  score     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  studentId  Int
+  examId     Int?
+  date       DateTime
+  type       String
+  score      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  exam       Exam?    @relation(fields: [examId], references: [id])
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  // Relations
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  lecturer  Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  exam      Exam?    @relation(fields: [examId], references: [id], onDelete: SetNull)
-
+  @@index([courseId], map: "results_courseId_fkey")
+  @@index([examId], map: "results_examId_fkey")
+  @@index([lecturerId], map: "results_lecturerId_fkey")
+  @@index([levelId], map: "results_levelId_fkey")
+  @@index([studentId], map: "results_studentId_fkey")
   @@map("results")
 }
 
-// --- Event ---
 model Event {
   id        Int      @id @default(autoincrement())
   title     String
@@ -248,14 +227,12 @@ model Event {
   endTime   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
   level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
+  @@index([levelId], map: "events_levelId_fkey")
   @@map("events")
 }
 
-// --- Announcement ---
 model Announcement {
   id        Int      @id @default(autoincrement())
   title     String
@@ -263,14 +240,12 @@ model Announcement {
   date      DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
   level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
+  @@index([levelId], map: "announcements_levelId_fkey")
   @@map("announcements")
 }
 
-// --- CalendarEvent ---
 model CalendarEvent {
   id        Int      @id @default(autoincrement())
   title     String
@@ -290,9 +265,57 @@ model Admin {
   role      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admins")
+}
+
+model CourseRegistrationLink {
+  id            String               @id @default(cuid())
+  courseId      Int
+  lecturerId    Int
+  expiresAt     DateTime
+  isActive      Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  level         Int
+  course        Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer      Lecturer             @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  registrations CourseRegistration[]
+
+  @@index([courseId], map: "course_registration_links_courseId_fkey")
+  @@index([lecturerId], map: "course_registration_links_lecturerId_fkey")
+  @@map("course_registration_links")
+}
+
+model CourseRegistration {
+  id           Int                    @id @default(autoincrement())
+  linkId       String
+  courseId     Int
+  studentName  String
+  studentEmail String
+  studentPhone String
+  matricNumber String
+  status       RegistrationStatus     @default(PENDING)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  level        Int
+  course       Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  link         CourseRegistrationLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([courseId], map: "course_registrations_courseId_fkey")
+  @@index([linkId], map: "course_registrations_linkId_fkey")
+  @@map("course_registrations")
+}
+
+enum Role {
+  LECTURER
+  STUDENT
+  ADMIN
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

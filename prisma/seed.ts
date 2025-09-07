@@ -21,41 +21,7 @@ async function main() {
   await prisma.level.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create courses
-  console.log("📚 Creating courses...");
-  const courses = [
-    { name: "Math", code: "MATH101", level: 100 },
-    { name: "English", code: "ENG101", level: 100 },
-    { name: "Physics", code: "PHYS101", level: 100 },
-    { name: "Chemistry", code: "CHEM101", level: 100 },
-    { name: "Biology", code: "BIOL101", level: 100 },
-    { name: "History", code: "HIST101", level: 100 },
-    { name: "Geography", code: "GEOG101", level: 100 },
-    { name: "Art", code: "ART101", level: 100 },
-    { name: "Music", code: "MUS101", level: 100 },
-    { name: "Literature", code: "LIT101", level: 100 },
-    { name: "Geometry", code: "MATH201", level: 200 },
-    { name: "Spanish", code: "SPAN101", level: 100 },
-  ];
-
-  // Get the first lecturer to assign courses to
-  const firstLecturer = await prisma.lecturer.findFirst();
-  if (!firstLecturer) {
-    throw new Error("No lecturer found to assign courses to");
-  }
-
-  const createdCourses = await Promise.all(
-    courses.map((course) =>
-      prisma.course.create({
-        data: {
-          ...course,
-          lecturerId: firstLecturer.id,
-        },
-      })
-    )
-  );
-
-  // Create levels
+  // Create levels first
   console.log("🏫 Creating levels...");
   const levels = [
     { name: "1A", capacity: 20, grade: 1, supervisor: "Joseph Padilla" },
@@ -218,13 +184,7 @@ async function main() {
       },
     });
 
-    // Create lecturer-subject relationships
-    for (const subjectName of lecturerData.subjects) {
-      const subject = createdCourses.find((s) => s.name === subjectName);
-      if (subject) {
-        // This block is removed as per the edit hint.
-      }
-    }
+    // Note: Course assignments are handled after all lecturers are created
 
     // Create lecturer-class relationships
     for (const className of lecturerData.classes) {
@@ -237,11 +197,42 @@ async function main() {
     createdLecturers.push(lecturer);
   }
 
+  // Create courses and assign them to lecturers
+  console.log("📚 Creating courses...");
+  const courses = [
+    { name: "Math", code: "MATH101", level: 100 },
+    { name: "English", code: "ENG101", level: 100 },
+    { name: "Physics", code: "PHYS101", level: 100 },
+    { name: "Chemistry", code: "CHEM101", level: 100 },
+    { name: "Biology", code: "BIOL101", level: 100 },
+    { name: "History", code: "HIST101", level: 100 },
+    { name: "Geography", code: "GEOG101", level: 100 },
+    { name: "Art", code: "ART101", level: 100 },
+    { name: "Music", code: "MUS101", level: 100 },
+    { name: "Literature", code: "LIT101", level: 100 },
+    { name: "Geometry", code: "MATH201", level: 200 },
+    { name: "Spanish", code: "SPAN101", level: 100 },
+  ];
+
+  const createdCourses = [];
+  for (let i = 0; i < courses.length; i++) {
+    const course = courses[i];
+    const lecturer = createdLecturers[i % createdLecturers.length]; // Distribute courses among lecturers
+
+    const createdCourse = await prisma.course.create({
+      data: {
+        ...course,
+        lecturerId: lecturer.id,
+      },
+    });
+    createdCourses.push(createdCourse);
+  }
+
   // Create users and students
   console.log("👨‍🎓 Creating students...");
   const studentsData = [
     {
-      studentId: "S001",
+      matricNumber: "100001",
       name: "John Doe",
       email: "john.student@doe.com",
       photo:
@@ -252,7 +243,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S002",
+      matricNumber: "100002",
       name: "Jane Doe",
       email: "jane.student@doe.com",
       photo:
@@ -263,7 +254,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S003",
+      matricNumber: "100003",
       name: "Mike Geller",
       email: "mike.student@geller.com",
       photo:
@@ -274,7 +265,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S004",
+      matricNumber: "100004",
       name: "Jay French",
       email: "jay.student@gmail.com",
       photo:
@@ -285,7 +276,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S005",
+      matricNumber: "100005",
       name: "Jane Smith",
       email: "jane.student@gmail.com",
       photo:
@@ -296,7 +287,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S006",
+      matricNumber: "100006",
       name: "Anna Santiago",
       email: "anna.student@gmail.com",
       photo:
@@ -307,7 +298,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S007",
+      matricNumber: "100007",
       name: "Allen Black",
       email: "allen.student@black.com",
       photo:
@@ -318,7 +309,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S008",
+      matricNumber: "100008",
       name: "Ophelia Castro",
       email: "ophelia.student@castro.com",
       photo:
@@ -329,7 +320,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S009",
+      matricNumber: "100009",
       name: "Derek Briggs",
       email: "derek.student@briggs.com",
       photo:
@@ -340,7 +331,7 @@ async function main() {
       address: "123 Main St, Anytown, USA",
     },
     {
-      studentId: "S010",
+      matricNumber: "100010",
       name: "John Glover",
       email: "john.student@glover.com",
       photo:
@@ -368,10 +359,12 @@ async function main() {
         title: "mr",
       },
     });
-    const student = await prisma.student.create({
+    const student = await (prisma as any).student.create({
       data: {
-        studentId: studentData.studentId,
-        name: studentData.name,
+        matricNumber: studentData.matricNumber,
+        name: `${studentData.name.split(" ")[1] ?? ""} ${
+          studentData.name.split(" ")[0]
+        }`,
         email: studentData.email,
         photo: studentData.photo,
         phone: studentData.phone,

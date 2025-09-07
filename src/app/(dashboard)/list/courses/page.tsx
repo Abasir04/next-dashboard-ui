@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { showError, showSuccess } from "@/lib/toast";
 import CourseForm from "@/components/forms/CourseForm";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import Pagination from "@/components/Pagination";
-import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiPlus, FiLink, FiUsers } from "react-icons/fi";
 
 interface Course {
   id: number;
@@ -61,11 +61,11 @@ const CoursesPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    fetchCourses();
-    fetchUserRole();
-  }, []);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [courseForRegistration, setCourseForRegistration] =
+    useState<Course | null>(null);
+  const [registrationLink, setRegistrationLink] = useState<string | null>(null);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
   const fetchUserRole = async () => {
     try {
@@ -79,18 +79,57 @@ const CoursesPage = () => {
     }
   };
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
-      const response = await fetch("/api/courses");
-      if (!response.ok) throw new Error("Failed to fetch courses");
+      let response;
+
+      // If user is a lecturer, fetch only their courses
+      if (userRole === "lecturer") {
+        // First get the lecturer ID
+        const meResponse = await fetch("/api/auth/me");
+        if (!meResponse.ok) throw new Error("Failed to fetch user data");
+        const meData = await meResponse.json();
+
+        if (meData.user?.lecturer?.id) {
+          response = await fetch(
+            `/api/lecturers/${meData.user.lecturer.id}/courses`
+          );
+        } else {
+          throw new Error("Lecturer profile not found");
+        }
+      } else {
+        // For admins, fetch all courses
+        response = await fetch("/api/courses");
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch courses");
+      }
       const data = await response.json();
-      setCourses(data);
+
+      // Handle different response formats
+      if (userRole === "lecturer") {
+        setCourses(data.courses || []);
+      } else {
+        setCourses(data || []);
+      }
     } catch (error) {
       showError("Failed to load courses");
     } finally {
       setLoading(false);
     }
-  };
+  }, [userRole]);
+
+  useEffect(() => {
+    fetchUserRole();
+  }, []);
+
+  useEffect(() => {
+    if (userRole) {
+      fetchCourses();
+    }
+  }, [userRole, fetchCourses]);
 
   const handleCreateCourse = () => {
     setEditingCourse(null);
@@ -137,6 +176,47 @@ const CoursesPage = () => {
     setCourseToDelete(null);
   };
 
+  const handleGenerateRegistrationLink = (course: Course) => {
+    setCourseForRegistration(course);
+    setShowRegistrationModal(true);
+  };
+
+  const generateRegistrationLink = async () => {
+    if (!courseForRegistration) return;
+
+    setIsGeneratingLink(true);
+    try {
+      const response = await fetch("/api/course-registration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseId: courseForRegistration.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate registration link");
+      }
+
+      setRegistrationLink(data.registrationUrl);
+      showSuccess("Registration link generated successfully");
+    } catch (error: any) {
+      showError(error.message);
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const closeRegistrationModal = () => {
+    setShowRegistrationModal(false);
+    setCourseForRegistration(null);
+    setRegistrationLink(null);
+  };
+
   const handleFormSuccess = () => {
     fetchCourses();
   };
@@ -181,6 +261,13 @@ const CoursesPage = () => {
                 title="Edit course"
               >
                 <FiEdit2 size={16} />
+              </button>
+              <button
+                onClick={() => handleGenerateRegistrationLink(course)}
+                className="p-1 text-green-600 hover:text-green-800 transition-colors"
+                title="Generate registration link"
+              >
+                <FiLink size={16} />
               </button>
               <button
                 onClick={() => handleDeleteCourse(course)}
@@ -339,6 +426,116 @@ const CoursesPage = () => {
                     Delete Course
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTRATION LINK MODAL */}
+      {showRegistrationModal && courseForRegistration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Generate Registration Link
+              </h2>
+              <button
+                onClick={closeRegistrationModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={isGeneratingLink}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-600 mb-2">
+                Generate a registration link for:
+              </p>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="font-medium text-gray-800">
+                  {courseForRegistration.name}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Code: {courseForRegistration.code} | Level:{" "}
+                  {courseForRegistration.level}
+                </p>
+              </div>
+            </div>
+
+            {!registrationLink ? (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  The registration link will be automatically generated for
+                  level {courseForRegistration.level} based on the course code.
+                </p>
+                <button
+                  onClick={generateRegistrationLink}
+                  disabled={isGeneratingLink}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isGeneratingLink ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Generating Link...
+                    </>
+                  ) : (
+                    "Generate Registration Link"
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Registration link generated successfully:
+                </p>
+                <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                  <p className="text-sm text-green-800 break-all">
+                    {registrationLink}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() =>
+                      navigator.clipboard.writeText(registrationLink)
+                    }
+                    className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Copy Link
+                  </button>
+                  <button
+                    onClick={() => window.open(registrationLink, "_blank")}
+                    className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Open Link
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  This link will expire in 1 month from now.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-4 pt-4">
+              <button
+                onClick={closeRegistrationModal}
+                className="px-6 py-2 bg-gray-400 text-black rounded-md hover:bg-gray-300 transition-colors"
+                disabled={isGeneratingLink}
+              >
+                {registrationLink ? "Close" : "Cancel"}
               </button>
             </div>
           </div>

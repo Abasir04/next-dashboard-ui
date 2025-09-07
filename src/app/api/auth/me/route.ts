@@ -28,6 +28,27 @@ export async function GET(request: NextRequest) {
         title: true,
         role: true,
         createdAt: true,
+        lecturer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        admin: {
+          select: {
+            id: true,
+            title: true,
+            role: true,
+          },
+        },
       },
     });
 

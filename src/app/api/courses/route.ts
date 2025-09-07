@@ -13,6 +13,14 @@ export async function GET() {
             email: true,
           },
         },
+        registrations: {
+          where: {
+            status: "APPROVED",
+          },
+          select: {
+            id: true,
+          },
+        },
         lessons: {
           include: {
             level: {
@@ -31,10 +39,8 @@ export async function GET() {
     });
 
     const coursesWithStudentCounts = courses.map((course) => {
-      // Calculate total students taking this course across all levels
-      const studentCount = course.lessons.reduce((total, lesson) => {
-        return total + lesson.level.students.length;
-      }, 0);
+      // Calculate total students registered for this course
+      const studentCount = course.registrations.length;
 
       return {
         id: course.id,

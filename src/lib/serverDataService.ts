@@ -113,7 +113,7 @@ export const getStudentsData = async () => {
 
     return students.map((student) => ({
       id: student.id,
-      studentId: student.studentId,
+      matricNumber: (student as any).matricNumber ?? (student as any).studentId,
       name: student.name,
       email: student.email,
       photo: student.photo || "",

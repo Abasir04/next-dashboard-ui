@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName, title, role } = body;
+    const { email, password, firstName, lastName, title, role, matricNumber } =
+      body;
 
     // Validation
     if (!email || !password || !firstName || !lastName) {
@@ -82,10 +83,22 @@ export async function POST(request: NextRequest) {
         );
       }
       try {
+        // Enforce surname-first storage for name
+        const fullName = `${lastName} ${firstName}`;
+
+        // Require 6-digit matric number
+        const matricRegex = /^\d{6}$/;
+        if (!matricRegex.test(matricNumber || "")) {
+          return NextResponse.json(
+            { error: "Matric number must be exactly 6 digits" },
+            { status: 400 }
+          );
+        }
+
         await prisma.student.create({
           data: {
-            studentId: `S${user.id}`,
-            name: `${firstName} ${lastName}`,
+            matricNumber: matricNumber,
+            name: fullName,
             email,
             photo: null,
             phone: "",
