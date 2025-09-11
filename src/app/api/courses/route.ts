@@ -21,6 +21,12 @@ export async function GET() {
             id: true,
           },
         },
+        materials: {
+          select: { id: true },
+        },
+        _count: {
+          select: { materials: true },
+        },
         lessons: {
           include: {
             level: {
@@ -51,6 +57,7 @@ export async function GET() {
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
         studentCount,
+        materialsCount: course._count.materials,
         levels: course.lessons.map((lesson) => lesson.level.name),
       };
     });

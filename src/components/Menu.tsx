@@ -37,12 +37,6 @@ const menuItems = [
         visible: ["admin"],
       },
       {
-        label: "Students",
-        href: paths.list.students,
-        icon: FaUsers,
-        visible: ["admin", "lecturer"],
-      },
-      {
         label: "Courses",
         href: paths.list.courses,
         icon: FaBook,
@@ -54,7 +48,13 @@ const menuItems = [
         icon: FaChalkboardTeacher,
         visible: ["admin", "lecturer"],
       },
-      // {
+      {
+        label: "Students",
+        href: paths.list.students,
+        icon: FaUsers,
+        visible: ["admin", "lecturer"],
+      },
+        // {
       //   label: "Lessons",
       //   href: paths.list.lessons,
       //   icon: FaBook,

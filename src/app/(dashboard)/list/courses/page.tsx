@@ -6,7 +6,14 @@ import CourseForm from "@/components/forms/CourseForm";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import Pagination from "@/components/Pagination";
-import { FiEdit2, FiTrash2, FiPlus, FiLink, FiUsers } from "react-icons/fi";
+import {
+  FiEdit2,
+  FiTrash2,
+  FiPlus,
+  FiLink,
+  FiUsers,
+  FiFileText,
+} from "react-icons/fi";
 
 interface Course {
   id: number;
@@ -14,6 +21,7 @@ interface Course {
   code: string;
   level: number;
   studentCount: number;
+  materialsCount?: number;
   lecturer: {
     name: string;
     email: string;
@@ -39,6 +47,10 @@ const columns = [
   {
     header: "Students",
     accessor: "studentCount",
+  },
+  {
+    header: "Materials",
+    accessor: "materialsCount",
   },
   {
     header: "Created",
@@ -181,6 +193,10 @@ const CoursesPage = () => {
     setShowRegistrationModal(true);
   };
 
+  const handleViewMaterials = (course: Course) => {
+    window.location.href = `/list/courses/${course.id}/materials`;
+  };
+
   const generateRegistrationLink = async () => {
     if (!courseForRegistration) return;
 
@@ -248,11 +264,16 @@ const CoursesPage = () => {
           {course.studentCount} students
         </span>
       </td>
+      <td className="p-4">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          {course.materialsCount ?? 0} materials
+        </span>
+      </td>
       <td className="hidden md:table-cell p-4 text-gray-500">
         {new Date(course.createdAt).toLocaleDateString()}
       </td>
       <td className="p-4">
-        <div className="flex items-center gap-2">
+        <div className="flex justify-center gap-2">
           {(userRole === "admin" || userRole === "lecturer") && (
             <>
               <button
@@ -268,6 +289,13 @@ const CoursesPage = () => {
                 title="Generate registration link"
               >
                 <FiLink size={16} />
+              </button>
+              <button
+                onClick={() => handleViewMaterials(course)}
+                className="p-1 text-purple-600 hover:text-purple-800 transition-colors"
+                title="Course Materials"
+              >
+                <FiFileText size={16} />
               </button>
               <button
                 onClick={() => handleDeleteCourse(course)}

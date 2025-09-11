@@ -46,6 +46,7 @@ model Lecturer {
   user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessons           Lesson[]
   results           Result[]
+  materials         CourseMaterial[]
 
   @@map("lecturers")
 }
@@ -86,6 +87,7 @@ model Course {
   lecturerCourses   LecturerCourse[]
   lessons           Lesson[]
   results           Result[]
+  materials         CourseMaterial[]
 
   @@index([lecturerId], map: "courses_lecturerId_fkey")
   @@map("courses")
@@ -312,6 +314,23 @@ enum Role {
   LECTURER
   STUDENT
   ADMIN
+}
+
+model CourseMaterial {
+  id               Int      @id @default(autoincrement())
+  courseId         Int
+  fileUrl          String
+  fileType         String   // "document" or "video"
+  originalFilename String
+  uploadedBy       Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer         Lecturer @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+
+  @@index([courseId], map: "course_materials_courseId_fkey")
+  @@index([uploadedBy], map: "course_materials_uploadedBy_fkey")
+  @@map("course_materials")
 }
 
 enum RegistrationStatus {
