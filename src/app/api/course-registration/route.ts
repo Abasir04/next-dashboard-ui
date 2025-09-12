@@ -88,11 +88,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingActiveLink) {
+      const origin =
+        request.nextUrl?.origin ||
+        `${request.headers.get("x-forwarded-proto") || "http"}://${
+          request.headers.get("host") || "localhost:3000"
+        }`;
       return NextResponse.json({
         link: existingActiveLink,
-        registrationUrl: `${
-          process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-        }/register/${existingActiveLink.id}`,
+        registrationUrl: `${origin}/register/${existingActiveLink.id}`,
         reused: true,
       });
     }
@@ -114,11 +117,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const origin =
+      request.nextUrl?.origin ||
+      `${request.headers.get("x-forwarded-proto") || "http"}://${
+        request.headers.get("host") || "localhost:3000"
+      }`;
     return NextResponse.json({
       link: registrationLink,
-      registrationUrl: `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/register/${registrationLink.id}`,
+      registrationUrl: `${origin}/register/${registrationLink.id}`,
     });
   } catch (error) {
     console.error("Error creating registration link:", error);

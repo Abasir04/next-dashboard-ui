@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { showError, showSuccess } from "@/lib/toast";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import {
   FiUpload,
   FiDownload,
@@ -13,6 +14,8 @@ import {
   FiFileText,
   FiCalendar,
   FiUser,
+  FiCheck,
+  FiX,
 } from "react-icons/fi";
 
 interface CourseMaterial {
@@ -46,6 +49,18 @@ const CourseMaterialsPage = () => {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [userRole, setUserRole] = useState<string>("");
+
+  // Bulk operations state
+  const [selectedMaterials, setSelectedMaterials] = useState<Set<number>>(
+    new Set()
+  );
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "single" | "bulk";
+    materialId?: number;
+    materialName?: string;
+  } | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchUserRole = async () => {
     try {
@@ -164,32 +179,103 @@ const CourseMaterialsPage = () => {
     }
   };
 
-  const handleDelete = async (materialId: number) => {
-    if (!confirm("Are you sure you want to delete this material?")) {
-      return;
+  // Bulk selection functions
+  const handleSelectAll = () => {
+    if (selectedMaterials.size === materials.length) {
+      setSelectedMaterials(new Set());
+    } else {
+      setSelectedMaterials(new Set(materials.map((m) => m.id)));
     }
+  };
 
-    setDeleting(materialId);
-    try {
-      const response = await fetch(
-        `/api/courses/${courseId}/materials/${materialId}`,
-        {
-          method: "DELETE",
+  const handleSelectMaterial = (materialId: number) => {
+    const newSelected = new Set(selectedMaterials);
+    if (newSelected.has(materialId)) {
+      newSelected.delete(materialId);
+    } else {
+      newSelected.add(materialId);
+    }
+    setSelectedMaterials(newSelected);
+  };
+
+  const handleDeleteClick = (materialId: number, materialName: string) => {
+    setDeleteTarget({
+      type: "single",
+      materialId,
+      materialName,
+    });
+    setShowDeleteModal(true);
+  };
+
+  const handleBulkDeleteClick = () => {
+    setDeleteTarget({
+      type: "bulk",
+    });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === "single" && deleteTarget.materialId) {
+      setDeleting(deleteTarget.materialId);
+      try {
+        const response = await fetch(
+          `/api/courses/${courseId}/materials/${deleteTarget.materialId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (response.ok) {
+          setMaterials(
+            materials.filter((m) => m.id !== deleteTarget.materialId)
+          );
+          showSuccess("Material deleted successfully");
+        } else {
+          const error = await response.json();
+          showError(error.error || "Failed to delete material");
         }
-      );
-
-      if (response.ok) {
-        setMaterials(materials.filter((m) => m.id !== materialId));
-        showSuccess("Material deleted successfully");
-      } else {
-        const error = await response.json();
-        showError(error.error || "Failed to delete material");
+      } catch (error) {
+        showError("Failed to delete material");
+      } finally {
+        setDeleting(null);
       }
-    } catch (error) {
-      showError("Failed to delete material");
-    } finally {
-      setDeleting(null);
+    } else if (deleteTarget.type === "bulk") {
+      setBulkDeleting(true);
+      try {
+        const deletePromises = Array.from(selectedMaterials).map((materialId) =>
+          fetch(`/api/courses/${courseId}/materials/${materialId}`, {
+            method: "DELETE",
+          })
+        );
+
+        const responses = await Promise.all(deletePromises);
+        const failedDeletes = responses.filter((response) => !response.ok);
+
+        if (failedDeletes.length === 0) {
+          setMaterials(materials.filter((m) => !selectedMaterials.has(m.id)));
+          setSelectedMaterials(new Set());
+          showSuccess(
+            `${selectedMaterials.size} materials deleted successfully`
+          );
+        } else {
+          showError(`Failed to delete ${failedDeletes.length} materials`);
+        }
+      } catch (error) {
+        showError("Failed to delete materials");
+      } finally {
+        setBulkDeleting(false);
+      }
     }
+
+    setShowDeleteModal(false);
+    setDeleteTarget(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setDeleteTarget(null);
   };
 
   const handleDownload = (material: CourseMaterial) => {
@@ -306,9 +392,42 @@ const CourseMaterialsPage = () => {
       {/* MATERIALS LIST */}
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Course Materials ({materials.length})
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Course Materials ({materials.length})
+            </h2>
+            {(userRole === "admin" || userRole === "lecturer") &&
+              materials.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-2 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    {selectedMaterials.size === materials.length ? (
+                      <>
+                        <FiX size={16} />
+                        Deselect All
+                      </>
+                    ) : (
+                      <>
+                        <FiCheck size={16} />
+                        Select All
+                      </>
+                    )}
+                  </button>
+                  {selectedMaterials.size > 0 && (
+                    <button
+                      onClick={handleBulkDeleteClick}
+                      disabled={bulkDeleting}
+                      className="flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                    >
+                      <FiTrash2 size={16} />
+                      Delete Selected ({selectedMaterials.size})
+                    </button>
+                  )}
+                </div>
+              )}
+          </div>
         </div>
 
         {materials.length === 0 ? (
@@ -326,10 +445,20 @@ const CourseMaterialsPage = () => {
             {materials.map((material) => (
               <div
                 key={material.id}
-                className="p-4 hover:bg-gray-50 transition-colors"
+                className={`p-4 hover:bg-gray-50 transition-colors ${
+                  selectedMaterials.has(material.id) ? "bg-blue-50" : ""
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    {(userRole === "admin" || userRole === "lecturer") && (
+                      <input
+                        type="checkbox"
+                        checked={selectedMaterials.has(material.id)}
+                        onChange={() => handleSelectMaterial(material.id)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                    )}
                     {getFileIcon(material.fileType)}
                     <div>
                       <h3 className="font-medium text-gray-800">
@@ -360,7 +489,12 @@ const CourseMaterialsPage = () => {
                     </button>
                     {(userRole === "admin" || userRole === "lecturer") && (
                       <button
-                        onClick={() => handleDelete(material.id)}
+                        onClick={() =>
+                          handleDeleteClick(
+                            material.id,
+                            material.originalFilename
+                          )
+                        }
                         disabled={deleting === material.id}
                         className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                         title="Delete"
@@ -379,6 +513,33 @@ const CourseMaterialsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title={
+          deleteTarget?.type === "bulk"
+            ? "Delete Selected Materials"
+            : "Delete Material"
+        }
+        message={
+          deleteTarget?.type === "bulk"
+            ? "Are you sure you want to delete the selected materials? This action cannot be undone."
+            : "Are you sure you want to delete this material? This action cannot be undone."
+        }
+        itemName={deleteTarget?.materialName}
+        isDeleting={
+          deleteTarget?.type === "single"
+            ? deleting === deleteTarget.materialId
+            : bulkDeleting
+        }
+        isBulk={deleteTarget?.type === "bulk"}
+        itemCount={
+          deleteTarget?.type === "bulk" ? selectedMaterials.size : undefined
+        }
+      />
     </div>
   );
 };

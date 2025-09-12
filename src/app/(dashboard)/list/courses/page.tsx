@@ -78,6 +78,7 @@ const CoursesPage = () => {
     useState<Course | null>(null);
   const [registrationLink, setRegistrationLink] = useState<string | null>(null);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchUserRole = async () => {
     try {
@@ -537,12 +538,18 @@ const CoursesPage = () => {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() =>
-                      navigator.clipboard.writeText(registrationLink)
-                    }
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(registrationLink);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 3000);
+                      } catch (err) {
+                        console.error("Failed to copy:", err);
+                      }
+                    }}
                     className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
-                    Copy Link
+                    {copied ? "Copied" : "Copy Link"}
                   </button>
                   <button
                     onClick={() => window.open(registrationLink, "_blank")}

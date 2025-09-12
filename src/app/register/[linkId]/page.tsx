@@ -45,6 +45,7 @@ interface RegistrationFormData {
   matricNumber: string;
 }
 
+
 const StudentRegistrationPage = () => {
   const params = useParams();
   const linkId = params.linkId as string;
