@@ -317,3 +317,43 @@ export const getCalendarEvents = async () => {
     return [];
   }
 };
+
+// Materials data (aggregate lessons and assignments as course materials)
+export const getMaterialsData = async () => {
+  try {
+    const [lessons, assignments] = await Promise.all([
+      prisma.lesson.findMany({
+        include: { subject: true, class: true, teacher: true },
+      }),
+      prisma.assignment.findMany({
+        include: { subject: true, class: true, teacher: true },
+      }),
+    ]);
+
+    const lessonMaterials = lessons.map((lesson) => ({
+      id: `lesson-${lesson.id}`,
+      type: "lesson" as const,
+      subject: lesson.subject.name,
+      class: lesson.class.name,
+      teacher: lesson.teacher.name,
+      date: lesson.createdAt.toISOString().split("T")[0],
+    }));
+
+    const assignmentMaterials = assignments.map((assignment) => ({
+      id: `assignment-${assignment.id}`,
+      type: "assignment" as const,
+      subject: assignment.subject.name,
+      class: assignment.class.name,
+      teacher: assignment.teacher.name,
+      date: assignment.dueDate.toISOString().split("T")[0],
+    }));
+
+    // Merge and sort by date desc
+    return [...lessonMaterials, ...assignmentMaterials].sort((a, b) =>
+      a.date < b.date ? 1 : a.date > b.date ? -1 : 0
+    );
+  } catch (error) {
+    console.error("Error fetching materials:", error);
+    return [];
+  }
+};
