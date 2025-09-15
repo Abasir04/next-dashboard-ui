@@ -331,7 +331,7 @@ const CourseMaterialsPage = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push("/list/courses")}
+            onClick={() => router.push("/menu/courses")}
             className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
             title="Back to Courses"
           >

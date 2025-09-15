@@ -13,21 +13,21 @@ export const paths = {
   },
 
   home: "/home",
-  // List pages
-  list: {
-    students: "/list/students",
-    lecturers: "/list/lecturers",
-    parents: "/list/parents",
-    levels: "/list/levels",
-    courses: "/list/courses",
-    lessons: "/list/lessons",
-    exams: "/list/exams",
-    assignments: "/list/assignments",
-    results: "/list/results",
-    events: "/list/events",
-    announcements: "/list/announcements",
-    attendance: "/list/attendance",
-    messages: "/list/messages",
+  // Menu pages
+  menu: {
+    students: "/menu/students",
+    lecturers: "/menu/lecturers",
+    parents: "/menu/parents",
+    levels: "/menu/levels",
+    courses: "/menu/courses",
+    lessons: "/menu/lessons",
+    exams: "/menu/exams",
+    assignments: "/menu/assignments",
+    results: "/menu/results",
+    events: "/menu/events",
+    announcements: "/menu/announcements",
+    attendance: "/menu/attendance",
+    messages: "/menu/messages",
   },
 
   // Standalone pages
@@ -37,8 +37,8 @@ export const paths = {
 
   // Dynamic routes
   dynamic: {
-    student: (id: string) => `/list/students/${id}`,
-    lecturer: (id: string) => `/list/lecturers/${id}`,
+    student: (id: string) => `/menu/students/${id}`,
+    lecturer: (id: string) => `/menu/lecturers/${id}`,
   },
 
   // API routes
@@ -59,9 +59,9 @@ export type AppPaths = typeof paths;
 export const getAuthUrl = (mode: "sign-in" | "sign-up") =>
   `${paths.auth}?mode=${mode}`;
 
-// Helper function to check if a path is a list page
-export const isListPage = (path: string): boolean => {
-  return Object.values(paths.list).includes(path as any);
+// Helper function to check if a path is a menu page
+export const isMenuPage = (path: string): boolean => {
+  return Object.values(paths.menu).includes(path as any);
 };
 
 // Helper function to get the page title from path
@@ -73,17 +73,17 @@ export const getPageTitle = (path: string): string => {
     [paths.dashboard.lecturer]: "Lecturer Dashboard",
     [paths.dashboard.student]: "Student Dashboard",
     [paths.dashboard.parent]: "Parent Dashboard",
-    [paths.list.students]: "Students",
-    [paths.list.lecturers]: "Lecturers",
-    [paths.list.parents]: "Parents",
-    [paths.list.levels]: "Levels",
-    [paths.list.courses]: "Courses",
-    [paths.list.lessons]: "Lessons",
-    [paths.list.exams]: "Exams",
-    [paths.list.assignments]: "Assignments",
-    [paths.list.results]: "Results",
-    [paths.list.events]: "Events",
-    [paths.list.announcements]: "Announcements",
+    [paths.menu.students]: "Students",
+    [paths.menu.lecturers]: "Lecturers",
+    [paths.menu.parents]: "Parents",
+    [paths.menu.levels]: "Levels",
+    [paths.menu.courses]: "Courses",
+    [paths.menu.lessons]: "Lessons",
+    [paths.menu.exams]: "Exams",
+    [paths.menu.assignments]: "Assignments",
+    [paths.menu.results]: "Results",
+    [paths.menu.events]: "Events",
+    [paths.menu.announcements]: "Announcements",
     [paths.profile]: "Profile",
     [paths.settings]: "Settings",
     [paths.logout]: "Logout",

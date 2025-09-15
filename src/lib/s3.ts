@@ -1,4 +1,8 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 
 const S3_ENDPOINT = process.env.S3_ENDPOINT || "";
 const S3_REGION = process.env.S3_REGION || "us-east-1";
@@ -73,4 +77,34 @@ export async function uploadBufferToS3(params: {
 
 export function sanitizeKeyPart(input: string): string {
   return input.replace(/[^a-zA-Z0-9-_.\/]/g, "-");
+}
+
+export function parseS3KeyFromUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/^\//, "");
+    if (S3_PUBLIC_BASE_URL && url.startsWith(S3_PUBLIC_BASE_URL)) {
+      return path;
+    }
+    if (S3_ENDPOINT && u.hostname.includes(new URL(S3_ENDPOINT).hostname)) {
+      const parts = path.split("/");
+      if (parts[0] === S3_BUCKET) return parts.slice(1).join("/");
+      return path;
+    }
+    if (u.hostname.endsWith("amazonaws.com")) {
+      const parts = path.split("/");
+      if (parts[0] === S3_BUCKET) return parts.slice(1).join("/");
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteFromS3ByKey(key: string): Promise<void> {
+  const command = new DeleteObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: key,
+  } as any);
+  await s3Client.send(command);
 }

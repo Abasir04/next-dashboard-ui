@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { FiBook, FiUsers, FiCalendar, FiEdit, FiTrash2 } from "react-icons/fi";
 
@@ -29,11 +29,7 @@ const LecturerCourses = ({ lecturerId, userRole }: LecturerCoursesProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchCourses();
-  }, [lecturerId]);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/lecturers/${lecturerId}/courses`);
@@ -50,7 +46,11 @@ const LecturerCourses = ({ lecturerId, userRole }: LecturerCoursesProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lecturerId]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const handleEditCourse = (course: Course) => {
     // TODO: Implement edit functionality

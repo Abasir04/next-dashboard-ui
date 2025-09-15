@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import SignIn from "./components/signin";
 import SignUp from "./components/signup";
 import { paths } from "@/lib/paths";
 
-const AuthPage = () => {
+const AuthContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialMode =
@@ -116,6 +116,20 @@ const AuthPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const AuthPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <AuthContent />
+    </Suspense>
   );
 };
 

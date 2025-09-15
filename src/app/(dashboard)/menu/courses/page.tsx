@@ -195,7 +195,7 @@ const CoursesPage = () => {
   };
 
   const handleViewMaterials = (course: Course) => {
-    window.location.href = `/list/courses/${course.id}/materials`;
+    window.location.href = `/menu/courses/${course.id}/materials`;
   };
 
   const generateRegistrationLink = async () => {

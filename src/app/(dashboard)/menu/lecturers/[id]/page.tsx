@@ -180,31 +180,31 @@ const SingleLecturerPage = async ({ params }: SingleLecturerPageProps) => {
           <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
             <Link
               className="p-3 rounded-md bg-lamaSkyLight"
-              href="/list/courses"
+              href="/menu/courses"
             >
               All Courses
             </Link>
             <Link
               className="p-3 rounded-md bg-lamaPurpleLight"
-              href="/list/lessons"
+              href="/menu/lessons"
             >
               Lessons
             </Link>
             <Link
               className="p-3 rounded-md bg-lamaYellowLight"
-              href="/list/exams"
+              href="/menu/exams"
             >
               Exams
             </Link>
             <Link
               className="p-3 rounded-md bg-pink-50"
-              href="/list/assignments"
+              href="/menu/assignments"
             >
               Assignments
             </Link>
             <Link
               className="p-3 rounded-md bg-lamaSkyLight"
-              href="/list/students"
+              href="/menu/students"
             >
               Students
             </Link>
