@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { showError, showSuccess } from "@/lib/toast";
 import CourseForm from "@/components/forms/CourseForm";
 import Table from "@/components/Table";
@@ -64,6 +65,7 @@ const columns = [
 ];
 
 const CoursesPage = () => {
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>("");
@@ -195,7 +197,7 @@ const CoursesPage = () => {
   };
 
   const handleViewMaterials = (course: Course) => {
-    window.location.href = `/menu/courses/${course.id}/materials`;
+    router.push(`/menu/courses/${course.id}/materials`);
   };
 
   const generateRegistrationLink = async () => {

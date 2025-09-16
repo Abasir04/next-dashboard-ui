@@ -30,7 +30,7 @@ export async function DELETE(
       where: {
         id: materialId,
         courseId,
-        ...(user.role === "lecturer"
+        ...(user.role === "LECTURER"
           ? {
               lecturer: {
                 userId: user.id,

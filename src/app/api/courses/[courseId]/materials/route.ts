@@ -29,7 +29,7 @@ export async function GET(
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
-        ...(user.role === "lecturer"
+        ...(user.role === "LECTURER"
           ? {
               lecturer: {
                 userId: user.id,
@@ -90,7 +90,7 @@ export async function POST(
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
-        ...(user.role === "lecturer"
+        ...(user.role === "LECTURER"
           ? {
               lecturer: {
                 userId: user.id,
