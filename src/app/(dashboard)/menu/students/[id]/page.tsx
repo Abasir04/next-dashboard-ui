@@ -35,6 +35,8 @@ const SingleStudentPage = () => {
   const [student, setStudent] = useState<StudentRegistration | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     studentName: "",
     studentEmail: "",
@@ -43,24 +45,40 @@ const SingleStudentPage = () => {
   });
 
   const fetchStudent = useCallback(
-    async (registrationId: number) => {
+    async (studentId: number) => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/lecturers/students/${registrationId}`
-        );
+        const response = await fetch(`/api/students/${studentId}`);
 
         if (!response.ok) {
-          throw new Error("Failed to fetch student");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch student");
         }
 
         const data = await response.json();
-        setStudent(data.student);
+        const studentData = data.student;
+
+        // Transform the student data to match the expected interface
+        const transformedStudent = {
+          id: studentData.id,
+          studentName: studentData.name,
+          studentEmail: studentData.email,
+          studentPhone: studentData.phone,
+          matricNumber: studentData.matricNumber,
+          status: "APPROVED", // Default status for existing students
+          createdAt: studentData.createdAt,
+          course:
+            studentData.courses && studentData.courses.length > 0
+              ? studentData.courses[0]
+              : { id: 0, name: "No Course", code: "N/A" },
+        };
+
+        setStudent(transformedStudent);
         setFormData({
-          studentName: data.student.studentName,
-          studentEmail: data.student.studentEmail,
-          studentPhone: data.student.studentPhone,
-          matricNumber: data.student.matricNumber,
+          studentName: studentData.name,
+          studentEmail: studentData.email,
+          studentPhone: studentData.phone,
+          matricNumber: studentData.matricNumber,
         });
       } catch (error) {
         console.error("Error fetching student:", error);
@@ -83,20 +101,35 @@ const SingleStudentPage = () => {
     if (!student) return;
 
     try {
-      const response = await fetch(`/api/lecturers/students/${student.id}`, {
+      const response = await fetch(`/api/students/${student.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.studentName,
+          email: formData.studentEmail,
+          phone: formData.studentPhone,
+          matricNumber: formData.matricNumber,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update student");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update student");
       }
 
       const data = await response.json();
-      setStudent(data.student);
+      const updatedStudent = data.student;
+
+      // Update the student state with the new data
+      setStudent({
+        ...student,
+        studentName: updatedStudent.name,
+        studentEmail: updatedStudent.email,
+        studentPhone: updatedStudent.phone,
+        matricNumber: updatedStudent.matricNumber,
+      });
       setEditing(false);
       toast.success("Student updated successfully");
     } catch (error) {
@@ -105,30 +138,37 @@ const SingleStudentPage = () => {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (!student) return;
 
-    if (
-      !confirm("Are you sure you want to delete this student registration?")
-    ) {
-      return;
-    }
-
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/lecturers/students/${student.id}`, {
+      const response = await fetch(`/api/students/${student.id}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete student");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete student");
       }
 
-      toast.success("Student registration deleted successfully");
+      toast.success("Student deleted successfully");
       router.push("/menu/students");
     } catch (error) {
       console.error("Error deleting student:", error);
       toast.error("Failed to delete student");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
   };
 
   if (loading) {
@@ -193,7 +233,7 @@ const SingleStudentPage = () => {
                 <FiEdit size={16} />
               </button>
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
                 title="Delete student"
               >
@@ -351,6 +391,66 @@ const SingleStudentPage = () => {
           </div>
         </div>
       </div>
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {showDeleteModal && student && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <FiTrash2 className="text-red-600" size={20} />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800">
+                Delete Student
+              </h2>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-600 mb-2">
+                Are you sure you want to delete this student? This action cannot
+                be undone.
+              </p>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="font-medium text-gray-800">
+                  {student.studentName}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Matric: {student.matricNumber}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Email: {student.studentEmail}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Student"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

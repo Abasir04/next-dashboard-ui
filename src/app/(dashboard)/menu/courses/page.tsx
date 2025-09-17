@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { showError, showSuccess } from "@/lib/toast";
 import CourseForm from "@/components/forms/CourseForm";
 import Table from "@/components/Table";
-import TableSearch from "@/components/TableSearch";
+import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
 import Pagination from "@/components/Pagination";
 import {
   FiEdit2,
@@ -100,18 +100,7 @@ const CoursesPage = () => {
 
       // If user is a lecturer, fetch only their courses
       if (userRole === "lecturer") {
-        // First get the lecturer ID
-        const meResponse = await fetch("/api/auth/me");
-        if (!meResponse.ok) throw new Error("Failed to fetch user data");
-        const meData = await meResponse.json();
-
-        if (meData.user?.lecturer?.id) {
-          response = await fetch(
-            `/api/lecturers/${meData.user.lecturer.id}/courses`
-          );
-        } else {
-          throw new Error("Lecturer profile not found");
-        }
+        response = await fetch("/api/lecturers/courses");
       } else {
         // For admins, fetch all courses
         response = await fetch("/api/courses");
@@ -135,6 +124,10 @@ const CoursesPage = () => {
       setLoading(false);
     }
   }, [userRole]);
+
+  const handleRefresh = () => {
+    fetchCourses();
+  };
 
   useEffect(() => {
     fetchUserRole();
@@ -328,10 +321,12 @@ const CoursesPage = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
         <div className="flex items-center gap-4">
-          <TableSearch
+          <TableSearchWithRefresh
             value={searchTerm}
             onChange={setSearchTerm}
+            onRefresh={handleRefresh}
             placeholder="Search courses by name or code..."
+            isLoading={loading}
           />
           {(userRole === "admin" || userRole === "lecturer") && (
             <button

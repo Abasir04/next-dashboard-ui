@@ -5,22 +5,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { email, password } = body;
+    const { email, password, matricNumber } = body;
 
     // Validation
-    if (!email || !password) {
+    if ((!email && !matricNumber) || !password) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: "Email or matric number and password are required" },
         { status: 400 }
       );
     }
 
     // Authenticate user
-    const user = await authenticateUser(email, password);
+    const user = await authenticateUser(email || matricNumber, password);
 
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Invalid credentials" },
         { status: 401 }
       );
     }

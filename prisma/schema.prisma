@@ -118,23 +118,24 @@ model LecturerLevel {
 }
 
 model Student {
-  id            Int      @id @default(autoincrement())
-  matricNumber  String   @unique
-  name      String
-  email     String   @unique
-  photo     String?
-  phone     String
-  grade     Int
-  levelId   Int
-  address   String
-  userId    Int      @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  role      String
-  title     String
-  results   Result[]
-  level     Level    @relation(fields: [levelId], references: [id])
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            Int                   @id @default(autoincrement())
+  matricNumber  String                @unique
+  name          String
+  email         String                @unique
+  photo         String?
+  phone         String
+  grade         Int
+  levelId       Int
+  address       String
+  userId        Int                   @unique
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  role          String
+  title         String
+  results       Result[]
+  submissions   AssignmentSubmission[]
+  level         Level                 @relation(fields: [levelId], references: [id])
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([levelId], map: "students_levelId_fkey")
   @@map("students")
@@ -177,21 +178,46 @@ model Exam {
 }
 
 model Assignment {
-  id         Int      @id @default(autoincrement())
-  courseId   Int
-  levelId    Int
-  lecturerId Int
-  dueDate    DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  id          Int                   @id @default(autoincrement())
+  title       String
+  description String?
+  courseId    Int
+  levelId     Int
+  lecturerId  Int
+  startDate   DateTime
+  dueDate     DateTime
+  linkId      String                @unique @default(cuid())
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  course      Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer    Lecturer              @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  level       Level                 @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  submissions AssignmentSubmission[]
 
   @@index([courseId], map: "assignments_courseId_fkey")
   @@index([lecturerId], map: "assignments_lecturerId_fkey")
   @@index([levelId], map: "assignments_levelId_fkey")
   @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id           Int        @id @default(autoincrement())
+  assignmentId Int
+  studentId    Int
+  fileUrl      String
+  originalFilename String
+  submittedAt  DateTime   @default(now())
+  gradedAt     DateTime?
+  grade        Int?
+  feedback     String?
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId], map: "assignment_submissions_assignmentId_fkey")
+  @@index([studentId], map: "assignment_submissions_studentId_fkey")
+  @@map("assignment_submissions")
 }
 
 model Result {

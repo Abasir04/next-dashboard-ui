@@ -9,6 +9,7 @@ import {
   FiBook,
   FiCalendar,
   FiCheckCircle,
+  FiLock,
 } from "react-icons/fi";
 
 interface RegistrationLink {
@@ -38,13 +39,10 @@ interface RegistrationLink {
 }
 
 interface RegistrationFormData {
-  surname: string;
-  firstName: string;
-  studentEmail: string;
-  studentPhone: string;
   matricNumber: string;
+  password: string;
+  phone?: string;
 }
-
 
 const StudentRegistrationPage = () => {
   const params = useParams();
@@ -57,11 +55,9 @@ const StudentRegistrationPage = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<RegistrationFormData>({
-    surname: "",
-    firstName: "",
-    studentEmail: "",
-    studentPhone: "",
     matricNumber: "",
+    password: "",
+    phone: "",
   });
 
   const fetchRegistrationLink = useCallback(async () => {
@@ -106,13 +102,107 @@ const StudentRegistrationPage = () => {
       if (!matricRegex.test(formData.matricNumber)) {
         throw new Error("Matric number must be exactly 6 digits");
       }
-      if (!formData.surname.trim() || !formData.firstName.trim()) {
-        throw new Error("Surname and First name are required");
+      if (!formData.password.trim()) {
+        throw new Error("Password is required");
       }
 
-      // Compose name as 'Surname Firstname'
-      const studentName = `${formData.surname.trim()} ${formData.firstName.trim()}`;
+      // First, authenticate the student
+      const authResponse = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          matricNumber: formData.matricNumber,
+          password: formData.password,
+        }),
+      });
 
+      const authData = await authResponse.json();
+
+      if (!authResponse.ok) {
+        throw new Error(authData.error || "Invalid credentials");
+      }
+
+      // Get student details from the authenticated user
+      const studentResponse = await fetch("/api/auth/me");
+
+      const studentData = await studentResponse.json();
+
+      if (!studentResponse.ok) {
+        throw new Error("Failed to get student details");
+      }
+
+      // Debug: Log the student data structure
+      console.log("Student data received:", studentData);
+      console.log("Student data type:", typeof studentData);
+      console.log("Has user object:", !!studentData?.user);
+      console.log("Has student object:", !!studentData?.student);
+      console.log("Has user.student object:", !!studentData?.user?.student);
+
+      // Validate student data structure
+      if (!studentData || !studentData.user) {
+        console.error("Invalid student data structure:", studentData);
+        console.error("studentData exists:", !!studentData);
+        console.error("user exists:", !!studentData?.user);
+        throw new Error("Invalid student data received");
+      }
+
+      // Check if student data is in user.student or directly in studentData.student
+      const studentInfo = studentData.student || studentData.user?.student;
+      if (!studentInfo) {
+        console.error("No student data found in either location:", {
+          studentDataStudent: studentData.student,
+          userStudent: studentData.user?.student,
+        });
+        throw new Error("Student data not found");
+      }
+
+      console.log("✅ Basic structure validation passed");
+
+      // Additional validation for required user fields
+      if (
+        !studentData.user.email ||
+        !studentData.user.firstName ||
+        !studentData.user.lastName
+      ) {
+        console.error("Missing required user fields:", studentData.user);
+        throw new Error("Invalid user data received");
+      }
+
+      console.log("✅ User fields validation passed");
+
+      // Additional validation for required student fields
+      if (!studentInfo.matricNumber || !studentInfo.name) {
+        console.error("Missing required student fields:", studentInfo);
+        throw new Error("Invalid student data received");
+      }
+
+      console.log("✅ Student fields validation passed");
+
+      // Check if phone number is provided and not empty
+      console.log("Student phone from profile:", studentInfo.phone);
+      console.log("Form phone:", formData.phone);
+
+      let phoneNumber = studentInfo.phone;
+      if (!phoneNumber || phoneNumber.trim() === "") {
+        console.log("Phone missing from profile, checking form data");
+        // If phone is missing from profile, check if user provided it in the form
+        if (!formData.phone || formData.phone.trim() === "") {
+          console.error("No phone number provided in form either");
+          throw new Error(
+            "Phone number is required. Please enter your phone number below."
+          );
+        }
+        phoneNumber = formData.phone;
+        console.log("Using phone from form:", phoneNumber);
+      } else {
+        console.log("Using phone from profile:", phoneNumber);
+      }
+
+      console.log("✅ Phone number validation passed, using:", phoneNumber);
+
+      // Now register for the course
       const response = await fetch("/api/course-registration/register", {
         method: "POST",
         headers: {
@@ -120,9 +210,10 @@ const StudentRegistrationPage = () => {
         },
         body: JSON.stringify({
           linkId,
-          studentName,
-          studentEmail: formData.studentEmail,
-          studentPhone: formData.studentPhone,
+          studentName:
+            studentData.user.firstName + " " + studentData.user.lastName,
+          studentEmail: studentData.user.email,
+          studentPhone: phoneNumber,
           matricNumber: formData.matricNumber,
         }),
       });
@@ -187,7 +278,7 @@ const StudentRegistrationPage = () => {
             <strong>{registrationLink?.course.name}</strong>.
           </p>
           <p className="text-md text-gray-500">
-            Your registration has been approved. You can now start attending {" "}
+            Your registration has been approved. You can now start attending{" "}
             <strong>{registrationLink?.course.name}</strong> lectures.
           </p>
         </div>
@@ -241,7 +332,9 @@ const StudentRegistrationPage = () => {
               <div>
                 <span className="font-medium text-gray-600">Lecturer:</span>
                 <span className="ml-2 text-gray-800">
-                  {registrationLink.lecturer.title.charAt(0).toUpperCase() + registrationLink.lecturer.title.slice(1)} {registrationLink.lecturer.name}
+                  {registrationLink.lecturer.title.charAt(0).toUpperCase() +
+                    registrationLink.lecturer.title.slice(1)}{" "}
+                  {registrationLink.lecturer.name}
                 </span>
               </div>
             </div>
@@ -256,75 +349,23 @@ const StudentRegistrationPage = () => {
         {/* Registration Form */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">
-            Student Information
+            Student Login
           </h2>
+          <p className="text-gray-600 mb-6">
+            Enter your credentials to register for this course. Don&apos;t have
+            an account?{" "}
+            <a
+              href={`/signup?returnUrl=${encodeURIComponent(
+                `/register/${linkId}`
+              )}`}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Sign up here
+            </a>
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FiUser className="inline mr-1" />
-                  Surname (Last name) *
-                </label>
-                <input
-                  type="text"
-                  name="surname"
-                  value={formData.surname}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your surname"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FiUser className="inline mr-1" />
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your first name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FiMail className="inline mr-1" />
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  name="studentEmail"
-                  value={formData.studentEmail}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your email address"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FiPhone className="inline mr-1" />
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  name="studentPhone"
-                  value={formData.studentPhone}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your phone number"
-                />
-              </div>
-
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FiUser className="inline mr-1" />
@@ -343,6 +384,41 @@ const StudentRegistrationPage = () => {
                   placeholder="Enter your 6-digit matric number"
                   maxLength={6}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <FiLock className="inline mr-1" />
+                  Password *
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <FiPhone className="inline mr-1" />
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your phone number"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Required for course registration
+                </p>
               </div>
             </div>
 

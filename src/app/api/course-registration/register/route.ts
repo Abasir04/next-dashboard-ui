@@ -20,6 +20,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate phone number
+    if (!studentPhone || studentPhone.trim() === "") {
+      return NextResponse.json(
+        { error: "Phone number is required" },
+        { status: 400 }
+      );
+    }
+
     // Validate email format
     const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
     if (!emailRegex.test(studentEmail)) {
@@ -75,6 +83,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "You have already registered for this course" },
         { status: 409 }
+      );
+    }
+
+    // Verify that the student exists in the Student table
+    const student = await prisma.student.findFirst({
+      where: {
+        OR: [{ email: studentEmail }, { matricNumber: matricNumber }],
+      },
+    });
+
+    if (!student) {
+      return NextResponse.json(
+        { error: "Student not found. Please sign up first." },
+        { status: 404 }
       );
     }
 

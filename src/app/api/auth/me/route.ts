@@ -40,6 +40,18 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             email: true,
+            matricNumber: true,
+            phone: true,
+            address: true,
+            grade: true,
+            levelId: true,
+            level: {
+              select: {
+                id: true,
+                name: true,
+                grade: true,
+              },
+            },
           },
         },
         admin: {

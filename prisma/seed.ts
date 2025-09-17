@@ -558,9 +558,12 @@ async function main() {
     if (subject && levelObj && teacher) {
       await prisma.assignment.create({
         data: {
+          title: `Assignment for ${subject.name}`,
+          description: `Assignment description for ${subject.name}`,
           courseId: subject.id,
           levelId: levelObj.id,
           lecturerId: teacher.id,
+          startDate: new Date(assignmentData.dueDate),
           dueDate: new Date(assignmentData.dueDate),
         },
       });
