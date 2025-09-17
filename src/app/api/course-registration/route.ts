@@ -135,51 +135,89 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/course-registration/[linkId] - Get registration link details
+// GET /api/course-registration - Get existing registration link for a course
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const linkId = searchParams.get("linkId");
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!linkId) {
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    // Check if user is lecturer or admin
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { role: true },
+    });
+
+    if (!user || (user.role !== "LECTURER" && user.role !== "ADMIN")) {
       return NextResponse.json(
-        { error: "Registration link ID is required" },
+        { error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const courseId = searchParams.get("courseId");
+
+    if (!courseId) {
+      return NextResponse.json(
+        { error: "Course ID is required" },
         { status: 400 }
       );
     }
 
-    const registrationLink = await prisma.courseRegistrationLink.findUnique({
-      where: { id: linkId },
-      include: {
-        course: {
-          include: {
-            lecturer: true,
-          },
-        },
-        lecturer: true,
-      },
+    // Get the lecturer ID for the current user
+    const lecturer = await prisma.lecturer.findUnique({
+      where: { userId: payload.userId },
+      select: { id: true },
     });
 
-    if (!registrationLink) {
+    if (!lecturer) {
       return NextResponse.json(
-        { error: "Registration link not found" },
+        { error: "Lecturer profile not found" },
         { status: 404 }
       );
     }
 
-    // Check if link is expired
-    if (new Date() > registrationLink.expiresAt || !registrationLink.isActive) {
-      return NextResponse.json(
-        { error: "Registration link has expired or is inactive" },
-        { status: 410 }
-      );
+    // Check for existing active, non-expired link for this course
+    const now = new Date();
+    const existingLink = await prisma.courseRegistrationLink.findFirst({
+      where: {
+        courseId: parseInt(courseId),
+        lecturerId: lecturer.id,
+        isActive: true,
+        expiresAt: { gt: now },
+      },
+      include: {
+        course: true,
+        lecturer: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (existingLink) {
+      const origin =
+        request.nextUrl?.origin ||
+        `${request.headers.get("x-forwarded-proto") || "http"}://${
+          request.headers.get("host") || "localhost:3000"
+        }`;
+      return NextResponse.json({
+        link: existingLink,
+        registrationUrl: `${origin}/register/${existingLink.id}`,
+        exists: true,
+      });
     }
 
-    return NextResponse.json(registrationLink);
+    return NextResponse.json({ exists: false });
   } catch (error) {
-    console.error("Error fetching registration link:", error);
+    console.error("Error checking registration link:", error);
     return NextResponse.json(
-      { error: "Failed to fetch registration link" },
+      { error: "Failed to check registration link" },
       { status: 500 }
     );
   }

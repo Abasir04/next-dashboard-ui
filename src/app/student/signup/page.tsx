@@ -361,18 +361,7 @@ const StudentSignupPage = () => {
               )}
             </button>
           </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{" "}
-              <Link
-                href="/auth"
-                className="font-medium text-primary hover:text-indigo-500"
-              >
-                Sign in here
-              </Link>
-            </p>
-          </div>
+          
         </form>
       </div>
     </div>

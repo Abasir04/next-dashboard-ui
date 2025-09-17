@@ -184,9 +184,29 @@ const CoursesPage = () => {
     setCourseToDelete(null);
   };
 
-  const handleGenerateRegistrationLink = (course: Course) => {
+  const handleGenerateRegistrationLink = async (course: Course) => {
     setCourseForRegistration(course);
     setShowRegistrationModal(true);
+
+    // Check if a link already exists for this course
+    try {
+      const response = await fetch(
+        `/api/course-registration?courseId=${course.id}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.exists) {
+          setRegistrationLink(data.registrationUrl);
+        } else {
+          setRegistrationLink(null);
+        }
+      } else {
+        setRegistrationLink(null);
+      }
+    } catch (error) {
+      console.error("Error checking existing link:", error);
+      setRegistrationLink(null);
+    }
   };
 
   const handleViewMaterials = (course: Course) => {
@@ -489,7 +509,9 @@ const CoursesPage = () => {
 
             <div className="mb-6">
               <p className="text-gray-600 mb-2">
-                Generate a registration link for:
+                {registrationLink
+                  ? "Registration link for:"
+                  : "Generate a registration link for:"}
               </p>
               <div className="bg-gray-50 p-3 rounded-md">
                 <p className="font-medium text-gray-800">
@@ -505,7 +527,7 @@ const CoursesPage = () => {
             {!registrationLink ? (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  The registration link will be automatically generated for
+                  No active registration link found. Generate a new link for
                   level {courseForRegistration.level} based on the course code.
                 </p>
                 <button
@@ -525,9 +547,12 @@ const CoursesPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  Registration link generated successfully:
-                </p>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <p className="text-sm text-green-600 font-medium">
+                    Active registration link available
+                  </p>
+                </div>
                 <div className="bg-green-50 border border-green-200 rounded-md p-3">
                   <p className="text-sm text-green-800 break-all">
                     {registrationLink}
@@ -555,8 +580,24 @@ const CoursesPage = () => {
                     Open Link
                   </button>
                 </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={generateRegistrationLink}
+                    disabled={isGeneratingLink}
+                    className="flex-1 px-3 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  >
+                    {isGeneratingLink ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white inline-block mr-2"></div>
+                        Generating New...
+                      </>
+                    ) : (
+                      "Generate New Link"
+                    )}
+                  </button>
+                </div>
                 <p className="text-xs text-gray-500">
-                  This link will expire in 1 month from now.
+                  This link will expire in 1 month from creation date.
                 </p>
               </div>
             )}

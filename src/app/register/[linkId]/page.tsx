@@ -62,7 +62,7 @@ const StudentRegistrationPage = () => {
 
   const fetchRegistrationLink = useCallback(async () => {
     try {
-      const response = await fetch(`/api/course-registration?linkId=${linkId}`);
+      const response = await fetch(`/api/course-registration/${linkId}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -302,149 +302,163 @@ const StudentRegistrationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">
-            Course Registration
-          </h1>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+          {/* Course Details Header */}
+          <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-center">
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">
+              Course Registration
+            </h1>
 
-          {/* Course Details */}
-          <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
-              <FiBook className="mr-2" />
-              {registrationLink.course.name}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">Course Code:</span>
-                <span className="ml-2 text-gray-800">
-                  {registrationLink.course.code}
-                </span>
+            {/* Course Details */}
+            <div className="bg-blue-50 rounded-lg p-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                <FiBook className="mr-3 text-blue-600" />
+                {registrationLink.course.name}
+              </h2>
+
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-600 w-24">Code:</span>
+                  <span className="text-gray-800 font-mono bg-gray-100 px-2 py-1 rounded text-sm">
+                    {registrationLink.course.code}
+                  </span>
+                </div>
+
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-600 w-24">Level:</span>
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    {registrationLink.course.level} Level
+                  </span>
+                </div>
+
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-600 w-24">
+                    Lecturer:
+                  </span>
+                  <span className="text-gray-800">
+                    {registrationLink.lecturer.title.charAt(0).toUpperCase() +
+                      registrationLink.lecturer.title.slice(1)}{" "}
+                    {registrationLink.lecturer.name}
+                  </span>
+                </div>
+
+                <div className="flex items-center pt-2 border-t border-blue-200">
+                  <FiCalendar className="mr-2 text-gray-500" />
+                  <span className="text-sm text-gray-600">
+                    Registration expires:{" "}
+                    <span className="font-medium">
+                      {new Date(
+                        registrationLink.expiresAt
+                      ).toLocaleDateString()}
+                    </span>
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="font-medium text-gray-600">Level:</span>
-                <span className="ml-2 text-gray-800">
-                  {registrationLink.course.level} Level
-                </span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Lecturer:</span>
-                <span className="ml-2 text-gray-800">
-                  {registrationLink.lecturer.title.charAt(0).toUpperCase() +
-                    registrationLink.lecturer.title.slice(1)}{" "}
-                  {registrationLink.lecturer.name}
-                </span>
-              </div>
-            </div>
-            <div className="mt-3 text-sm text-gray-500 flex items-center">
-              <FiCalendar className="mr-1" />
-              Registration expires:{" "}
-              {new Date(registrationLink.expiresAt).toLocaleDateString()}
             </div>
           </div>
-        </div>
 
-        {/* Registration Form */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">
-            Student Login
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Enter your credentials to register for this course. Don&apos;t have
-            an account?{" "}
-            <a
-              href={`/signup?returnUrl=${encodeURIComponent(
-                `/register/${linkId}`
-              )}`}
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Sign up here
-            </a>
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FiUser className="inline mr-1" />
-                  Matric Number *
-                </label>
-                <input
-                  type="text"
-                  name="matricNumber"
-                  value={formData.matricNumber}
-                  onChange={handleInputChange}
-                  required
-                  pattern="\d{6}"
-                  inputMode="numeric"
-                  title="Matric number must be exactly 6 digits"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your 6-digit matric number"
-                  maxLength={6}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FiLock className="inline mr-1" />
-                  Password *
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your password"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FiPhone className="inline mr-1" />
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your phone number"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Required for course registration
-                </p>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
-
-            <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          {/* Registration Form */}
+          <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-center">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              Registration Form
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Enter your credentials to register for this course. Don&apos;t
+              have an account?{" "}
+              <a
+                href={`/student/signup?returnUrl=${encodeURIComponent(
+                  `/register/${linkId}`
+                )}`}
+                className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                {submitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Registering...
-                  </>
-                ) : (
-                  "Register for Course"
-                )}
-              </button>
-            </div>
-          </form>
+                Sign up here
+              </a>
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FiUser className="inline mr-2" />
+                    Matric Number *
+                  </label>
+                  <input
+                    type="text"
+                    name="matricNumber"
+                    value={formData.matricNumber}
+                    onChange={handleInputChange}
+                    required
+                    pattern="\d{6}"
+                    inputMode="numeric"
+                    title="Matric number must be exactly 6 digits"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your 6-digit matric number"
+                    maxLength={6}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FiLock className="inline mr-2" />
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your password"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FiPhone className="inline mr-2" />
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your phone number"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Required for course registration
+                  </p>
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
+              )}
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-medium"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Registering...
+                    </>
+                  ) : (
+                    "Register for Course"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
