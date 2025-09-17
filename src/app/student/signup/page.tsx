@@ -140,249 +140,285 @@ const StudentSignupPage = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-full max-w-6xl px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
           {/* Left Side - Header */}
-          <div className="bg-white rounded-lg shadow-md p-8 flex flex-col justify-center">
-            <div className="text-center">
-              <div className="mx-auto h-16 w-16 bg-primary rounded-full flex items-center justify-center mb-4">
-                <FiUser className="h-8 w-8 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Student Signup
-              </h1>
-              <p className="text-gray-600 mb-6">
-                Create your student account to register for courses
-              </p>
+          <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-center">
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">
+              Student Signup
+            </h1>
 
-              <div className="bg-blue-50 rounded-lg p-4 text-left">
-                <h3 className="font-semibold text-gray-800 mb-2">
-                  Required Information:
-                </h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Personal details (Name, Email, Phone)</li>
-                  <li>• Academic information (Matric Number, Level)</li>
-                  <li>• Contact address</li>
-                  <li>• Secure password</li>
-                </ul>
+            {/* Information Card */}
+            <div className="bg-blue-50 rounded-lg p-5">
+              <h2 className="text-xl font-semibold text-gray-800 mb-5 flex items-center">
+                <FiUser className="mr-2 text-blue-600" />
+                Create Your Account
+              </h2>
+
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-600 w-20 text-sm">
+                    Purpose:
+                  </span>
+                  <span className="text-gray-800 text-sm">
+                    Register for courses and access academic resources
+                  </span>
+                </div>
+
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-600 w-20 text-sm">
+                    Required:
+                  </span>
+                  <span className="text-gray-800 text-sm">
+                    Personal details, academic info, and contact address
+                  </span>
+                </div>
+
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-600 w-20 text-sm">
+                    Levels:
+                  </span>
+                  <span className="text-gray-800 text-sm">
+                    100, 200, 300, 400, or 500 Level
+                  </span>
+                </div>
+
+                <div className="flex items-center pt-6 pb-2 border-t border-blue-200">
+                  <FiBook className="mr-2 text-gray-500" size={14} />
+                  <span className="text-xs text-gray-600">
+                    All fields are required for account creation
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Form */}
-          <div className="bg-white rounded-lg shadow-md p-8 flex flex-col justify-center">
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="firstName"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    First Name *
-                  </label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    required
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                    placeholder="First name"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="lastName"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    Last Name *
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    required
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                    placeholder="Last name"
-                  />
-                </div>
-              </div>
+          <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-center">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+              Signup Form
+            </h2>
+            <p className="text-gray-600 mb-4 text-sm">
+              Fill in your details to create your student account
+            </p>
 
-              {/* Email and Phone */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    Email Address *
-                  </label>
-                  <div className="relative">
-                    <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-3">
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="firstName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      First Name *
+                    </label>
                     <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Email address"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    Phone Number *
-                  </label>
-                  <div className="relative">
-                    <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Phone number"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Matric Number and Level */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="matricNumber"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    Matric Number *
-                  </label>
-                  <div className="relative">
-                    <FiBook className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="matricNumber"
-                      name="matricNumber"
+                      id="firstName"
+                      name="firstName"
                       type="text"
                       required
-                      value={formData.matricNumber}
+                      value={formData.firstName}
                       onChange={handleInputChange}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="6-digit matric number"
-                      maxLength={6}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      placeholder="First name"
                     />
                   </div>
-                </div>
-                <div>
-                  <label
-                    htmlFor="level"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    Level *
-                  </label>
-                  <select
-                    id="level"
-                    name="level"
-                    required
-                    value={formData.level}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                  >
-                    <option value="">Select Level</option>
-                    <option value="100">100 Level</option>
-                    <option value="200">200 Level</option>
-                    <option value="300">300 Level</option>
-                    <option value="400">400 Level</option>
-                    <option value="500">500 Level</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Password Fields */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    Password *
-                  </label>
-                  <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="w-full pl-9 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      onClick={() => setShowPassword(!showPassword)}
+                  <div>
+                    <label
+                      htmlFor="lastName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      {showPassword ? (
-                        <FiEyeOff className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <FiEye className="h-4 w-4 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-xs font-medium text-gray-700 mb-1"
-                  >
-                    Confirm Password *
-                  </label>
-                  <div className="relative">
-                    <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      Last Name *
+                    </label>
                     <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showPassword ? "text" : "password"}
+                      id="lastName"
+                      name="lastName"
+                      type="text"
                       required
-                      value={formData.confirmPassword}
+                      value={formData.lastName}
                       onChange={handleInputChange}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Confirm password"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      placeholder="Last name"
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Address */}
-              <div>
-                <label
-                  htmlFor="address"
-                  className="block text-xs font-medium text-gray-700 mb-1"
-                >
-                  Address *
-                </label>
-                <textarea
-                  id="address"
-                  name="address"
-                  rows={2}
-                  required
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                  placeholder="Enter your complete address"
-                />
+                {/* Email and Phone */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Email Address *
+                    </label>
+                    <div className="relative">
+                      <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="Email address"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Phone Number *
+                    </label>
+                    <div className="relative">
+                      <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        required
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="Phone number"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Matric Number and Level */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="matricNumber"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Matric Number *
+                    </label>
+                    <div className="relative">
+                      <FiBook className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        id="matricNumber"
+                        name="matricNumber"
+                        type="text"
+                        required
+                        value={formData.matricNumber}
+                        onChange={handleInputChange}
+                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="6-digit matric number"
+                        maxLength={6}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Must be exactly 6 digits
+                    </p>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="level"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Level *
+                    </label>
+                    <select
+                      id="level"
+                      name="level"
+                      required
+                      value={formData.level}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                      <option value="">Select Level</option>
+                      <option value="100">100 Level</option>
+                      <option value="200">200 Level</option>
+                      <option value="300">300 Level</option>
+                      <option value="400">400 Level</option>
+                      <option value="500">500 Level</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Password Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Password *
+                    </label>
+                    <div className="relative">
+                      <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="Password"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <FiEyeOff className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <FiEye className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Confirm Password *
+                    </label>
+                    <div className="relative">
+                      <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="Confirm password"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label
+                    htmlFor="address"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Address *
+                  </label>
+                  <textarea
+                    id="address"
+                    name="address"
+                    rows={2}
+                    required
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    placeholder="Enter your complete address"
+                  />
+                </div>
               </div>
 
               {/* Submit Button */}
@@ -390,13 +426,13 @@ const StudentSignupPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary text-white py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
                 >
                   {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       Creating Account...
-                    </div>
+                    </>
                   ) : (
                     "Create Student Account"
                   )}

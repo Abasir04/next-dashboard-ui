@@ -373,7 +373,7 @@ const StudentRegistrationPage = () => {
                 )}`}
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                Sign up here
+                Sign up here.
               </a>
             </p>
 
