@@ -194,7 +194,7 @@ const StudentsPage = () => {
                         className="border-b border-gray-200 hover:bg-gray-50"
                       >
                         <td className="py-4 text-center">
-                          <div className="flex items-center justify-center gap-3">
+                          <div className="flex items-center gap-3 pl-6">
                             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                               <FiUser size={16} className="text-primary" />
                             </div>
@@ -208,7 +208,7 @@ const StudentsPage = () => {
                             {student.matricNumber}
                           </span>
                         </td>
-                        <td className="py-4 text-center">
+                        <td className="py-4 text-left">
                           <div className="flex items-center justify-center gap-2">
                             <FiBook size={14} className="text-gray-400" />
                             <span className="text-gray-800 font-medium">

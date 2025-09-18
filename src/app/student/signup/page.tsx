@@ -203,6 +203,14 @@ const StudentSignupPage = () => {
               Fill in your details to create your student account
             </p>
 
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+              <p className="text-xs text-yellow-800">
+                <strong>Note:</strong> If you&apos;re already logged in as a
+                lecturer or admin, please log out first to avoid session
+                conflicts.
+              </p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-3">
                 {/* Name Fields */}

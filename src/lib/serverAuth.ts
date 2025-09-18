@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "./auth";
 import { prisma } from "./prisma";
 
@@ -40,6 +40,14 @@ export async function getAuthenticatedUser(
       },
     });
 
+    // Validate that the token role matches the database role
+    if (user && payload.role !== user.role) {
+      console.warn(
+        `Role mismatch detected: token role ${payload.role} vs database role ${user.role} for user ${user.id}`
+      );
+      return null; // Force re-authentication
+    }
+
     return user;
   } catch (error) {
     console.error("Error getting authenticated user:", error);
@@ -57,4 +65,21 @@ export async function requireAuth(
   }
 
   return user;
+}
+
+export function createLogoutResponse() {
+  const response = NextResponse.json(
+    { message: "Logged out successfully" },
+    { status: 200 }
+  );
+
+  // Clear the authentication cookie
+  response.cookies.set("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 0, // Expire immediately
+  });
+
+  return response;
 }

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import dynamic from "next/dynamic";
 import { paths } from "@/lib/paths";
+import SessionMonitor from "@/components/SessionMonitor";
 
 const ClientBackButton = dynamic(
   () => import("@/components/ClientBackButton"),
@@ -16,7 +17,6 @@ export const metadata: Metadata = {
   title: "Ui Dev Lecturer Dashboard",
   description: "Next.js Lecturer Dashboard Management System",
 };
-
 
 export default function RootLayout({
   children,
@@ -34,9 +34,11 @@ export default function RootLayout({
           backgroundRepeat: "no-repeat",
         }}
       >
-        <Toaster position="top-center" reverseOrder={false} />
-        <ClientBackButton showOn={paths.auth} backTo={paths.landing}/>
-        {children}
+        <SessionMonitor>
+          <Toaster position="top-center" reverseOrder={false} />
+          <ClientBackButton showOn={paths.auth} backTo={paths.landing} />
+          {children}
+        </SessionMonitor>
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 // Define protected routes that require authentication
 const protectedRoutes = [
@@ -16,7 +17,7 @@ const protectedRoutes = [
 // Define public routes that don't require authentication
 const publicRoutes = ["/", "/auth"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if the current path is a protected route
@@ -52,7 +53,42 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(authUrl);
   }
 
-  // Token is valid, allow access
+  // Validate role consistency between token and database
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== payload.role) {
+      console.warn(
+        `Role mismatch detected: token role ${payload.role} vs database role ${user?.role} for user ${payload.userId}`
+      );
+
+      // Clear the invalid token and redirect to auth
+      const response = NextResponse.redirect(new URL("/auth", request.url));
+      response.cookies.set("token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 0,
+      });
+      return response;
+    }
+  } catch (error) {
+    console.error("Error validating user role in middleware:", error);
+    // If there's an error validating, clear the token and redirect
+    const response = NextResponse.redirect(new URL("/auth", request.url));
+    response.cookies.set("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 0,
+    });
+    return response;
+  }
+
+  // Token is valid and role is consistent, allow access
   return NextResponse.next();
 }
 

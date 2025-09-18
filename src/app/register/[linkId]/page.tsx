@@ -364,7 +364,7 @@ const StudentRegistrationPage = () => {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Registration Form
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Enter your credentials to register for this course. Don&apos;t
               have an account?{" "}
               <a
@@ -376,6 +376,14 @@ const StudentRegistrationPage = () => {
                 Sign up here.
               </a>
             </p>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-6">
+              <p className="text-sm text-yellow-800">
+                <strong>Note:</strong> If you&apos;re already logged in as a
+                lecturer or admin, please log out first to avoid session
+                conflicts.
+              </p>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
