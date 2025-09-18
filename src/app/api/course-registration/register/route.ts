@@ -1,38 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { authenticateUser } from "@/lib/auth";
 
 // POST /api/course-registration/register - Register a student for a course
 export async function POST(request: NextRequest) {
   try {
-    const { linkId, studentName, studentEmail, studentPhone, matricNumber } =
-      await request.json();
+    const { linkId, matricNumber, password } = await request.json();
 
-    if (
-      !linkId ||
-      !studentName ||
-      !studentEmail ||
-      !studentPhone ||
-      !matricNumber
-    ) {
+    if (!linkId || !matricNumber || !password) {
       return NextResponse.json(
-        { error: "All required fields must be provided" },
-        { status: 400 }
-      );
-    }
-
-    // Validate phone number
-    if (!studentPhone || studentPhone.trim() === "") {
-      return NextResponse.json(
-        { error: "Phone number is required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
-    if (!emailRegex.test(studentEmail)) {
-      return NextResponse.json(
-        { error: "Invalid email address" },
+        { error: "Matric number and password are required" },
         { status: 400 }
       );
     }
@@ -44,6 +21,31 @@ export async function POST(request: NextRequest) {
         { error: "Matric number must be exactly 6 digits" },
         { status: 400 }
       );
+    }
+
+    // Authenticate student using matric number and password
+    const user = await authenticateUser(matricNumber, password);
+    if (!user || user.role !== "STUDENT") {
+      return NextResponse.json(
+        { error: "Invalid matric number or password" },
+        { status: 401 }
+      );
+    }
+
+    // Get student details
+    const student = await prisma.student.findUnique({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        matricNumber: true,
+      },
+    });
+
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
     // Get registration link details
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
     ).courseRegistration.findFirst({
       where: {
         linkId: linkId,
-        OR: [{ studentEmail: studentEmail }, { matricNumber: matricNumber }],
+        matricNumber: matricNumber,
       },
     });
 
@@ -86,29 +88,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify that the student exists in the Student table
-    const student = await prisma.student.findFirst({
-      where: {
-        OR: [{ email: studentEmail }, { matricNumber: matricNumber }],
-      },
-    });
-
-    if (!student) {
-      return NextResponse.json(
-        { error: "Student not found. Please sign up first." },
-        { status: 404 }
-      );
-    }
-
     // Create registration (auto-approve upon successful submission)
     const registration = await (prisma as any).courseRegistration.create({
       data: {
         linkId: linkId,
         courseId: registrationLink.courseId,
-        studentName: studentName,
-        studentEmail: studentEmail,
-        studentPhone: studentPhone,
-        matricNumber: matricNumber,
+        studentName: student.name,
+        studentEmail: student.email,
+        studentPhone: student.phone,
+        matricNumber: student.matricNumber,
         level: registrationLink.level,
         status: "APPROVED",
       },

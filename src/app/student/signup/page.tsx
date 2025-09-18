@@ -12,7 +12,6 @@ import {
   FiEyeOff,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
-import Link from "next/link";
 
 const StudentSignupPage = () => {
   const router = useRouter();
@@ -79,6 +78,15 @@ const StudentSignupPage = () => {
       // Phone validation
       if (!formData.phone.trim()) {
         toast.error("Phone number is required");
+        return;
+      }
+
+      // Phone number regex validation for Nigerian numbers
+      const phoneRegex = /^(\+234|0)?[789][01]\d{8}$/;
+      if (!phoneRegex.test(formData.phone.replace(/\s/g, ""))) {
+        toast.error(
+          "Please enter a valid Nigerian phone number (e.g., 08012345678)"
+        );
         return;
       }
 

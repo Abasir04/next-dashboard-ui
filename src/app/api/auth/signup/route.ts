@@ -5,8 +5,18 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName, title, role, matricNumber } =
-      body;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      title,
+      role,
+      matricNumber,
+      phone,
+      address,
+      level,
+    } = body;
 
     // Validation
     if (!email || !password || !firstName || !lastName) {
@@ -35,6 +45,17 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // Phone validation for Nigerian numbers
+    if (phone) {
+      const phoneRegex = /^(\+234|0)?[789][01]\d{8}$/;
+      if (!phoneRegex.test(phone.replace(/\s/g, ""))) {
+        return NextResponse.json(
+          { error: "Please enter a valid Nigerian phone number" },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if user already exists
@@ -67,8 +88,8 @@ export async function POST(request: NextRequest) {
           name: `${firstName} ${lastName}`,
           email,
           photo: null,
-          phone: "",
-          address: "",
+          phone: phone || "",
+          address: address || "",
           userId: user.id,
           title,
           role,
@@ -101,10 +122,10 @@ export async function POST(request: NextRequest) {
             name: fullName,
             email,
             photo: null,
-            phone: "",
+            phone: phone || "",
             grade: 1,
             levelId: level.id,
-            address: "",
+            address: address || "",
             userId: user.id,
             title,
             role,

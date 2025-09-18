@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "react-hot-toast";
 import {
   FiUser,
-  FiMail,
-  FiPhone,
   FiBook,
   FiCalendar,
   FiCheckCircle,
@@ -41,7 +40,6 @@ interface RegistrationLink {
 interface RegistrationFormData {
   matricNumber: string;
   password: string;
-  phone?: string;
 }
 
 const StudentRegistrationPage = () => {
@@ -57,7 +55,6 @@ const StudentRegistrationPage = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     matricNumber: "",
     password: "",
-    phone: "",
   });
 
   const fetchRegistrationLink = useCallback(async () => {
@@ -66,12 +63,30 @@ const StudentRegistrationPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch registration details");
+        const errorMessage =
+          data.message || data.error || "Failed to fetch registration details";
+        throw new Error(errorMessage);
       }
 
       setRegistrationLink(data);
     } catch (error: any) {
-      setError(error.message);
+      console.error("Error fetching registration link:", error);
+      let errorMessage = "Failed to load registration details";
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (
+        error.name === "TypeError" &&
+        error.message.includes("fetch")
+      ) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      } else if (error.name === "AbortError") {
+        errorMessage = "Request was cancelled. Please try again.";
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -180,27 +195,13 @@ const StudentRegistrationPage = () => {
 
       console.log("✅ Student fields validation passed");
 
-      // Check if phone number is provided and not empty
-      console.log("Student phone from profile:", studentInfo.phone);
-      console.log("Form phone:", formData.phone);
-
-      let phoneNumber = studentInfo.phone;
+      // Use phone number from student profile
+      const phoneNumber = studentInfo.phone;
       if (!phoneNumber || phoneNumber.trim() === "") {
-        console.log("Phone missing from profile, checking form data");
-        // If phone is missing from profile, check if user provided it in the form
-        if (!formData.phone || formData.phone.trim() === "") {
-          console.error("No phone number provided in form either");
-          throw new Error(
-            "Phone number is required. Please enter your phone number below."
-          );
-        }
-        phoneNumber = formData.phone;
-        console.log("Using phone from form:", phoneNumber);
-      } else {
-        console.log("Using phone from profile:", phoneNumber);
+        throw new Error(
+          "Phone number not found in your profile. Please contact support."
+        );
       }
-
-      console.log("✅ Phone number validation passed, using:", phoneNumber);
 
       // Now register for the course
       const response = await fetch("/api/course-registration/register", {
@@ -210,23 +211,39 @@ const StudentRegistrationPage = () => {
         },
         body: JSON.stringify({
           linkId,
-          studentName:
-            studentData.user.firstName + " " + studentData.user.lastName,
-          studentEmail: studentData.user.email,
-          studentPhone: phoneNumber,
           matricNumber: formData.matricNumber,
+          password: formData.password,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to register for course");
+        const errorMessage =
+          data.message || data.error || "Failed to register for course";
+        throw new Error(errorMessage);
       }
 
       setSuccess(true);
+      toast.success("Course registration successful!");
     } catch (error: any) {
-      setError(error.message);
+      console.error("Registration error:", error);
+      let errorMessage = "Failed to register for course";
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (
+        error.name === "TypeError" &&
+        error.message.includes("fetch")
+      ) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      } else if (error.name === "AbortError") {
+        errorMessage = "Request was cancelled. Please try again.";
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -421,25 +438,6 @@ const StudentRegistrationPage = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter your password"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <FiPhone className="inline mr-2" />
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your phone number"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Required for course registration
-                  </p>
                 </div>
               </div>
 

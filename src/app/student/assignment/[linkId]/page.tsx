@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiBook,
-  FiUser,
-  FiCalendar,
   FiUpload,
   FiFile,
   FiCheckCircle,
@@ -50,38 +48,52 @@ const AssignmentSubmissionPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
-    studentName: "",
-    studentEmail: "",
-    studentPhone: "",
     matricNumber: "",
+    password: "",
   });
 
-  useEffect(() => {
-    if (linkId) {
-      fetchAssignment();
-    }
-  }, [linkId]);
-
-  const fetchAssignment = async () => {
+  const fetchAssignment = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/assignments/submit/${linkId}`);
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch assignment");
+        const errorMessage =
+          errorData.message || errorData.error || "Failed to fetch assignment";
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       setAssignment(data.assignment);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching assignment:", error);
-      toast.error("Failed to load assignment details");
+      let errorMessage = "Failed to load assignment details";
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (
+        error.name === "TypeError" &&
+        error.message.includes("fetch")
+      ) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      } else if (error.name === "AbortError") {
+        errorMessage = "Request was cancelled. Please try again.";
+      }
+
+      toast.error(errorMessage);
       router.push("/");
     } finally {
       setLoading(false);
     }
-  };
+  }, [linkId, router]);
+
+  useEffect(() => {
+    if (linkId) {
+      fetchAssignment();
+    }
+  }, [linkId, fetchAssignment]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -121,12 +133,7 @@ const AssignmentSubmissionPage = () => {
       return;
     }
 
-    if (
-      !formData.studentName ||
-      !formData.studentEmail ||
-      !formData.studentPhone ||
-      !formData.matricNumber
-    ) {
+    if (!formData.matricNumber || !formData.password) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -144,7 +151,8 @@ const AssignmentSubmissionPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
+          matricNumber: formData.matricNumber,
+          password: formData.password,
           fileUrl,
           originalFilename: selectedFile.name,
         }),
@@ -152,14 +160,30 @@ const AssignmentSubmissionPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to submit assignment");
+        const errorMessage =
+          errorData.message || errorData.error || "Failed to submit assignment";
+        throw new Error(errorMessage);
       }
 
       setSubmitted(true);
       toast.success("Assignment submitted successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting assignment:", error);
-      toast.error("Failed to submit assignment");
+      let errorMessage = "Failed to submit assignment";
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (
+        error.name === "TypeError" &&
+        error.message.includes("fetch")
+      ) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      } else if (error.name === "AbortError") {
+        errorMessage = "Request was cancelled. Please try again.";
+      }
+
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -317,28 +341,21 @@ const AssignmentSubmissionPage = () => {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Submit Your Assignment
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Fill in your details and upload your assignment file
             </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-6">
+              <p className="text-blue-800 text-sm">
+                <strong>Note:</strong> You must be registered for this course to
+                submit assignments. If you haven&apos;t registered yet, please
+                contact your lecturer for the registration link.
+              </p>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                {/* Student Details */}
+                {/* Student Authentication */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="studentName"
-                      value={formData.studentName}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Matric Number *
@@ -355,35 +372,18 @@ const AssignmentSubmissionPage = () => {
                       placeholder="Enter 6-digit matric number"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address *
+                      Password *
                     </label>
                     <input
-                      type="email"
-                      name="studentEmail"
-                      value={formData.studentEmail}
+                      type="password"
+                      name="password"
+                      value={formData.password}
                       onChange={handleInputChange}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      name="studentPhone"
-                      value={formData.studentPhone}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter your phone number"
+                      placeholder="Enter your password"
                     />
                   </div>
                 </div>

@@ -40,6 +40,8 @@ const SignUp = ({
       confirmPassword: "",
       title: "",
       role: "",
+      phone: "",
+      address: "",
     },
     mode: "onTouched",
   });
@@ -105,6 +107,8 @@ const SignUp = ({
           password: data.password,
           title: data.title,
           role: data.role.toUpperCase(),
+          phone: data.phone,
+          address: data.address,
         }),
       });
       const result = await response.json();
@@ -203,6 +207,24 @@ const SignUp = ({
           </>
         ) : (
           <>
+            <AuthenticationInput
+              name="phone"
+              label="Phone Number"
+              type="tel"
+              placeholder="Enter your phone number"
+              register={register}
+              errors={errors}
+              required
+            />
+            <AuthenticationInput
+              name="address"
+              label="Address"
+              type="text"
+              placeholder="Enter your address"
+              register={register}
+              errors={errors}
+              required
+            />
             <DropSelect
               name="title"
               label="Title"
