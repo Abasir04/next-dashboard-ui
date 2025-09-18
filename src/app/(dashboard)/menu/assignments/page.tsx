@@ -5,7 +5,6 @@ import {
   FiPlus,
   FiEye,
   FiTrash2,
-  FiDownload,
   FiEdit,
   FiCalendar,
   FiUsers,
@@ -13,7 +12,6 @@ import {
   FiLink,
   FiCopy,
   FiX,
-  FiFileText,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
@@ -294,7 +292,8 @@ const AssignmentsPage = () => {
             <thead>
               <tr className="text-center text-gray-500 text-sm border-b">
                 <th className="pb-3">Assignment Title</th>
-                <th className="pb-3">Course</th>
+                <th className="pb-3">Course Name</th>
+                <th className="pb-3">Course Code</th>
                 <th className="pb-3">Start Date</th>
                 <th className="pb-3">Due Date</th>
                 <th className="pb-3">Submissions</th>
@@ -321,11 +320,15 @@ const AssignmentsPage = () => {
                     </div>
                   </td>
                   <td className="py-4 text-center">
-                    <div className="space-y-1">
+                    <div className="">
                       <div className="font-medium text-gray-800">
                         {assignment.course.name}
                       </div>
-                      <div className="text-xs text-gray-500">
+                    </div>
+                  </td>
+                  <td className="py-4 text-center">
+                    <div className="">
+                      <div className="font-medium text-gray-800">
                         {assignment.course.code}
                       </div>
                     </div>
