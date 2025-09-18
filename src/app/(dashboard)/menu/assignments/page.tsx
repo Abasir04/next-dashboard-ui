@@ -292,8 +292,8 @@ const AssignmentsPage = () => {
             <thead>
               <tr className="text-center text-gray-500 text-sm border-b">
                 <th className="pb-3">Assignment Title</th>
-                <th className="pb-3">Course Name</th>
-                <th className="pb-3">Course Code</th>
+                <th className="pb-3">Course</th>
+                <th className="pb-3">Level</th>
                 <th className="pb-3">Start Date</th>
                 <th className="pb-3">Due Date</th>
                 <th className="pb-3">Submissions</th>
@@ -320,16 +320,19 @@ const AssignmentsPage = () => {
                     </div>
                   </td>
                   <td className="py-4 text-center">
-                    <div className="">
+                    <div className="space-y-2">
                       <div className="font-medium text-gray-800">
                         {assignment.course.name}
+                      </div>
+                      <div className="font-medium text-gray-800">
+                        {assignment.course.code}
                       </div>
                     </div>
                   </td>
                   <td className="py-4 text-center">
-                    <div className="">
+                    <div className="space-y-1">
                       <div className="font-medium text-gray-800">
-                        {assignment.course.code}
+                        {assignment.level.name}
                       </div>
                     </div>
                   </td>
