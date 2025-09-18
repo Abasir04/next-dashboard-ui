@@ -10,12 +10,17 @@ import {
   FiCalendar,
   FiUsers,
   FiBook,
+  FiLink,
+  FiCopy,
+  FiX,
+  FiFileText,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import {
   DeleteConfirmationModal,
   CreateAssignmentModal,
+  EditAssignmentModal,
 } from "@/components/modals/AssignmentModals";
 import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
 
@@ -55,7 +60,17 @@ const AssignmentsPage = () => {
     useState<Assignment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedAssignments, setSelectedAssignments] = useState<number[]>([]);
+  const [showSubmissionLinkModal, setShowSubmissionLinkModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<Assignment | null>(null);
+  const [submissionLink, setSubmissionLink] = useState<string | null>(null);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(
+    null
+  );
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -120,6 +135,101 @@ const AssignmentsPage = () => {
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
     setDeletingAssignment(null);
+  };
+
+  const handleEditClick = (assignment: Assignment) => {
+    setEditingAssignment(assignment);
+    setShowEditModal(true);
+  };
+
+  const handleEditCancel = () => {
+    setShowEditModal(false);
+    setEditingAssignment(null);
+  };
+
+  const handleEditSubmit = async (updatedAssignment: Partial<Assignment>) => {
+    if (!editingAssignment) return;
+
+    try {
+      setIsUpdating(true);
+      const response = await fetch(`/api/assignments/${editingAssignment.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedAssignment),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update assignment");
+      }
+
+      // Update the assignment in the local state
+      setAssignments(
+        assignments.map((assignment) =>
+          assignment.id === editingAssignment.id
+            ? { ...assignment, ...updatedAssignment }
+            : assignment
+        )
+      );
+
+      toast.success("Assignment updated successfully");
+      setShowEditModal(false);
+      setEditingAssignment(null);
+    } catch (error) {
+      console.error("Error updating assignment:", error);
+      toast.error("Failed to update assignment");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleGenerateSubmissionLink = async (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
+    setShowSubmissionLinkModal(true);
+    setIsGeneratingLink(true);
+
+    try {
+      const response = await fetch(
+        `/api/assignments/${assignment.id}/submission-link`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "Failed to generate submission link"
+        );
+      }
+
+      const data = await response.json();
+      setSubmissionLink(data.submissionUrl);
+    } catch (error) {
+      console.error("Error generating submission link:", error);
+      toast.error("Failed to generate submission link");
+      setSubmissionLink(null);
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (submissionLink) {
+      try {
+        await navigator.clipboard.writeText(submissionLink);
+        toast.success("Submission link copied to clipboard!");
+      } catch (error) {
+        console.error("Error copying link:", error);
+        toast.error("Failed to copy link");
+      }
+    }
+  };
+
+  const handleCloseSubmissionLinkModal = () => {
+    setShowSubmissionLinkModal(false);
+    setSelectedAssignment(null);
+    setSubmissionLink(null);
+    setIsGeneratingLink(false);
   };
 
   if (loading) {
@@ -211,15 +321,12 @@ const AssignmentsPage = () => {
                     </div>
                   </td>
                   <td className="py-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <FiBook size={14} className="text-gray-400" />
-                      <div>
-                        <div className="font-medium text-gray-800">
-                          {assignment.course.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {assignment.course.code}
-                        </div>
+                    <div className="space-y-1">
+                      <div className="font-medium text-gray-800">
+                        {assignment.course.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {assignment.course.code}
                       </div>
                     </div>
                   </td>
@@ -268,6 +375,21 @@ const AssignmentsPage = () => {
                         <FiEye size={16} />
                       </Link>
                       <button
+                        onClick={() => handleEditClick(assignment)}
+                        className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
+                        title="Edit assignment"
+                      >
+                        <FiEdit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleGenerateSubmissionLink(assignment)}
+                        disabled={isGeneratingLink}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50"
+                        title="Generate submission link"
+                      >
+                        <FiLink size={16} />
+                      </button>
+                      <button
                         onClick={() => handleDeleteClick(assignment)}
                         disabled={isDeleting}
                         className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
@@ -303,6 +425,113 @@ const AssignmentsPage = () => {
             fetchAssignments();
           }}
         />
+      )}
+
+      {/* EDIT ASSIGNMENT MODAL */}
+      {showEditModal && (
+        <EditAssignmentModal
+          assignment={editingAssignment}
+          isOpen={showEditModal}
+          onClose={handleEditCancel}
+          onSubmit={handleEditSubmit}
+          isUpdating={isUpdating}
+        />
+      )}
+
+      {/* SUBMISSION LINK MODAL */}
+      {showSubmissionLinkModal && selectedAssignment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <FiLink className="text-blue-600" size={20} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Assignment Submission Link
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Generate and share submission link
+                </p>
+              </div>
+              <button
+                onClick={handleCloseSubmissionLinkModal}
+                className="text-gray-400 hover:text-gray-600"
+                title="Close modal"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-700 mb-2">
+                  {selectedAssignment.title}
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Course: {selectedAssignment.course.name} (
+                  {selectedAssignment.course.code})
+                </p>
+                <p className="text-sm text-gray-600">
+                  Due:{" "}
+                  {new Date(selectedAssignment.dueDate).toLocaleDateString()}
+                </p>
+              </div>
+
+              {isGeneratingLink ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Generating link...</span>
+                </div>
+              ) : submissionLink ? (
+                <div className="space-y-3">
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Submission Link:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={submissionLink}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white"
+                      />
+                      <button
+                        onClick={handleCopyLink}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                        title="Copy link"
+                      >
+                        <FiCopy size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Note:</strong> This link will expire when the
+                      assignment due date is reached.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-600">
+                    Failed to generate submission link
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={handleCloseSubmissionLinkModal}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

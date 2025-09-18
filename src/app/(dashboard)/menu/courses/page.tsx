@@ -8,12 +8,12 @@ import Table from "@/components/Table";
 import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
 import Pagination from "@/components/Pagination";
 import {
-  FiEdit2,
   FiTrash2,
   FiPlus,
   FiLink,
-  FiUsers,
   FiFileText,
+  FiEdit,
+  FiX,
 } from "react-icons/fi";
 
 interface Course {
@@ -292,30 +292,34 @@ const CoursesPage = () => {
         <div className="flex justify-center gap-2">
           {(userRole === "admin" || userRole === "lecturer") && (
             <>
+              {/* Edit - Orange */}
               <button
                 onClick={() => handleEditCourse(course)}
-                className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
+                className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
                 title="Edit course"
               >
-                <FiEdit2 size={16} />
+                <FiEdit size={16} />
               </button>
+              {/* Link - Blue */}
               <button
                 onClick={() => handleGenerateRegistrationLink(course)}
-                className="p-1 text-green-600 hover:text-green-800 transition-colors"
+                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
                 title="Generate registration link"
               >
                 <FiLink size={16} />
               </button>
+              {/* Materials - Purple */}
               <button
                 onClick={() => handleViewMaterials(course)}
-                className="p-1 text-purple-600 hover:text-purple-800 transition-colors"
+                className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-md transition-colors"
                 title="Course Materials"
               >
                 <FiFileText size={16} />
               </button>
+              {/* Delete - Red */}
               <button
                 onClick={() => handleDeleteCourse(course)}
-                className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
                 title="Delete course"
               >
                 <FiTrash2 size={16} />
@@ -387,28 +391,25 @@ const CoursesPage = () => {
       {showDeleteModal && courseToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Delete Course
-              </h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <FiTrash2 className="text-red-600" size={20} />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Delete Course
+                </h2>
+                <p className="text-sm text-gray-600">
+                  This action cannot be undone
+                </p>
+              </div>
               <button
                 onClick={cancelDelete}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 disabled={isDeleting}
+                title="Close modal"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FiX size={20} />
               </button>
             </div>
 
@@ -482,28 +483,25 @@ const CoursesPage = () => {
       {showRegistrationModal && courseForRegistration && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Generate Registration Link
-              </h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <FiLink className="text-blue-600" size={20} />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Generate Registration Link
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Create and share course registration link
+                </p>
+              </div>
               <button
                 onClick={closeRegistrationModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 disabled={isGeneratingLink}
+                title="Close modal"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FiX size={20} />
               </button>
             </div>
 

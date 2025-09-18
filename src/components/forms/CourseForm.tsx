@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import AuthenticationInput from "@/components/AuthenticationInput";
-import DropSelect from "@/components/DropSelect";
 import { showError, showSuccess } from "@/lib/toast";
+import { FiEdit, FiX } from "react-icons/fi";
 
 const levelOptions = [
   { label: "100 Level", value: 100 },
@@ -127,27 +127,28 @@ const CourseForm: React.FC<CourseFormProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {course ? "Edit Course" : "Create New Course"}
-          </h2>
+        <div className="flex items-center gap-3 mb-4">
+          {course && (
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+              <FiEdit className="text-orange-600" size={20} />
+            </div>
+          )}
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold text-gray-800">
+              {course ? "Edit Course" : "Create New Course"}
+            </h2>
+            <p className="text-sm text-gray-600">
+              {course
+                ? "Update course information"
+                : "Add a new course to the system"}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Close modal"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <FiX size={20} />
           </button>
         </div>
 
@@ -222,7 +223,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-primary text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-6 py-2 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                course
+                  ? "bg-orange-600 hover:bg-orange-700"
+                  : "bg-primary hover:bg-indigo-700"
+              }`}
             >
               {isSubmitting
                 ? "Saving..."
