@@ -96,10 +96,23 @@ export async function POST(request: NextRequest) {
         },
       });
     } else if (role.toLowerCase() === "student") {
-      const level = await prisma.level.findFirst();
+      // Validate level parameter
       if (!level) {
         return NextResponse.json(
-          { error: "No level exists. Please contact admin." },
+          { error: "Level is required for student registration" },
+          { status: 400 }
+        );
+      }
+
+      // Find the level by grade (frontend sends 100-600, map to grades 1-6)
+      const levelGrade = parseInt(level) / 100; // Convert 100->1, 200->2, 300->3, 400->4, 500->5, 600->6
+      const levelRecord = await prisma.level.findFirst({
+        where: { grade: levelGrade },
+      });
+
+      if (!levelRecord) {
+        return NextResponse.json(
+          { error: "Invalid level selected. Please contact admin." },
           { status: 400 }
         );
       }
@@ -124,7 +137,7 @@ export async function POST(request: NextRequest) {
             photo: null,
             phone: phone || "",
             grade: 1,
-            levelId: level.id,
+            levelId: levelRecord.id,
             address: address || "",
             userId: user.id,
             title,
