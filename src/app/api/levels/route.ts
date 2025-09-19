@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const levels = await prisma.level.findMany({
       orderBy: {
-        grade: "asc",
+        name: "asc",
       },
     });
 

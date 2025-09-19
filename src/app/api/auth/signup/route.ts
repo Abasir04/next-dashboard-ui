@@ -104,10 +104,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Find the level by grade (frontend sends 100-600, map to grades 1-6)
-      const levelGrade = parseInt(level) / 100; // Convert 100->1, 200->2, 300->3, 400->4, 500->5, 600->6
+      // Find the level by name (frontend sends 100-600, find level with matching name)
       const levelRecord = await prisma.level.findFirst({
-        where: { grade: levelGrade },
+        where: { name: level.toString() },
       });
 
       if (!levelRecord) {

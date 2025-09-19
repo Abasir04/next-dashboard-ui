@@ -184,27 +184,25 @@ export async function POST(request: NextRequest) {
     // Course levels are 100, 200, 300, 400, 500, 600
     // Level grades are 1, 2, 3, 4, 5, 6, 7
     // Map course level to level grade: 100->1, 200->2, 300->3, 400->4, 500->5, 600->6
-    const levelGrade = Math.floor(course.level / 100);
-    console.log("Course level:", course.level, "-> Level grade:", levelGrade);
+    console.log(
+      "Course level:",
+      course.level,
+      "-> Looking for level name:",
+      course.level.toString()
+    );
 
-    console.log("Looking for level with grade:", levelGrade);
     const level = await prisma.level.findFirst({
       where: {
-        grade: levelGrade,
+        name: course.level.toString(),
       },
     });
     console.log("Found level:", level);
 
     if (!level) {
-      console.log(
-        "Level not found for course level:",
-        course.level,
-        "grade:",
-        levelGrade
-      );
+      console.log("Level not found for course level:", course.level);
       return NextResponse.json(
         {
-          error: `Level not found for course level ${course.level} (mapped to grade ${levelGrade})`,
+          error: `Level not found for course level ${course.level}`,
         },
         { status: 400 }
       );

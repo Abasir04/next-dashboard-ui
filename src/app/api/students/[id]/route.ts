@@ -34,7 +34,6 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            grade: true,
           },
         },
         user: {
@@ -182,7 +181,6 @@ export async function PUT(
           select: {
             id: true,
             name: true,
-            grade: true,
           },
         },
         user: {

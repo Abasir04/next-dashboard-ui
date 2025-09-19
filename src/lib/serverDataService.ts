@@ -86,8 +86,6 @@ export const getLevelsData = async () => {
       id: lvl.id,
       name: lvl.name,
       capacity: lvl.capacity,
-      grade: lvl.grade,
-      supervisor: lvl.supervisor,
     }));
   } catch (error) {
     console.error("Error fetching levels:", error);

@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
-              grade: true,
             },
           },
           user: {
@@ -102,7 +101,6 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            grade: true,
           },
         },
         user: {
