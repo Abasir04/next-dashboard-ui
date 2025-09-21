@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { showError, showSuccess } from "@/lib/toast";
 import CourseForm from "@/components/forms/CourseForm";
 import Table from "@/components/Table";
@@ -66,6 +66,7 @@ const columns = [
 
 const CoursesPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>("");
@@ -138,6 +139,21 @@ const CoursesPage = () => {
       fetchCourses();
     }
   }, [userRole, fetchCourses]);
+
+  // Handle URL parameters for quick actions
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "create") {
+      setShowCourseForm(true);
+    } else if (action === "materials") {
+      // This could be expanded to show materials section or modal
+      // For now, just scroll to materials section if it exists
+      const materialsSection = document.getElementById("materials-section");
+      if (materialsSection) {
+        materialsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [searchParams]);
 
   const handleCreateCourse = () => {
     setEditingCourse(null);

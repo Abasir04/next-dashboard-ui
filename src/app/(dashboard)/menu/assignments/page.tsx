@@ -14,6 +14,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   DeleteConfirmationModal,
@@ -50,6 +51,7 @@ interface Assignment {
 }
 
 const AssignmentsPage = () => {
+  const searchParams = useSearchParams();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -92,6 +94,13 @@ const AssignmentsPage = () => {
   useEffect(() => {
     fetchAssignments();
   }, [fetchAssignments]);
+
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "create") {
+      setShowCreateModal(true);
+    }
+  }, [searchParams]);
 
   const handleRefresh = () => {
     fetchAssignments();
