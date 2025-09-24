@@ -386,7 +386,7 @@ const StudentRegistrationPage = () => {
               have an account?{" "}
               <a
                 href={`/student/signup?returnUrl=${encodeURIComponent(
-                  `/register/${linkId}`
+                  `/student/register/${linkId}`
                 )}`}
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >

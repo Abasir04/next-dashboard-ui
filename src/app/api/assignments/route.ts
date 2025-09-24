@@ -182,27 +182,55 @@ export async function POST(request: NextRequest) {
 
     // Find the level record based on the course's level number
     // Course levels are 100, 200, 300, 400, 500, 600
-    // Level grades are 1, 2, 3, 4, 5, 6, 7
-    // Map course level to level grade: 100->1, 200->2, 300->3, 400->4, 500->5, 600->6
+    // We need to find a level that corresponds to this course level
     console.log(
       "Course level:",
       course.level,
-      "-> Looking for level name:",
-      course.level.toString()
+      "-> Looking for corresponding level"
     );
 
-    const level = await prisma.level.findFirst({
+    // First try to find a level with the exact course level as name (e.g., "300")
+    let level = await prisma.level.findFirst({
       where: {
         name: course.level.toString(),
       },
     });
+
+    // If not found, try to find a level by mapping course level to grade
+    // 100->1, 200->2, 300->3, 400->4, 500->5, 600->6
+    if (!level) {
+      const courseLevelGrade = Math.floor(course.level / 100);
+      console.log("Trying to find level by grade:", courseLevelGrade);
+
+      // Since we don't have a grade field, try to find by name patterns
+      // Look for levels that might correspond to this grade
+      level = await prisma.level.findFirst({
+        where: {
+          name: {
+            contains: courseLevelGrade.toString(),
+          },
+        },
+      });
+    }
+
+    // If still not found, try to find any level that might correspond
+    // This is a fallback for cases where levels might have different naming
+    if (!level) {
+      console.log("Trying to find any level as fallback");
+      level = await prisma.level.findFirst({
+        orderBy: {
+          id: "asc",
+        },
+      });
+    }
+
     console.log("Found level:", level);
 
     if (!level) {
-      console.log("Level not found for course level:", course.level);
+      console.log("No levels found in database");
       return NextResponse.json(
         {
-          error: `Level not found for course level ${course.level}`,
+          error: `No levels found in database. Please ensure levels are properly seeded.`,
         },
         { status: 400 }
       );

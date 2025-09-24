@@ -132,7 +132,7 @@ const StudentSignupPage = () => {
       );
 
       // Redirect back to the course registration page or auth page
-      if (returnUrl.includes("/register/")) {
+      if (returnUrl.includes("/student/register/")) {
         router.push(returnUrl);
       } else {
         router.push(

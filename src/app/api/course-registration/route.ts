@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         }`;
       return NextResponse.json({
         link: existingActiveLink,
-        registrationUrl: `${origin}/register/${existingActiveLink.id}`,
+        registrationUrl: `${origin}/student/register/${existingActiveLink.id}`,
         reused: true,
       });
     }
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       }`;
     return NextResponse.json({
       link: registrationLink,
-      registrationUrl: `${origin}/register/${registrationLink.id}`,
+      registrationUrl: `${origin}/student/register/${registrationLink.id}`,
     });
   } catch (error) {
     console.error("Error creating registration link:", error);
@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
         }`;
       return NextResponse.json({
         link: existingLink,
-        registrationUrl: `${origin}/register/${existingLink.id}`,
+        registrationUrl: `${origin}/student/register/${existingLink.id}`,
         exists: true,
       });
     }

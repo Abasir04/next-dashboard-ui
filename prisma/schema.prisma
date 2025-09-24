@@ -47,6 +47,7 @@ model Lecturer {
   lessons           Lesson[]
   results           Result[]
   materials         CourseMaterial[]
+  lectures          Lecture[]
 
   @@map("lecturers")
 }
@@ -86,6 +87,7 @@ model Course {
   lessons           Lesson[]
   results           Result[]
   materials         CourseMaterial[]
+  lectures          Lecture[]
 
   @@index([lecturerId], map: "courses_lecturerId_fkey")
   @@map("courses")
@@ -132,6 +134,7 @@ model Student {
   title         String
   results       Result[]
   submissions   AssignmentSubmission[]
+  attendances   Attendance[]
   level         Level                 @relation(fields: [levelId], references: [id])
   user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -361,4 +364,48 @@ enum RegistrationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+model Lecture {
+  id          String      @id @default(cuid())
+  courseId    Int
+  lecturerId  Int
+  uniqueCode  String      @unique
+  startTime   DateTime
+  endTime     DateTime
+  linkExpiry  DateTime
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturer    Lecturer    @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@index([courseId], map: "lectures_courseId_fkey")
+  @@index([lecturerId], map: "lectures_lecturerId_fkey")
+  @@index([uniqueCode], map: "lectures_uniqueCode_fkey")
+  @@map("lectures")
+}
+
+model Attendance {
+  id             Int       @id @default(autoincrement())
+  lectureId      String
+  studentId      Int
+  status         AttendanceStatus @default(PRESENT)
+  markedAt       DateTime  @default(now())
+  latitude       Float?
+  longitude      Float?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lecture        Lecture   @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([lectureId, studentId], map: "attendance_lecture_student_unique")
+  @@index([lectureId], map: "attendance_lectureId_fkey")
+  @@index([studentId], map: "attendance_studentId_fkey")
+  @@map("attendance")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
 }

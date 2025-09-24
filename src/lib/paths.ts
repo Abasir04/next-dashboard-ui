@@ -84,6 +84,7 @@ export const getPageTitle = (path: string): string => {
     [paths.menu.results]: "Results",
     [paths.menu.events]: "Events",
     [paths.menu.announcements]: "Announcements",
+    [paths.menu.attendance]: "Attendance",
     [paths.profile]: "Profile",
     [paths.settings]: "Settings",
     [paths.logout]: "Logout",
