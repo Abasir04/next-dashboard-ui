@@ -278,9 +278,26 @@ const CourseMaterialsPage = () => {
     setDeleteTarget(null);
   };
 
-  const handleDownload = (material: CourseMaterial) => {
-    // Open the file URL in a new tab for download
-    window.open(material.fileUrl, "_blank");
+  const handleDownload = async (material: CourseMaterial) => {
+    try {
+      // Call the download API with material ID
+      const response = await fetch(
+        `/api/courses/${courseId}/materials/${material.id}/download`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Open the signed URL in a new tab for download
+        window.open(data.url, "_blank");
+      } else {
+        // Fallback to direct URL if API fails
+        window.open(material.fileUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error generating download URL:", error);
+      // Fallback to direct URL on error
+      window.open(material.fileUrl, "_blank");
+    }
   };
 
   const getFileIcon = (fileType: string) => {
