@@ -134,10 +134,6 @@ const StudentSignupPage = () => {
       // Redirect back to the course registration page or auth page
       if (returnUrl.includes("/student/register/")) {
         router.push(returnUrl);
-      } else {
-        router.push(
-          "/auth?message=Account created successfully. Please sign in to register for courses."
-        );
       }
     } catch (error) {
       console.error("Signup error:", error);

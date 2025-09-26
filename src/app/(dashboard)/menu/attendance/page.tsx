@@ -13,6 +13,7 @@ import {
   FiRefreshCw,
   FiTrash2,
   FiDownload,
+  FiX,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { showError, showSuccess } from "@/lib/toast";
@@ -49,6 +50,11 @@ const AttendancePage = () => {
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrData, setQrData] = useState({ url: "", title: "" });
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    lectureId: string;
+    lectureName: string;
+  }>({ show: false, lectureId: "", lectureName: "" });
 
   const fetchLectures = useCallback(async () => {
     try {
@@ -103,6 +109,40 @@ const AttendancePage = () => {
   const handleShowQR = (url: string, title: string) => {
     setQrData({ url, title });
     setShowQRModal(true);
+  };
+
+  const handleDeleteLecture = (lectureId: string, lectureName: string) => {
+    setDeleteConfirm({
+      show: true,
+      lectureId,
+      lectureName,
+    });
+  };
+
+  const confirmDeleteLecture = async () => {
+    try {
+      const response = await fetch(`/api/lectures/${deleteConfirm.lectureId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete lecture");
+      }
+
+      showSuccess("Lecture deleted successfully");
+      setDeleteConfirm({ show: false, lectureId: "", lectureName: "" });
+      fetchLectures();
+    } catch (error) {
+      console.error("Error deleting lecture:", error);
+      showError(
+        error instanceof Error ? error.message : "Failed to delete lecture"
+      );
+    }
+  };
+
+  const cancelDeleteLecture = () => {
+    setDeleteConfirm({ show: false, lectureId: "", lectureName: "" });
   };
 
   const handleExportAttendance = async (lectureId: string) => {
@@ -342,6 +382,15 @@ const AttendancePage = () => {
                         >
                           <FiDownload size={16} />
                         </button>
+                        <button
+                          onClick={() =>
+                            handleDeleteLecture(lecture.id, lecture.course.name)
+                          }
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                          title="Delete lecture"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -367,6 +416,54 @@ const AttendancePage = () => {
           title={qrData.title}
           onClose={() => setShowQRModal(false)}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Delete Lecture
+              </h2>
+              <button
+                onClick={cancelDeleteLecture}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              >
+                <FiX className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-600 mb-2">
+                Are you sure you want to delete this lecture?
+              </p>
+              <p className="text-sm text-gray-500">
+                <strong>Course:</strong> {deleteConfirm.lectureName}
+              </p>
+              <p className="text-sm text-red-600 mt-2">
+                <strong>Warning:</strong> This action cannot be undone. All
+                attendance records will be permanently deleted. Make sure you
+                have downloaded the attendance data before proceeding.
+              </p>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelDeleteLecture}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteLecture}
+                className="flex-1 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

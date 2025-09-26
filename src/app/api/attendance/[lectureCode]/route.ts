@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/serverAuth";
+import bcrypt from "bcryptjs";
 
 // Helper function to calculate distance between two coordinates using Haversine formula
 function calculateDistance(
@@ -29,24 +29,22 @@ export async function POST(
   { params }: { params: { lectureCode: string } }
 ) {
   try {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is student
-    if (user.role !== "STUDENT") {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
     const { lectureCode } = params;
     const body = await request.json();
-    const { latitude, longitude } = body;
+    const { latitude, longitude, matricNumber, password } = body;
 
     // Validate geolocation
     if (!latitude || !longitude) {
       return NextResponse.json(
         { error: "Location data is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate authentication data
+    if (!matricNumber || !password) {
+      return NextResponse.json(
+        { error: "Matric number and password are required" },
         { status: 400 }
       );
     }
@@ -85,21 +83,45 @@ export async function POST(
       );
     }
 
-    // Get student
+    // Find student by matric number
     const student = await prisma.student.findUnique({
-      where: { userId: user.id },
-      select: { id: true, name: true, matricNumber: true },
+      where: { matricNumber },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            password: true,
+            role: true,
+          },
+        },
+      },
     });
 
     if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      student.user.password
+    );
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
     }
 
     // Check if student is registered for the course
     const registration = await prisma.courseRegistration.findFirst({
       where: {
         courseId: lecture.courseId,
-        studentEmail: user.email,
+        studentEmail: student.user.email,
         status: "APPROVED",
       },
     });
@@ -229,5 +251,3 @@ export async function GET(
     );
   }
 }
-
-

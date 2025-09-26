@@ -15,6 +15,7 @@ interface QRCodeModalProps {
 const QRCodeModal: React.FC<QRCodeModalProps> = ({ url, title, onClose }) => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const generateQRCode = useCallback(async () => {
     try {
@@ -43,7 +44,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ url, title, onClose }) => {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      showSuccess("Link copied to clipboard");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
     } catch (error) {
       showError("Failed to copy link");
     }
@@ -107,15 +109,19 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ url, title, onClose }) => {
                 <div className="flex space-x-3">
                   <button
                     onClick={handleCopyLink}
-                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors duration-200 ${
+                      copied
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
                   >
                     <FiCopy className="h-4 w-4" />
-                    <span>Copy Link</span>
+                    <span>{copied ? "Copied!" : "Copy Link"}</span>
                   </button>
 
                   <button
                     onClick={handleDownloadQR}
-                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                   >
                     <FiDownload className="h-4 w-4" />
                     <span>Download QR</span>

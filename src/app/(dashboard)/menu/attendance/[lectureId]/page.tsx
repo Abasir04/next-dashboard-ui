@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   FiArrowLeft,
   FiUsers,
@@ -51,16 +51,14 @@ interface Statistics {
 
 const AttendanceDetailsPage = () => {
   const router = useRouter();
+  const params = useParams();
   const [lecture, setLecture] = useState<Lecture | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Get lecture ID from URL
-  const lectureId =
-    typeof window !== "undefined"
-      ? window.location.pathname.split("/").pop()
-      : "";
+  // Get lecture ID from URL params
+  const lectureId = params.lectureId as string;
 
   const fetchAttendanceDetails = useCallback(async () => {
     try {
@@ -94,7 +92,7 @@ const AttendanceDetailsPage = () => {
     if (lectureId) {
       fetchAttendanceDetails();
     }
-  }, [lectureId, fetchAttendanceDetails]);
+  }, [lectureId]);
 
   const handleExportAttendance = () => {
     if (!lecture || !attendance.length) return;
