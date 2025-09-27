@@ -8,10 +8,9 @@
 - ✅ Added foreign keys to `courses` and `lecturers` tables
 - ✅ Applied database migration successfully
 
-### 2. Cloudinary Integration
+### 2. Backblaze B2 Integration
 
-- ✅ Installed Cloudinary package
-- ✅ Created cloudinary configuration with proper TypeScript types
+- ✅ Configured Backblaze B2 S3-compatible storage
 - ✅ Implemented file upload functionality with error handling
 - ✅ Implemented file deletion functionality
 - ✅ Added file type detection (document vs video)
@@ -81,7 +80,7 @@
 course_materials:
 - id (auto increment)
 - course_id (foreign key)
-- file_url (Cloudinary URL)
+- file_url (Backblaze B2 URL)
 - file_type (document/video)
 - original_filename
 - uploaded_by (lecturer ID)
@@ -91,10 +90,10 @@ course_materials:
 
 ### File Storage:
 
-- **Provider**: Cloudinary
+- **Provider**: Backblaze B2
 - **Organization**: `course-materials/[courseId]/[timestamp]-[filename]`
 - **Security**: HTTPS URLs, automatic file type detection
-- **Cleanup**: Automatic deletion from Cloudinary when removed from DB
+- **Cleanup**: Automatic deletion from Backblaze B2 when removed from DB
 
 ### API Security:
 
@@ -110,14 +109,16 @@ The Course Materials management system is now fully functional and ready for use
 ### Required Environment Variables:
 
 ```env
-CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
-CLOUDINARY_API_KEY="your-cloudinary-api-key"
-CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
+S3_ENDPOINT="https://s3.eu-central-003.backblazeb2.com"
+S3_REGION="us-west-2"
+S3_ACCESS_KEY_ID="your-backblaze-key-id"
+S3_SECRET_ACCESS_KEY="your-backblaze-application-key"
+S3_BUCKET="your-bucket-name"
 ```
 
 ### Next Steps:
 
-1. Set up Cloudinary account and get credentials
+1. Set up Backblaze B2 account and get credentials
 2. Add environment variables to `.env` file
 3. Test the functionality with real file uploads
 4. Deploy to production
@@ -138,7 +139,7 @@ CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
 ✅ **All Requirements Met:**
 
 - Course-specific materials pages
-- File upload with Cloudinary
+- File upload with Backblaze B2
 - Database storage with proper relationships
 - Download and delete functionality
 - Professional UI matching existing design

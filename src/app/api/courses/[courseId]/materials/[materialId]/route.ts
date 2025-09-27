@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
-import { deleteFromCloudinary } from "@/lib/cloudinary";
-import { parseS3KeyFromUrl, deleteFromS3ByKey } from "@/lib/s3";
+import { deleteFile as deleteFromBackblaze } from "@/lib/backblaze";
 
 // DELETE - Delete a material
 export async function DELETE(
@@ -50,23 +49,13 @@ export async function DELETE(
       );
     }
 
-    // Try S3 deletion first; if not S3, try Cloudinary
-    const maybeKey = parseS3KeyFromUrl(material.fileUrl);
-    if (maybeKey) {
-      try {
-        await deleteFromS3ByKey(maybeKey);
-      } catch (s3Error) {
-        console.error("Error deleting from S3:", s3Error);
-      }
-    } else {
-      try {
-        const urlParts = material.fileUrl.split("/");
-        const publicIdWithExtension = urlParts[urlParts.length - 1];
-        const publicId = publicIdWithExtension.split(".")[0];
-        await deleteFromCloudinary(publicId);
-      } catch (cloudinaryError) {
-        console.error("Error deleting from Cloudinary:", cloudinaryError);
-      }
+    // Delete from Backblaze B2 storage
+    try {
+      await deleteFromBackblaze(material.fileUrl);
+    } catch (storageError) {
+      console.error("Error deleting from Backblaze B2:", storageError);
+      // Continue with database deletion even if storage deletion fails
+      // This prevents orphaned database records
     }
 
     // Delete from database

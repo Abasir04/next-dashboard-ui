@@ -123,11 +123,21 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
     const endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000); // 2 hours after start
     const linkExpiry = new Date(endTime.getTime() + 30 * 60 * 1000); // 30 minutes after end
 
+    // Format for datetime-local input while preserving local timezone
+    const formatForInput = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
     setFormData((prev) => ({
       ...prev,
-      startTime: startTime.toISOString().slice(0, 16),
-      endTime: endTime.toISOString().slice(0, 16),
-      linkExpiry: linkExpiry.toISOString().slice(0, 16),
+      startTime: formatForInput(startTime),
+      endTime: formatForInput(endTime),
+      linkExpiry: formatForInput(linkExpiry),
     }));
   };
 

@@ -41,15 +41,25 @@ const EditLectureModal: React.FC<EditLectureModalProps> = ({
 
   useEffect(() => {
     if (lecture) {
-      // Set form data with proper datetime-local format
+      // Set form data with proper datetime-local format (preserving local timezone)
       const startTime = new Date(lecture.startTime);
       const endTime = new Date(lecture.endTime);
       const linkExpiry = new Date(lecture.linkExpiry);
 
+      // Format for datetime-local input while preserving local timezone
+      const formatForInput = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      };
+
       setFormData({
-        startTime: startTime.toISOString().slice(0, 16), // Format for datetime-local input
-        endTime: endTime.toISOString().slice(0, 16),
-        linkExpiry: linkExpiry.toISOString().slice(0, 16),
+        startTime: formatForInput(startTime),
+        endTime: formatForInput(endTime),
+        linkExpiry: formatForInput(linkExpiry),
       });
     }
   }, [lecture]);

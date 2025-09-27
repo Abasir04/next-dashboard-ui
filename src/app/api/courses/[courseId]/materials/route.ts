@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
-import {
-  uploadToCloudinary,
-  deleteFromCloudinary,
-  extractPublicIdFromUrl,
-} from "@/lib/cloudinary";
 import { uploadBufferToS3, sanitizeKeyPart } from "@/lib/s3";
 import { deleteFile as deleteFromBackblaze } from "@/lib/backblaze";
 
@@ -150,36 +145,17 @@ export async function POST(
       );
     }
 
-    // Decide storage: videos and documents >10MB -> S3; small documents -> Cloudinary
-    const useS3 = isVideo || file.size > 10 * 1024 * 1024;
-
-    let fileUrl = "";
-
-    if (useS3) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const safeName = sanitizeKeyPart(file.name.replace(/\.[^/.]+$/, ""));
-      const key = `course-materials/${courseId}/${Date.now()}-${safeName}`;
-      const result = await uploadBufferToS3({
-        buffer,
-        key,
-        contentType: file.type || undefined,
-      });
-      fileUrl = result.url;
-    } else {
-      // Upload to Cloudinary for small documents
-      const uploadResult = await uploadToCloudinary(
-        file,
-        `course-materials/${courseId}`
-      );
-      if (!uploadResult || !uploadResult.secure_url) {
-        return NextResponse.json(
-          { error: "Failed to upload file" },
-          { status: 500 }
-        );
-      }
-      fileUrl = uploadResult.secure_url;
-    }
+    // Upload all files to Backblaze B2 (S3-compatible)
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const safeName = sanitizeKeyPart(file.name.replace(/\.[^/.]+$/, ""));
+    const key = `course-materials/${courseId}/${Date.now()}-${safeName}`;
+    const result = await uploadBufferToS3({
+      buffer,
+      key,
+      contentType: file.type || undefined,
+    });
+    const fileUrl = result.url;
 
     // Determine file type
     const fileType = isVideo ? "video" : "document";
@@ -275,21 +251,11 @@ export async function DELETE(
       );
     }
 
-    // Delete the file from storage
+    // Delete the file from Backblaze B2 storage
     try {
-      if (material.fileUrl.includes("cloudinary.com")) {
-        // Delete from Cloudinary
-        const publicId = extractPublicIdFromUrl(material.fileUrl);
-        if (publicId) {
-          await deleteFromCloudinary(publicId);
-        }
-      } else if (material.fileUrl.includes("backblazeb2.com")) {
-        // Delete from Backblaze B2
-        await deleteFromBackblaze(material.fileUrl);
-      }
-      // Note: For other storage providers, you might need to add additional logic
+      await deleteFromBackblaze(material.fileUrl);
     } catch (storageError) {
-      console.error("Error deleting file from storage:", storageError);
+      console.error("Error deleting file from Backblaze B2:", storageError);
       // Continue with database deletion even if storage deletion fails
       // This prevents orphaned database records
     }

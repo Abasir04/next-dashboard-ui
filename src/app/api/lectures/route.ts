@@ -47,13 +47,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (expiry <= end) {
-      return NextResponse.json(
-        { error: "Link expiry must be after end time" },
-        { status: 400 }
-      );
-    }
-
     // Get lecturer ID
     let lecturerId: number;
     if (user.role === "ADMIN") {

@@ -8,7 +8,7 @@ This document outlines the new Course Materials management system that has been 
 
 - **Course-specific Materials**: Each course has its own dedicated materials page
 - **File Upload**: Support for documents (PDF, DOCX, PPT, etc.) and videos (MP4, etc.)
-- **Cloud Storage**: All files are stored on Cloudinary for scalability
+- **Cloud Storage**: All files are stored on Backblaze B2 for scalability
 - **Database Integration**: File metadata stored in MySQL database
 - **Access Control**: Only lecturers and admins can upload/manage materials
 
@@ -19,7 +19,7 @@ This document outlines the new Course Materials management system that has been 
 - New `course_materials` table with the following fields:
   - `id` (auto increment)
   - `course_id` (foreign key to courses table)
-  - `file_url` (Cloudinary link)
+  - `file_url` (Backblaze B2 link)
   - `file_type` (document, video)
   - `original_filename`
   - `uploaded_by` (lecturer ID)
@@ -33,7 +33,7 @@ This document outlines the new Course Materials management system that has been 
 
 #### File Storage
 
-- **Cloudinary Integration**: All files uploaded to Cloudinary
+- **Backblaze B2 Integration**: All files uploaded to Backblaze B2
 - **Automatic File Type Detection**: Documents vs Videos
 - **File Size Validation**: Maximum 100MB per file
 - **Secure URLs**: All files served via HTTPS
@@ -45,10 +45,12 @@ This document outlines the new Course Materials management system that has been 
 Add the following to your `.env` file:
 
 ```env
-# Cloudinary Configuration
-CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
-CLOUDINARY_API_KEY="your-cloudinary-api-key"
-CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
+# Backblaze B2 Configuration
+S3_ENDPOINT="https://s3.eu-central-003.backblazeb2.com"
+S3_REGION="us-west-2"
+S3_ACCESS_KEY_ID="your-backblaze-key-id"
+S3_SECRET_ACCESS_KEY="your-backblaze-application-key"
+S3_BUCKET="your-bucket-name"
 ```
 
 ### 2. Database Migration
@@ -61,10 +63,10 @@ npx prisma migrate dev --name add_course_materials
 
 ### 3. Dependencies
 
-Cloudinary package has been installed:
+Backblaze B2 packages have been installed:
 
 ```bash
-npm install cloudinary
+npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 
 ## Usage Guide
@@ -108,7 +110,7 @@ Admins have the same access as lecturers and can manage materials for all course
 
 ### Storage Structure
 
-Files are organized in Cloudinary with the following structure:
+Files are organized in Backblaze B2 with the following structure:
 
 ```
 course-materials/
@@ -128,7 +130,7 @@ course-materials/
 
 - File type validation on both client and server
 - File size validation (100MB limit)
-- Secure file uploads to Cloudinary
+- Secure file uploads to Backblaze B2
 
 ### Data Integrity
 
@@ -154,7 +156,7 @@ course-materials/
 
 1. **File too large**: Maximum 100MB limit
 2. **Unsupported format**: Only specified file types allowed
-3. **Upload failure**: Network or Cloudinary issues
+3. **Upload failure**: Network or Backblaze B2 issues
 4. **Access denied**: Insufficient permissions
 
 ### User Feedback
@@ -180,9 +182,9 @@ course-materials/
 
 ### Common Setup Issues
 
-1. **Cloudinary not configured**: Ensure environment variables are set
+1. **Backblaze B2 not configured**: Ensure environment variables are set
 2. **Database errors**: Run migrations and check database connection
-3. **Upload failures**: Verify Cloudinary credentials and network connectivity
+3. **Upload failures**: Verify Backblaze B2 credentials and network connectivity
 
 ### Support
 
@@ -190,5 +192,5 @@ For technical issues, check:
 
 - Browser console for client-side errors
 - Server logs for API errors
-- Cloudinary dashboard for upload issues
+- Backblaze B2 dashboard for upload issues
 - Database logs for data-related problems
