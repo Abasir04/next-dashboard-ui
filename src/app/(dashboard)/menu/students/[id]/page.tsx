@@ -225,13 +225,13 @@ const SingleStudentPage = () => {
             </>
           ) : (
             <>
-              <button
+              {/* <button
                 onClick={() => setEditing(true)}
                 className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
                 title="Edit student"
               >
                 <FiEdit size={16} />
-              </button>
+              </button> */}
               <button
                 onClick={handleDeleteClick}
                 className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
