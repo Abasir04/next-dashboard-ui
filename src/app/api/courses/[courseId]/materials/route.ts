@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
-import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+  extractPublicIdFromUrl,
+} from "@/lib/cloudinary";
 import { uploadBufferToS3, sanitizeKeyPart } from "@/lib/s3";
+import { deleteFile as deleteFromBackblaze } from "@/lib/backblaze";
 
 // Ensure Node.js runtime for Buffer and streaming APIs
 export const runtime = "nodejs";
@@ -149,7 +154,6 @@ export async function POST(
     const useS3 = isVideo || file.size > 10 * 1024 * 1024;
 
     let fileUrl = "";
-    let storagePublicId: string | null = null;
 
     if (useS3) {
       const bytes = await file.arrayBuffer();
@@ -175,7 +179,6 @@ export async function POST(
         );
       }
       fileUrl = uploadResult.secure_url;
-      storagePublicId = uploadResult.public_id;
     }
 
     // Determine file type
@@ -203,6 +206,105 @@ export async function POST(
     return NextResponse.json({ material }, { status: 201 });
   } catch (error) {
     console.error("Error uploading course material:", error);
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+// DELETE - Delete a course material
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { courseId: string } }
+) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const courseId = parseInt(params.courseId);
+    if (isNaN(courseId)) {
+      return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });
+    }
+
+    // Get material ID from query params
+    const { searchParams } = new URL(request.url);
+    const materialId = searchParams.get("materialId");
+
+    if (!materialId) {
+      return NextResponse.json(
+        { error: "Material ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user has access to this course
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        ...(user.role === "LECTURER"
+          ? {
+              lecturer: {
+                userId: user.id,
+              },
+            }
+          : {}),
+      },
+    });
+
+    if (!course) {
+      return NextResponse.json(
+        { error: "Course not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // Find the material
+    const material = await prisma.courseMaterial.findFirst({
+      where: {
+        id: parseInt(materialId),
+        courseId: courseId,
+      },
+    });
+
+    if (!material) {
+      return NextResponse.json(
+        { error: "Material not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete the file from storage
+    try {
+      if (material.fileUrl.includes("cloudinary.com")) {
+        // Delete from Cloudinary
+        const publicId = extractPublicIdFromUrl(material.fileUrl);
+        if (publicId) {
+          await deleteFromCloudinary(publicId);
+        }
+      } else if (material.fileUrl.includes("backblazeb2.com")) {
+        // Delete from Backblaze B2
+        await deleteFromBackblaze(material.fileUrl);
+      }
+      // Note: For other storage providers, you might need to add additional logic
+    } catch (storageError) {
+      console.error("Error deleting file from storage:", storageError);
+      // Continue with database deletion even if storage deletion fails
+      // This prevents orphaned database records
+    }
+
+    // Delete from database
+    await prisma.courseMaterial.delete({
+      where: { id: material.id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Material deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting course material:", error);
     const message =
       error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });

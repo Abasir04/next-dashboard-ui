@@ -1,4 +1,8 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Initialize S3 client for Backblaze B2
@@ -125,6 +129,54 @@ export function isBackblazeUrl(url: string): boolean {
     url.includes("backblazeb2.com") ||
     (!!process.env.S3_ENDPOINT && url.includes(process.env.S3_ENDPOINT))
   );
+}
+
+/**
+ * Delete a file from Backblaze B2
+ * @param key - The S3 key (file path) in the bucket
+ * @returns Promise<void>
+ */
+export async function deleteFromBackblaze(key: string): Promise<void> {
+  try {
+    console.log("Deleting file from Backblaze B2 with key:", key);
+
+    const command = new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET!,
+      Key: key,
+    });
+
+    await s3Client.send(command);
+    console.log("Successfully deleted file from Backblaze B2:", key);
+  } catch (error) {
+    console.error("Error deleting file from Backblaze B2:", error);
+    throw new Error("Failed to delete file from Backblaze B2");
+  }
+}
+
+/**
+ * Delete a file from any storage provider
+ * @param fileUrl - The file URL
+ * @returns Promise<void>
+ */
+export async function deleteFile(fileUrl: string): Promise<void> {
+  try {
+    // Check if it's a Backblaze B2 URL
+    if (isBackblazeUrl(fileUrl)) {
+      const key = extractS3KeyFromUrl(fileUrl);
+      if (!key) {
+        throw new Error("Could not extract S3 key from Backblaze URL");
+      }
+
+      await deleteFromBackblaze(key);
+      return;
+    }
+
+    // For non-Backblaze URLs, throw error (should use other delete methods)
+    throw new Error("File URL is not a Backblaze B2 URL");
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    throw error;
+  }
 }
 
 /**
