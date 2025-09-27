@@ -14,6 +14,7 @@ import {
   FiFileText,
   FiEdit,
   FiX,
+  FiEye,
 } from "react-icons/fi";
 
 interface Course {
@@ -229,6 +230,10 @@ const CoursesPage = () => {
     router.push(`/menu/courses/${course.id}/materials`);
   };
 
+  const handleViewCourse = (course: Course) => {
+    router.push(`/menu/courses/${course.id}`);
+  };
+
   const generateRegistrationLink = async () => {
     if (!courseForRegistration) return;
 
@@ -306,6 +311,14 @@ const CoursesPage = () => {
       </td>
       <td className="p-4">
         <div className="flex justify-center gap-2">
+          {/* View - Green */}
+          <button
+            onClick={() => handleViewCourse(course)}
+            className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+            title="View course details"
+          >
+            <FiEye size={16} />
+          </button>
           {(userRole === "admin" || userRole === "lecturer") && (
             <>
               {/* Edit - Orange */}
