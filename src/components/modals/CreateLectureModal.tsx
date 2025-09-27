@@ -73,8 +73,8 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
       return;
     }
 
-    if (linkExpiry <= endTime) {
-      showError("Link expiry must be after end time");
+    if (linkExpiry <= startTime) {
+      showError("Link expiry must be after start time");
       return;
     }
 
@@ -233,7 +233,7 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
-                When attendance link expires
+                When attendance link expires (must be after start time)
               </p>
             </div>
           </div>
@@ -245,7 +245,10 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
             </h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Students can mark attendance only after the start time</li>
-              <li>• The attendance link expires at the specified time</li>
+              <li>
+                • The attendance link expires at the specified time (must be
+                after start time)
+              </li>
               <li>• Each lecture gets a unique, one-time use link</li>
               <li>• Students must be registered for the course to attend</li>
             </ul>
@@ -275,5 +278,3 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
 };
 
 export default CreateLectureModal;
-
-

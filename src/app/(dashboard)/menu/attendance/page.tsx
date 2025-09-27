@@ -8,17 +8,18 @@ import {
   FiClock,
   FiUsers,
   FiEye,
-  FiCopy,
   FiCode,
   FiRefreshCw,
   FiTrash2,
   FiDownload,
   FiX,
+  FiEdit,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { showError, showSuccess } from "@/lib/toast";
 import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
 import CreateLectureModal from "@/components/modals/CreateLectureModal";
+import EditLectureModal from "@/components/modals/EditLectureModal";
 import QRCodeModal from "@/components/modals/QRCodeModal";
 
 interface Lecture {
@@ -47,6 +48,8 @@ const AttendancePage = () => {
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingLecture, setEditingLecture] = useState<Lecture | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrData, setQrData] = useState({ url: "", title: "" });
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,13 +100,20 @@ const AttendancePage = () => {
     router.push(`/menu/attendance/${lectureId}`);
   };
 
-  const handleCopyLink = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      showSuccess("Link copied to clipboard");
-    } catch (error) {
-      showError("Failed to copy link");
-    }
+  const handleEditLecture = (lecture: Lecture) => {
+    setEditingLecture(lecture);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditModal(false);
+    setEditingLecture(null);
+    fetchLectures();
+  };
+
+  const handleEditClose = () => {
+    setShowEditModal(false);
+    setEditingLecture(null);
   };
 
   const handleShowQR = (url: string, title: string) => {
@@ -357,11 +367,11 @@ const AttendancePage = () => {
                           <FiEye size={16} />
                         </button>
                         <button
-                          onClick={() => handleCopyLink(lecture.attendanceUrl)}
-                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-                          title="Copy attendance link"
+                          onClick={() => handleEditLecture(lecture)}
+                          className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
+                          title="Edit lecture"
                         >
-                          <FiCopy size={16} />
+                          <FiEdit size={16} />
                         </button>
                         <button
                           onClick={() =>
@@ -377,7 +387,7 @@ const AttendancePage = () => {
                         </button>
                         <button
                           onClick={() => handleExportAttendance(lecture.id)}
-                          className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
                           title="Export attendance"
                         >
                           <FiDownload size={16} />
@@ -464,6 +474,15 @@ const AttendancePage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Lecture Modal */}
+      {showEditModal && (
+        <EditLectureModal
+          lecture={editingLecture}
+          onClose={handleEditClose}
+          onSuccess={handleEditSuccess}
+        />
       )}
     </div>
   );

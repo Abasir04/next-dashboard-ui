@@ -220,7 +220,7 @@ const AttendanceDetailsPage = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Lecture Information
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="flex items-center space-x-3">
                 <FiBookOpen className="h-5 w-5 text-blue-600" />
                 <div>
@@ -242,7 +242,9 @@ const AttendanceDetailsPage = () => {
               <div className="flex items-center space-x-3">
                 <FiClock className="h-5 w-5 text-purple-600" />
                 <div>
-                  <p className="text-sm text-gray-500">Start Time</p>
+                  <p className="text-sm text-gray-500">
+                    Start Time/Link Start Time
+                  </p>
                   <p className="font-medium text-gray-900">
                     {new Date(lecture.startTime).toLocaleString()}
                   </p>
@@ -254,6 +256,15 @@ const AttendanceDetailsPage = () => {
                   <p className="text-sm text-gray-500">End Time</p>
                   <p className="font-medium text-gray-900">
                     {new Date(lecture.endTime).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <FiClock className="h-5 w-5 text-red-600" />
+                <div>
+                  <p className="text-sm text-gray-500">Link Expiry</p>
+                  <p className="font-medium text-gray-900">
+                    {new Date(lecture.linkExpiry).toLocaleString()}
                   </p>
                 </div>
               </div>
