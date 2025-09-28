@@ -223,6 +223,7 @@ export async function POST(
         assignmentId: assignment.id,
         studentId: student.id,
         fileUrl,
+        fileName: originalFilename, // Use originalFilename as fileName
         originalFilename,
       },
       include: {

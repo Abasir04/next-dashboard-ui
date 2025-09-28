@@ -94,7 +94,6 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
       }
 
       const data = await response.json();
-      showSuccess("Lecture created successfully");
       onSuccess();
     } catch (error) {
       console.error("Error creating lecture:", error);
