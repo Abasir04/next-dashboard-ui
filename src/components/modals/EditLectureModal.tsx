@@ -247,7 +247,7 @@ const EditLectureModal: React.FC<EditLectureModalProps> = ({
             <button
               type="button"
               onClick={handleCancel}
-              className="px-6 py-2 bg-gray-400 text-black rounded-md hover:bg-gray-300 transition-colors"
+              className="flex-1 px-6 py-2 bg-gray-400 text-black rounded-md hover:bg-gray-300 transition-colors"
               disabled={isSubmitting}
             >
               Cancel
@@ -255,7 +255,7 @@ const EditLectureModal: React.FC<EditLectureModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Updating..." : "Update Lecture"}
             </button>

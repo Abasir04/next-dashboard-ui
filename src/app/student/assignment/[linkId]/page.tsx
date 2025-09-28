@@ -373,11 +373,12 @@ const AssignmentSubmissionPage = () => {
                   </div>
                 )}
 
-                {assignment.lecturerFileUrl && (
-                  <div className="pt-2 border-t border-blue-200">
-                    <span className="font-medium text-gray-600 block mb-2">
-                      Assignment File:
-                    </span>
+                <div className="pt-2 border-t border-blue-200">
+                  <span className="font-medium text-gray-600 block mb-2">
+                    Assignment File:
+                  </span>
+
+                  {assignment.lecturerFileUrl ? (
                     <button
                       onClick={handleDownload}
                       className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
@@ -386,8 +387,10 @@ const AssignmentSubmissionPage = () => {
                       Download{" "}
                       {assignment.lecturerFileName || "Assignment File"}
                     </button>
-                  </div>
-                )}
+                  ) : (
+                    "No file uploaded by lecturer"
+                  )}
+                </div>
               </div>
             </div>
           </div>
