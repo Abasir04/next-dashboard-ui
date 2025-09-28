@@ -12,6 +12,8 @@ interface Assignment {
   dueDate: string;
   isActive: boolean;
   linkId: string;
+  lecturerFileUrl?: string;
+  lecturerFileName?: string;
   createdAt: string;
   course: {
     id: number;
@@ -107,7 +109,12 @@ interface EditAssignmentModalProps {
   assignment: Assignment | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (updatedAssignment: Partial<Assignment>) => void;
+  onSubmit: (
+    updatedAssignment: Partial<Assignment> & {
+      lecturerFileUrl?: string;
+      lecturerFileName?: string;
+    }
+  ) => void;
   isUpdating: boolean;
 }
 
@@ -124,6 +131,7 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
     startDate: "",
     dueDate: "",
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (assignment) {
@@ -133,19 +141,68 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
         startDate: assignment.startDate.split("T")[0], // Convert to YYYY-MM-DD format
         dueDate: assignment.dueDate.split("T")[0],
       });
+      setSelectedFile(null); // Reset file selection when assignment changes
     }
   }, [assignment]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be less than 10MB");
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const uploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to upload file");
+    }
+
+    const data = await response.json();
+    return data.url;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    try {
+      let lecturerFileUrl = assignment?.lecturerFileUrl;
+      let lecturerFileName = assignment?.lecturerFileName;
+
+      // Upload new file if selected
+      if (selectedFile) {
+        lecturerFileUrl = await uploadFile(selectedFile);
+        lecturerFileName = selectedFile.name;
+      }
+
+      onSubmit({
+        ...formData,
+        lecturerFileUrl,
+        lecturerFileName,
+      });
+    } catch (error: any) {
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload file. Please try again.");
+    }
   };
 
   if (!isOpen || !assignment) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
             <FiEdit className="text-orange-600" size={20} />
@@ -218,7 +275,87 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               rows={4}
               placeholder="Enter assignment description (optional)"
+              maxLength={80}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum 80 characters. Current: {formData.description.length}{" "}
+              characters
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Assignment File (Optional)
+            </label>
+            {assignment?.lecturerFileUrl && !selectedFile && (
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800 font-medium">
+                  Current file:
+                </p>
+                <p className="text-sm text-blue-600">
+                  {assignment.lecturerFileName}
+                </p>
+                <p className="text-xs text-blue-500 mt-1">
+                  Upload a new file to replace the current one
+                </p>
+              </div>
+            )}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
+              <input
+                type="file"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                className="hidden"
+                id="edit-assignment-file-upload"
+              />
+              <label
+                htmlFor="edit-assignment-file-upload"
+                className="cursor-pointer flex flex-col items-center"
+              >
+                <svg
+                  className="w-8 h-8 text-gray-400 mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                <span className="text-sm text-gray-600">
+                  {selectedFile
+                    ? selectedFile.name
+                    : assignment?.lecturerFileUrl
+                    ? "Click to upload a new file"
+                    : "Click to upload or drag and drop"}
+                </span>
+                <span className="text-xs text-gray-500 mt-1">
+                  PDF, DOC, DOCX, TXT, JPG, PNG (max 10MB)
+                </span>
+              </label>
+            </div>
+            {selectedFile && (
+              <div className="mt-2 flex items-center text-sm text-green-600">
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {selectedFile.name} (
+                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -270,6 +407,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     startDate: "",
     dueDate: "",
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [levels, setLevels] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -313,6 +451,36 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be less than 10MB");
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const uploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload/assignment", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to upload file");
+    }
+
+    const data = await response.json();
+    return data.url;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -328,6 +496,16 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
     try {
       setIsSubmitting(true);
+
+      let lecturerFileUrl = null;
+      let lecturerFileName = null;
+
+      // Upload file if selected
+      if (selectedFile) {
+        lecturerFileUrl = await uploadFile(selectedFile);
+        lecturerFileName = selectedFile.name;
+      }
+
       const response = await fetch("/api/assignments", {
         method: "POST",
         headers: {
@@ -339,6 +517,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           courseId: formData.courseId,
           startDate: formData.startDate,
           dueDate: formData.dueDate,
+          lecturerFileUrl,
+          lecturerFileName,
         }),
       });
 
@@ -468,7 +648,72 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               rows={4}
               placeholder="Enter assignment description (optional)"
+              maxLength={80}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum 80 characters. Current: {formData.description.length}{" "}
+              characters
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Assignment File (Optional)
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
+              <input
+                type="file"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                className="hidden"
+                id="assignment-file-upload"
+              />
+              <label
+                htmlFor="assignment-file-upload"
+                className="cursor-pointer flex flex-col items-center"
+              >
+                <svg
+                  className="w-8 h-8 text-gray-400 mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                <span className="text-sm text-gray-600">
+                  {selectedFile
+                    ? selectedFile.name
+                    : "Click to upload or drag and drop"}
+                </span>
+                <span className="text-xs text-gray-500 mt-1">
+                  PDF, DOC, DOCX, TXT, JPG, PNG (max 10MB)
+                </span>
+              </label>
+            </div>
+            {selectedFile && (
+              <div className="mt-2 flex items-center text-sm text-green-600">
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {selectedFile.name} (
+                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">

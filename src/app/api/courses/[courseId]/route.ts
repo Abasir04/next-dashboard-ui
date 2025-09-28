@@ -233,3 +233,58 @@ export async function GET(
     );
   }
 }
+
+// DELETE - Delete a course
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { courseId: string } }
+) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const courseId = parseInt(params.courseId);
+    if (isNaN(courseId)) {
+      return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });
+    }
+
+    // Check if user has access to this course
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        ...(user.role === "LECTURER"
+          ? {
+              lecturer: {
+                userId: user.id,
+              },
+            }
+          : {}),
+      },
+    });
+
+    if (!course) {
+      return NextResponse.json(
+        { error: "Course not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // Delete the course (cascade will handle related records)
+    await prisma.course.delete({
+      where: { id: courseId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Course deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting course:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

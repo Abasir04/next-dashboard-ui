@@ -66,9 +66,15 @@ async function main() {
     },
   ];
 
-  const createdLevels = await Promise.all(
-    levels.map((lvl) => prisma.level.create({ data: lvl }))
-  );
+  const createdLevels = [];
+  for (const lvl of levels) {
+    const createdLevel = await prisma.level.upsert({
+      where: { id: lvl.id },
+      update: lvl,
+      create: lvl,
+    });
+    createdLevels.push(createdLevel);
+  }
 
   console.log("✅ Levels-only seeding completed successfully!");
   console.log("📊 Created levels:");

@@ -22,6 +22,8 @@ interface Assignment {
   dueDate: string;
   isActive: boolean;
   linkId: string;
+  lecturerFileUrl?: string;
+  lecturerFileName?: string;
   createdAt: string;
   course: {
     id: number;
@@ -318,6 +320,20 @@ const AssignmentDetailsPage = () => {
                 <FiCalendar size={16} className="text-gray-400" />
                 <p className="text-gray-800">
                   {new Date(assignment.dueDate).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lecturer File
+              </label>
+              <div className="flex items-center gap-2">
+                <FiFileText size={16} className="text-gray-400" />
+                <p className="text-gray-800 text-sm">
+                  {assignment.lecturerFileUrl
+                    ? assignment.lecturerFileName || "Assignment File"
+                    : "No file uploaded"}
                 </p>
               </div>
             </div>

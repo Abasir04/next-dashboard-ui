@@ -321,11 +321,6 @@ const AssignmentsPage = () => {
                       <h3 className="font-medium text-gray-800">
                         {assignment.title}
                       </h3>
-                      {assignment.description && (
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                          {assignment.description}
-                        </p>
-                      )}
                     </div>
                   </td>
                   <td className="py-4 text-center">

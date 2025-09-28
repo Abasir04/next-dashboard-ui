@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/course-registration - Get existing registration link for a course
+// GET /api/course-registration - Get existing registration links or all registrations for a lecturer
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get("token")?.value;
@@ -161,16 +161,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const courseId = searchParams.get("courseId");
-
-    if (!courseId) {
-      return NextResponse.json(
-        { error: "Course ID is required" },
-        { status: 400 }
-      );
-    }
-
     // Get the lecturer ID for the current user
     const lecturer = await prisma.lecturer.findUnique({
       where: { userId: payload.userId },
@@ -184,40 +174,68 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check for existing active, non-expired link for this course
-    const now = new Date();
-    const existingLink = await prisma.courseRegistrationLink.findFirst({
-      where: {
-        courseId: parseInt(courseId),
-        lecturerId: lecturer.id,
-        isActive: true,
-        expiresAt: { gt: now },
-      },
-      include: {
-        course: true,
-        lecturer: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const { searchParams } = new URL(request.url);
+    const courseId = searchParams.get("courseId");
 
-    if (existingLink) {
-      const origin =
-        request.nextUrl?.origin ||
-        `${request.headers.get("x-forwarded-proto") || "http"}://${
-          request.headers.get("host") || "localhost:3000"
-        }`;
-      return NextResponse.json({
-        link: existingLink,
-        registrationUrl: `${origin}/student/register/${existingLink.id}`,
-        exists: true,
+    // If courseId is provided, return existing registration link for that course
+    if (courseId) {
+      const now = new Date();
+      const existingLink = await prisma.courseRegistrationLink.findFirst({
+        where: {
+          courseId: parseInt(courseId),
+          lecturerId: lecturer.id,
+          isActive: true,
+          expiresAt: { gt: now },
+        },
+        include: {
+          course: true,
+          lecturer: true,
+        },
+        orderBy: { createdAt: "desc" },
       });
+
+      if (existingLink) {
+        const origin =
+          request.nextUrl?.origin ||
+          `${request.headers.get("x-forwarded-proto") || "http"}://${
+            request.headers.get("host") || "localhost:3000"
+          }`;
+        return NextResponse.json({
+          link: existingLink,
+          registrationUrl: `${origin}/student/register/${existingLink.id}`,
+          exists: true,
+        });
+      }
+
+      return NextResponse.json({ exists: false });
     }
 
-    return NextResponse.json({ exists: false });
+    // If no courseId provided, return all course registrations for the lecturer
+    const registrations = await prisma.courseRegistration.findMany({
+      where: {
+        course: {
+          lecturerId: lecturer.id,
+        },
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json({ registrations });
   } catch (error) {
-    console.error("Error checking registration link:", error);
+    console.error("Error fetching course registrations:", error);
     return NextResponse.json(
-      { error: "Failed to check registration link" },
+      { error: "Failed to fetch course registrations" },
       { status: 500 }
     );
   }

@@ -19,10 +19,18 @@ export async function GET(
     }
 
     const { lectureId } = params;
+    const lectureIdNum = parseInt(lectureId);
+
+    if (isNaN(lectureIdNum)) {
+      return NextResponse.json(
+        { error: "Invalid lecture ID" },
+        { status: 400 }
+      );
+    }
 
     // Get the lecture with attendance details
     const lecture = await prisma.lecture.findUnique({
-      where: { id: lectureId },
+      where: { id: lectureIdNum },
       include: {
         course: {
           select: {
@@ -138,5 +146,3 @@ export async function GET(
     );
   }
 }
-
-

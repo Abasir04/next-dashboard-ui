@@ -131,6 +131,14 @@ export async function PUT(
     const body = await request.json();
     const { title, description, startDate, dueDate, isActive } = body;
 
+    // Validate description length if provided
+    if (description && description.length > 80) {
+      return NextResponse.json(
+        { error: "Description must be 80 characters or less" },
+        { status: 400 }
+      );
+    }
+
     let whereClause: any = { id: assignmentId };
 
     if (user.role === "LECTURER") {

@@ -79,6 +79,8 @@ export async function GET(
         isActive: assignment.isActive,
         isExpired,
         canSubmit: isActive,
+        lecturerFileUrl: assignment.lecturerFileUrl,
+        lecturerFileName: assignment.lecturerFileName,
         course: assignment.course,
         lecturer: assignment.lecturer,
         level: assignment.level,
@@ -177,8 +179,7 @@ export async function POST(
       return NextResponse.json(
         {
           error: "Access denied",
-          message:
-            "You are not registered for this course.",
+          message: "You are not registered for this course.",
         },
         { status: 403 }
       );

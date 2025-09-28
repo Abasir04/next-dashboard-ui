@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
+import { nanoid } from "nanoid";
 
 // GET - Fetch all assignments for the current lecturer
 export async function GET(request: NextRequest) {
@@ -96,7 +97,15 @@ export async function POST(request: NextRequest) {
 
     body = await request.json();
     console.log("Request body:", body);
-    const { title, description, courseId, startDate, dueDate } = body;
+    const {
+      title,
+      description,
+      courseId,
+      startDate,
+      dueDate,
+      lecturerFileUrl,
+      lecturerFileName,
+    } = body;
     console.log("Extracted fields:", {
       title,
       description,
@@ -109,6 +118,14 @@ export async function POST(request: NextRequest) {
     if (!title || !courseId || !startDate || !dueDate) {
       return NextResponse.json(
         { error: "All required fields must be provided" },
+        { status: 400 }
+      );
+    }
+
+    // Validate description length
+    if (description && description.length > 80) {
+      return NextResponse.json(
+        { error: "Description must be 80 characters or less" },
         { status: 400 }
       );
     }
@@ -236,10 +253,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Parse dates and validate them
+    const startDateObj = new Date(startDate);
+    const dueDateObj = new Date(dueDate);
+    const currentDate = new Date();
+
+    // Check if dates are valid
+    if (isNaN(startDateObj.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid start date format" },
+        { status: 400 }
+      );
+    }
+
+    if (isNaN(dueDateObj.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid due date format" },
+        { status: 400 }
+      );
+    }
+
+    // Validate that start date is not in the past
+    // if (startDateObj < currentDate) {
+    //   return NextResponse.json(
+    //     { error: "Start date cannot be in the past" },
+    //     { status: 400 }
+    //   );
+    // }
+
+    // Validate that due date is not in the past
+    if (dueDateObj < currentDate) {
+      return NextResponse.json(
+        { error: "Due date cannot be in the past" },
+        { status: 400 }
+      );
+    }
+
+    // Validate that start date is before due date
+    if (startDateObj >= dueDateObj) {
+      return NextResponse.json(
+        { error: "Start date must be before due date" },
+        { status: 400 }
+      );
+    }
+
     // Note: Multiple assignments are now allowed per course
     console.log(
       "Allowing multiple assignments per course - no restriction check needed"
     );
+
+    // Generate unique linkId for the assignment
+    const linkId = nanoid(12);
 
     // Create the assignment
     console.log("Creating assignment with data:", {
@@ -248,8 +312,9 @@ export async function POST(request: NextRequest) {
       courseId: parsedCourseId,
       levelId: level.id,
       lecturerId,
-      startDate: new Date(startDate),
-      dueDate: new Date(dueDate),
+      startDate: startDateObj,
+      dueDate: dueDateObj,
+      linkId,
       isActive: true,
     });
 
@@ -260,9 +325,12 @@ export async function POST(request: NextRequest) {
         courseId: parsedCourseId,
         levelId: level.id,
         lecturerId,
-        startDate: new Date(startDate),
-        dueDate: new Date(dueDate),
+        startDate: startDateObj,
+        dueDate: dueDateObj,
+        linkId,
         isActive: true,
+        lecturerFileUrl,
+        lecturerFileName,
       },
       include: {
         course: {

@@ -8,6 +8,7 @@ import {
   FiFile,
   FiCheckCircle,
   FiAlertCircle,
+  FiDownload,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 
@@ -21,6 +22,8 @@ interface Assignment {
   isActive: boolean;
   isExpired: boolean;
   canSubmit: boolean;
+  lecturerFileUrl?: string;
+  lecturerFileName?: string;
   course: {
     id: number;
     name: string;
@@ -115,14 +118,51 @@ const AssignmentSubmissionPage = () => {
     }
   };
 
+  const handleDownload = async () => {
+    if (!assignment?.lecturerFileUrl) return;
+
+    try {
+      // Call the download API with linkId
+      const response = await fetch(
+        `/api/assignments/submit/${linkId}/download`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Open the signed URL in a new tab for download
+        window.open(data.url, "_blank");
+      } else {
+        // Fallback to direct URL if API fails
+        window.open(assignment.lecturerFileUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error generating download URL:", error);
+      // Fallback to direct URL on error
+      window.open(assignment.lecturerFileUrl, "_blank");
+    }
+  };
+
   const uploadFile = async (file: File): Promise<string> => {
-    // For now, we'll simulate file upload
-    // In a real implementation, you'd upload to a cloud storage service
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`https://example.com/uploads/${file.name}`);
-      }, 1000);
-    });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to upload file");
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw new Error("Failed to upload file. Please try again.");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -330,6 +370,22 @@ const AssignmentSubmissionPage = () => {
                     <p className="text-gray-800 text-sm">
                       {assignment.description}
                     </p>
+                  </div>
+                )}
+
+                {assignment.lecturerFileUrl && (
+                  <div className="pt-2 border-t border-blue-200">
+                    <span className="font-medium text-gray-600 block mb-2">
+                      Assignment File:
+                    </span>
+                    <button
+                      onClick={handleDownload}
+                      className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      <FiDownload className="w-4 h-4 mr-2" />
+                      Download{" "}
+                      {assignment.lecturerFileName || "Assignment File"}
+                    </button>
                   </div>
                 )}
               </div>

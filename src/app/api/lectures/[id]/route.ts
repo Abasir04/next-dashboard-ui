@@ -19,10 +19,18 @@ export async function GET(
     }
 
     const { id } = params;
+    const lectureId = parseInt(id);
+
+    if (isNaN(lectureId)) {
+      return NextResponse.json(
+        { error: "Invalid lecture ID" },
+        { status: 400 }
+      );
+    }
 
     const lecture = await prisma.lecture.findFirst({
       where: {
-        id: id,
+        id: lectureId,
         ...(user.role === "LECTURER"
           ? {
               lecturer: {
@@ -82,6 +90,15 @@ export async function PUT(
     }
 
     const { id } = params;
+    const lectureId = parseInt(id);
+
+    if (isNaN(lectureId)) {
+      return NextResponse.json(
+        { error: "Invalid lecture ID" },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const { startTime, endTime, linkExpiry } = body;
 
@@ -107,7 +124,7 @@ export async function PUT(
     // Check if lecture exists and user has access
     const existingLecture = await prisma.lecture.findFirst({
       where: {
-        id: id,
+        id: lectureId,
         ...(user.role === "LECTURER"
           ? {
               lecturer: {
@@ -127,7 +144,7 @@ export async function PUT(
 
     // Update the lecture
     const updatedLecture = await prisma.lecture.update({
-      where: { id },
+      where: { id: lectureId },
       data: {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
@@ -181,10 +198,18 @@ export async function DELETE(
     }
 
     const { id } = params;
+    const lectureId = parseInt(id);
+
+    if (isNaN(lectureId)) {
+      return NextResponse.json(
+        { error: "Invalid lecture ID" },
+        { status: 400 }
+      );
+    }
 
     // Get the lecture
     const lecture = await prisma.lecture.findUnique({
-      where: { id },
+      where: { id: lectureId },
       include: {
         course: {
           select: {
@@ -220,12 +245,12 @@ export async function DELETE(
 
     // Delete all attendance records first (cascade delete)
     await prisma.attendance.deleteMany({
-      where: { lectureId: id },
+      where: { lectureId: lectureId },
     });
 
     // Delete the lecture
     await prisma.lecture.delete({
-      where: { id },
+      where: { id: lectureId },
     });
 
     return NextResponse.json({
