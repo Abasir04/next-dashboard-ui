@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import dynamic from "next/dynamic";
+import { paths } from "@/lib/paths";
+import SessionMonitor from "@/components/SessionMonitor";
+
+const ClientBackButton = dynamic(
+  () => import("@/components/ClientBackButton"),
+  { ssr: false }
+);
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,8 +34,11 @@ export default function RootLayout({
           backgroundRepeat: "no-repeat",
         }}
       >
-        <Toaster position="top-center" reverseOrder={false} />
-        {children}
+        <SessionMonitor>
+          <Toaster position="top-center" reverseOrder={false} />
+          <ClientBackButton showOn={paths.auth} backTo={paths.landing} />
+          {children}
+        </SessionMonitor>
       </body>
     </html>
   );

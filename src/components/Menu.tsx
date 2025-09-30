@@ -1,94 +1,88 @@
-import Image from "next/image";
+"use client";
 import Link from "next/link";
-import { getCurrentUserRole } from "@/lib/dataService";
+import { usePathname } from "next/navigation";
+// Remove the problematic import
+import { paths } from "@/lib/paths";
+import {
+  FaHome,
+  FaUser,
+  FaUsers,
+  FaChalkboardTeacher,
+  FaBook,
+  FaClipboardList,
+  FaCalendarAlt,
+  FaEnvelope,
+  FaUserCircle,
+  FaCog,
+  FaSignOutAlt,
+  FaCheckCircle,
+} from "react-icons/fa";
+import { useEffect, useState } from "react";
+import LogoutModal from "./LogoutModal";
 
 const menuItems = [
   {
     title: "MENU",
     items: [
       {
-        icon: "/home.png",
         label: "Home",
-        href: "/",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: paths.home,
+        icon: FaHome,
+        visible: ["admin", "lecturer"],
       },
       {
-        icon: "/teacher.png",
-        label: "Teachers",
-        href: "/list/teachers",
-        visible: ["admin", "teacher"],
-      },
-      {
-        icon: "/student.png",
-        label: "Students",
-        href: "/list/students",
-        visible: ["admin", "teacher"],
-      },
-      {
-        icon: "/parent.png",
-        label: "Parents",
-        href: "/list/parents",
-        visible: ["admin", "teacher"],
-      },
-      {
-        icon: "/subject.png",
-        label: "Subjects",
-        href: "/list/subjects",
+        label: "Lecturers",
+        href: paths.menu.lecturers,
+        icon: FaUser,
         visible: ["admin"],
       },
       {
-        icon: "/class.png",
-        label: "Classes",
-        href: "/list/classes",
-        visible: ["admin", "teacher"],
+        label: "Courses",
+        href: paths.menu.courses,
+        icon: FaBook,
+        visible: ["admin", "lecturer"],
       },
       {
-        icon: "/lesson.png",
-        label: "Lessons",
-        href: "/list/lessons",
-        visible: ["admin", "teacher"],
+        label: "Levels",
+        href: paths.menu.levels,
+        icon: FaChalkboardTeacher,
+        visible: ["admin", "lecturer"],
       },
       {
-        icon: "/exam.png",
-        label: "Exams",
-        href: "/list/exams",
-        visible: ["admin", "teacher", "student", "parent"],
+        label: "Students",
+        href: paths.menu.students,
+        icon: FaUsers,
+        visible: ["admin", "lecturer"],
       },
+      // {
+      //   label: "Lessons",
+      //   href: paths.menu.lessons,
+      //   icon: FaBook,
+      //   visible: ["admin", "lecturer"],
+      // },
       {
-        icon: "/assignment.png",
         label: "Assignments",
-        href: "/list/assignments",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: paths.menu.assignments,
+        icon: FaClipboardList,
+        visible: ["admin", "lecturer", "student", "parent"],
       },
       {
-        icon: "/result.png",
-        label: "Results",
-        href: "/list/results",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/attendance.png",
         label: "Attendance",
-        href: "/list/attendance",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: paths.menu.attendance,
+        icon: FaCheckCircle,
+        visible: ["admin", "lecturer", "student", "parent"],
       },
+      // {
+      //   label: "Events",
+      //   href: paths.menu.events,
+      //   icon: FaCalendarAlt,
+      //   visible: ["admin", "lecturer", "student", "parent"],
+      // },
       {
-        icon: "/calendar.png",
-        label: "Events",
-        href: "/list/events",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/message.png",
         label: "Messages",
-        href: "/list/messages",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/announcement.png",
-        label: "Announcements",
-        href: "/list/announcements",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: paths.menu.messages,
+        icon: FaEnvelope,
+        visible: ["admin", "lecturer", "student", "parent"],
       },
     ],
   },
@@ -96,53 +90,156 @@ const menuItems = [
     title: "OTHER",
     items: [
       {
-        icon: "/profile.png",
         label: "Profile",
-        href: "/profile",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: paths.profile,
+        icon: FaUserCircle,
+        visible: ["admin", "lecturer", "student", "parent"],
       },
       {
-        icon: "/setting.png",
         label: "Settings",
-        href: "/settings",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: paths.settings,
+        icon: FaCog,
+        visible: ["admin", "lecturer", "student", "parent"],
       },
       {
-        icon: "/logout.png",
         label: "Logout",
-        href: "/logout",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: paths.logout,
+        icon: FaSignOutAlt,
+        visible: ["admin", "lecturer", "student", "parent"],
       },
     ],
   },
 ];
 
-const Menu = async () => {
-  const role = await getCurrentUserRole();
+const Menu = () => {
+  const pathname = usePathname();
+  const [role, setRole] = useState<string>("");
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (response.ok) {
+          const data = await response.json();
+          // Convert role to lowercase to match menu visibility checks
+          setRole(data.user.role.toLowerCase());
+        } else {
+          setRole("");
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+        setRole("");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
+
+  const menuSection = menuItems[0].items.filter((item) =>
+    item.visible.includes(role)
+  );
+  const otherSection = menuItems[1].items.filter((item) =>
+    item.visible.includes(role)
+  );
+
+  const isActive = (href: string) => {
+    // Exact match or startsWith for subpages
+    return pathname === href || (href !== "/" && pathname.startsWith(href));
+  };
+
+  const handleLogoutClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLogoutModalOpen(true);
+  };
+
+  // Show loading state while fetching user role
+  if (isLoading) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 p-2">
+        <span className="hidden lg:block text-black font-semibold my-2">
+          MENU
+        </span>
+        <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-4 text-sm">
-      {menuItems.map((i) => (
-        <div className="flex flex-col gap-2" key={i.title}>
-          <span className="hidden lg:block text-gray-400 font-light my-4">
-            {i.title}
+    <div className="flex flex-col flex-1 min-h-0 p-2">
+      <span className="hidden lg:block text-black font-semibold my-2">
+        MENU
+      </span>
+      <div className="flex-1 min-h-0 overflow-auto">
+        {menuSection.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {menuSection.map((item) => (
+              <Link
+                href={item.href}
+                key={item.label}
+                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
+                  ${
+                    isActive(item.href)
+                      ? "bg-primary text-white"
+                      : "text-black hover:bg-primary hover:text-white"
+                  }`}
+              >
+                <item.icon size={20} />
+                <span className="hidden lg:block">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+      {otherSection.length > 0 && (
+        <div className="flex flex-col gap-2 pb-2 pt-2">
+          <span className="hidden lg:block text-black font-semibold my-2">
+            OTHER
           </span>
-          {i.items.map((item) => {
-            if (item.visible.includes(role)) {
+          {otherSection.map((item) => {
+            if (item.label === "Logout") {
               return (
-                <Link
-                  href={item.href}
+                <button
                   key={item.label}
-                  className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-lamaSkyLight"
+                  onClick={handleLogoutClick}
+                  className="flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors text-black hover:bg-primary hover:text-white w-full"
                 >
-                  <Image src={item.icon} alt="" width={20} height={20} />
+                  <item.icon size={20} />
                   <span className="hidden lg:block">{item.label}</span>
-                </Link>
+                </button>
               );
             }
+            return (
+              <Link
+                href={item.href}
+                key={item.label}
+                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
+                  ${
+                    isActive(item.href)
+                      ? "bg-primary text-white"
+                      : "text-black hover:bg-primary hover:text-white"
+                  }`}
+              >
+                <item.icon size={20} />
+                <span className="hidden lg:block">{item.label}</span>
+              </Link>
+            );
           })}
         </div>
-      ))}
+      )}
+
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
     </div>
   );
 };

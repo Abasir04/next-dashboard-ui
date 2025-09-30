@@ -2,37 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateUser, generateToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
-  console.log("Signin route called");
-
   try {
     const body = await request.json();
-    console.log("Request body:", body);
 
-    const { email, password } = body;
+    const { email, password, matricNumber } = body;
 
     // Validation
-    if (!email || !password) {
-      console.log("Missing email or password");
+    if ((!email && !matricNumber) || !password) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: "Email or matric number and password are required" },
         { status: 400 }
       );
     }
 
-    console.log("Authenticating user:", email);
-
     // Authenticate user
-    const user = await authenticateUser(email, password);
+    const user = await authenticateUser(email || matricNumber, password);
 
     if (!user) {
-      console.log("Authentication failed");
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Invalid credentials" },
         { status: 401 }
       );
     }
-
-    console.log("User authenticated:", user.email);
 
     // Generate JWT token
     const token = generateToken({
@@ -64,10 +55,8 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
-    console.log("Signin successful");
     return response;
   } catch (error) {
-    console.error("Signin error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

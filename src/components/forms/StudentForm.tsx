@@ -5,6 +5,16 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import InputField from "../InputField";
 import Image from "next/image";
+import DropSelect from "../DropSelect";
+
+const titleOptions = [
+  { label: "Mr", value: "mr" },
+  { label: "Mrs", value: "mrs" },
+  { label: "Miss", value: "miss" },
+  { label: "Dr", value: "dr" },
+  { label: "Prof", value: "prof" },
+];
+const roleOptions = [{ label: "Student", value: "student" }];
 
 const schema = z.object({
   username: z
@@ -15,14 +25,21 @@ const schema = z.object({
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters long!" }),
+  // Surname-first enforcement via separate fields in UI
+  surname: z.string().min(1, { message: "Surname is required!" }),
   firstName: z.string().min(1, { message: "First name is required!" }),
-  lastName: z.string().min(1, { message: "Last name is required!" }),
+  // Required 6-digit matric number
+  matricNumber: z
+    .string()
+    .regex(/^\d{6}$/, { message: "Matric number must be exactly 6 digits" }),
   phone: z.string().min(1, { message: "Phone is required!" }),
   address: z.string().min(1, { message: "Address is required!" }),
   bloodType: z.string().min(1, { message: "Blood Type is required!" }),
   birthday: z.date({ message: "Birthday is required!" }),
   sex: z.enum(["male", "female"], { message: "Sex is required!" }),
   img: z.instanceof(File, { message: "Image is required" }),
+  title: z.string().min(1, { message: "Title is required!" }),
+  role: z.string().min(1, { message: "Role is required!" }),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -38,6 +55,7 @@ const StudentForm = ({
     register,
     handleSubmit,
     formState: { errors },
+    control,
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
   });
@@ -81,6 +99,13 @@ const StudentForm = ({
       </span>
       <div className="flex justify-between flex-wrap gap-4">
         <InputField
+          label="Surname (Last name)"
+          name="surname"
+          defaultValue={data?.surname}
+          register={register}
+          error={errors.surname}
+        />
+        <InputField
           label="First Name"
           name="firstName"
           defaultValue={data?.firstName}
@@ -88,11 +113,11 @@ const StudentForm = ({
           error={errors.firstName}
         />
         <InputField
-          label="Last Name"
-          name="lastName"
-          defaultValue={data?.lastName}
+          label="Matric Number (6 digits)"
+          name="matricNumber"
+          defaultValue={data?.matricNumber}
           register={register}
-          error={errors.lastName}
+          error={errors.matricNumber}
         />
         <InputField
           label="Phone"
@@ -154,6 +179,22 @@ const StudentForm = ({
             </p>
           )}
         </div>
+        <DropSelect
+          name="title"
+          label="Title"
+          placeholder="Select your title"
+          control={control}
+          options={titleOptions}
+          errors={errors}
+        />
+        <DropSelect
+          name="role"
+          label="Role"
+          placeholder="Select your role"
+          control={control}
+          options={roleOptions}
+          errors={errors}
+        />
       </div>
       <button className="bg-blue-400 text-white p-2 rounded-md">
         {type === "create" ? "Create" : "Update"}

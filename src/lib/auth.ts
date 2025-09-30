@@ -38,7 +38,8 @@ export async function createUser(userData: {
   password: string;
   firstName: string;
   lastName: string;
-  role?: string;
+  title: string;
+  role: string;
 }) {
   try {
     console.log("Creating user:", userData.email);
@@ -50,13 +51,15 @@ export async function createUser(userData: {
         password: hashedPassword,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        role: (userData.role as any) || "TEACHER",
+        title: userData.title,
+        role: (userData.role as any) || "LECTURER",
       },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
+        title: true,
         role: true,
         createdAt: true,
       },
@@ -70,27 +73,40 @@ export async function createUser(userData: {
   }
 }
 
-export async function authenticateUser(email: string, password: string) {
+export async function authenticateUser(identifier: string, password: string) {
   try {
-    console.log("Authenticating user:", email);
+    console.log("Authenticating user:", identifier);
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    // Try to find user by email first, then by matric number through student table
+    let user = await prisma.user.findUnique({
+      where: { email: identifier },
     });
 
+    // If not found by email, try to find by matric number
     if (!user) {
-      console.log("User not found:", email);
+      const student = await prisma.student.findUnique({
+        where: { matricNumber: identifier },
+        include: { user: true },
+      });
+
+      if (student) {
+        user = student.user;
+      }
+    }
+
+    if (!user) {
+      console.log("User not found:", identifier);
       return null;
     }
 
     const isValidPassword = await verifyPassword(password, user.password);
 
     if (!isValidPassword) {
-      console.log("Invalid password for user:", email);
+      console.log("Invalid password for user:", identifier);
       return null;
     }
 
-    console.log("User authenticated successfully:", email);
+    console.log("User authenticated successfully:", identifier);
     return {
       id: user.id,
       email: user.email,
