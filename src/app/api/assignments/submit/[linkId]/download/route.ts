@@ -69,7 +69,7 @@ export async function GET(
 
     const downloadUrl = await generateBackblazeUrl(
       assignment.lecturerFileUrl,
-      assignment.lecturerFileName
+      assignment.lecturerFileName || undefined
     );
 
     console.log("Generated download URL:", downloadUrl);

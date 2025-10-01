@@ -103,7 +103,7 @@ const StudentAttendancePage = () => {
       fetchLectureDetails();
       requestLocation();
     }
-  }, [lectureCode]);
+  }, [lectureCode, fetchLectureDetails]);
 
   // Update countdown timer
   useEffect(() => {
