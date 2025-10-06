@@ -83,8 +83,8 @@ const EditLectureModal: React.FC<EditLectureModalProps> = ({
     }
 
     // Validate that link expiry is after start time
-    const startTimeDate = new Date(formData.startTime);
-    const linkExpiryDate = new Date(formData.linkExpiry);
+    const startTimeDate = new Date(formData.startTime + ":00");
+    const linkExpiryDate = new Date(formData.linkExpiry + ":00");
 
     if (linkExpiryDate <= startTimeDate) {
       showError("Link expiry must be after start time");

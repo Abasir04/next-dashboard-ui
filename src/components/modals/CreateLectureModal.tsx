@@ -57,7 +57,7 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
       return;
     }
 
-    // Validate dates
+    // Validate dates - ensure they're treated as local time
     const startTime = new Date(formData.startTime);
     const endTime = new Date(formData.endTime);
     const linkExpiry = new Date(formData.linkExpiry);
