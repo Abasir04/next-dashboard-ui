@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
+import { getBaseUrl } from "@/lib/urlUtils";
 
 // GET - Get existing submission link for assignment
 export async function GET(
@@ -91,9 +92,7 @@ export async function GET(
         level: assignment.level,
       },
       submissionUrl: isActive
-        ? `${
-            process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-          }/student/assignment/${assignment.linkId}`
+        ? `${getBaseUrl(request)}/student/assignment/${assignment.linkId}`
         : null,
     });
   } catch (error) {
@@ -187,9 +186,9 @@ export async function POST(
     // Generate new linkId if needed (assignment already has one, but we can regenerate)
     const newLinkId = assignment.linkId; // Keep existing linkId
 
-    const submissionUrl = `${
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }/student/assignment/${newLinkId}`;
+    const submissionUrl = `${getBaseUrl(
+      request
+    )}/student/assignment/${newLinkId}`;
 
     return NextResponse.json({
       message: "Submission link generated successfully",

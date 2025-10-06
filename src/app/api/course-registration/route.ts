@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
+import { getBaseUrl } from "@/lib/urlUtils";
 
 // POST /api/course-registration - Create a registration link
 export async function POST(request: NextRequest) {
@@ -88,14 +89,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingActiveLink) {
-      const origin =
-        request.nextUrl?.origin ||
-        `${request.headers.get("x-forwarded-proto") || "http"}://${
-          request.headers.get("host") || "localhost:3000"
-        }`;
       return NextResponse.json({
         link: existingActiveLink,
-        registrationUrl: `${origin}/student/register/${existingActiveLink.id}`,
+        registrationUrl: `${getBaseUrl(request)}/student/register/${
+          existingActiveLink.id
+        }`,
         reused: true,
       });
     }
@@ -117,14 +115,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const origin =
-      request.nextUrl?.origin ||
-      `${request.headers.get("x-forwarded-proto") || "http"}://${
-        request.headers.get("host") || "localhost:3000"
-      }`;
     return NextResponse.json({
       link: registrationLink,
-      registrationUrl: `${origin}/student/register/${registrationLink.id}`,
+      registrationUrl: `${getBaseUrl(request)}/student/register/${
+        registrationLink.id
+      }`,
     });
   } catch (error) {
     console.error("Error creating registration link:", error);
@@ -195,14 +190,11 @@ export async function GET(request: NextRequest) {
       });
 
       if (existingLink) {
-        const origin =
-          request.nextUrl?.origin ||
-          `${request.headers.get("x-forwarded-proto") || "http"}://${
-            request.headers.get("host") || "localhost:3000"
-          }`;
         return NextResponse.json({
           link: existingLink,
-          registrationUrl: `${origin}/student/register/${existingLink.id}`,
+          registrationUrl: `${getBaseUrl(request)}/student/register/${
+            existingLink.id
+          }`,
           exists: true,
         });
       }

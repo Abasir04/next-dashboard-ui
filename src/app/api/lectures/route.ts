@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
 import { nanoid } from "nanoid";
+import { getBaseUrl } from "@/lib/urlUtils";
 
 // POST - Create a new lecture
 export async function POST(request: NextRequest) {
@@ -127,9 +128,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate attendance URL
-    const attendanceUrl = `${
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }/student/attendance/${uniqueCode}`;
+    const attendanceUrl = `${getBaseUrl(
+      request
+    )}/student/attendance/${uniqueCode}`;
 
     return NextResponse.json({
       success: true,
@@ -217,9 +218,9 @@ export async function GET(request: NextRequest) {
     // Add attendance counts and URLs
     const lecturesWithCounts = lectures.map((lecture) => ({
       ...lecture,
-      attendanceUrl: `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/student/attendance/${lecture.uniqueCode}`,
+      attendanceUrl: `${getBaseUrl(request)}/student/attendance/${
+        lecture.uniqueCode
+      }`,
       presentCount: lecture.attendances.filter((a) => a.status === "PRESENT")
         .length,
       totalStudents: lecture.attendances.length,
