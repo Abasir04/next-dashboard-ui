@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
 
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
+
 // GET - Get a single lecture
 export async function GET(
   request: NextRequest,
@@ -111,8 +114,8 @@ export async function PUT(
     }
 
     // Validate that link expiry is after start time
-    const startTimeDate = new Date(startTime);
-    const linkExpiryDate = new Date(linkExpiry);
+    const startTimeDate = new Date(startTime + ":00");
+    const linkExpiryDate = new Date(linkExpiry + ":00");
 
     if (linkExpiryDate <= startTimeDate) {
       return NextResponse.json(
@@ -146,9 +149,9 @@ export async function PUT(
     const updatedLecture = await prisma.lecture.update({
       where: { id: lectureId },
       data: {
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-        linkExpiry: new Date(linkExpiry),
+        startTime: new Date(startTime + ":00"),
+        endTime: new Date(endTime + ":00"),
+        linkExpiry: new Date(linkExpiry + ":00"),
       },
       include: {
         course: {

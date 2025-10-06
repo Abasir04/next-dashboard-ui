@@ -40,10 +40,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate dates
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const expiry = new Date(linkExpiry);
+    // Validate dates - handle datetime-local format properly
+    // datetime-local inputs provide dates in format "YYYY-MM-DDTHH:MM" without timezone
+    // We need to ensure they're parsed consistently regardless of server timezone
+    const start = new Date(startTime + ":00"); // Add seconds to ensure proper parsing
+    const end = new Date(endTime + ":00");
+    const expiry = new Date(linkExpiry + ":00");
     const now = new Date();
 
     if (start <= now) {
