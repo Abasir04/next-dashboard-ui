@@ -89,7 +89,6 @@ model Course {
   lessons           Lesson[]
   results           Result[]
 
-  @@index([lecturerId], map: "courses_lecturerId_fkey")
   @@map("courses")
 }
 
@@ -101,7 +100,6 @@ model LecturerCourse {
   lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 
   @@unique([lecturerId, courseId])
-  @@index([courseId], map: "lecturer_courses_courseId_fkey")
   @@map("lecturer_courses")
 }
 
@@ -113,7 +111,6 @@ model LecturerLevel {
   level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
   @@unique([lecturerId, levelId])
-  @@index([levelId], map: "lecturer_levels_levelId_fkey")
   @@map("lecturer_levels")
 }
 
@@ -138,7 +135,6 @@ model Student {
   level        Level    @relation(fields: [levelId], references: [id])
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([levelId], map: "students_levelId_fkey")
   @@map("students")
 }
 
@@ -153,9 +149,6 @@ model Lesson {
   lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
-  @@index([courseId], map: "lessons_courseId_fkey")
-  @@index([lecturerId], map: "lessons_lecturerId_fkey")
-  @@index([levelId], map: "lessons_levelId_fkey")
   @@map("lessons")
 }
 
@@ -172,9 +165,6 @@ model Exam {
   level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
   results    Result[]
 
-  @@index([courseId], map: "exams_courseId_fkey")
-  @@index([lecturerId], map: "exams_lecturerId_fkey")
-  @@index([levelId], map: "exams_levelId_fkey")
   @@map("exams")
 }
 
@@ -198,9 +188,6 @@ model Assignment {
   level           Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
   submissions     AssignmentSubmission[]
 
-  @@index([courseId], map: "assignments_courseId_fkey")
-  @@index([lecturerId], map: "assignments_lecturerId_fkey")
-  @@index([levelId], map: "assignments_levelId_fkey")
   @@map("assignments")
 }
 
@@ -222,11 +209,6 @@ model Result {
   level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@index([courseId], map: "results_courseId_fkey")
-  @@index([examId], map: "results_examId_fkey")
-  @@index([lecturerId], map: "results_lecturerId_fkey")
-  @@index([levelId], map: "results_levelId_fkey")
-  @@index([studentId], map: "results_studentId_fkey")
   @@map("results")
 }
 
@@ -241,7 +223,6 @@ model Event {
   updatedAt DateTime @updatedAt
   level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
-  @@index([levelId], map: "events_levelId_fkey")
   @@map("events")
 }
 
@@ -254,7 +235,6 @@ model Announcement {
   updatedAt DateTime @updatedAt
   level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
 
-  @@index([levelId], map: "announcements_levelId_fkey")
   @@map("announcements")
 }
 
@@ -295,8 +275,6 @@ model CourseRegistrationLink {
   lecturer      Lecturer             @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   registrations CourseRegistration[]
 
-  @@index([courseId], map: "course_registration_links_courseId_fkey")
-  @@index([lecturerId], map: "course_registration_links_lecturerId_fkey")
   @@map("course_registration_links")
 }
 
@@ -315,8 +293,6 @@ model CourseRegistration {
   course       Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
   link         CourseRegistrationLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
 
-  @@index([courseId], map: "course_registrations_courseId_fkey")
-  @@index([linkId], map: "course_registrations_linkId_fkey")
   @@map("course_registrations")
 }
 
@@ -332,8 +308,6 @@ model CourseMaterial {
   course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lecturer         Lecturer @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
 
-  @@index([courseId], map: "course_materials_courseId_fkey")
-  @@index([uploadedBy], map: "course_materials_uploadedBy_fkey")
   @@map("course_materials")
 }
 
@@ -351,8 +325,6 @@ model Lecture {
   lecturer     Lecturer   @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   attendances  Attendance[]
 
-  @@index([courseId], map: "lectures_courseId_fkey")
-  @@index([lecturerId], map: "lectures_lecturerId_fkey")
   @@map("lectures")
 }
 
@@ -370,8 +342,6 @@ model Attendance {
   student    Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([lectureId, studentId])
-  @@index([lectureId], map: "attendances_lectureId_fkey")
-  @@index([studentId], map: "attendances_studentId_fkey")
   @@map("attendances")
 }
 
@@ -390,8 +360,6 @@ model AssignmentSubmission {
   student          Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, studentId])
-  @@index([assignmentId], map: "assignment_submissions_assignmentId_fkey")
-  @@index([studentId], map: "assignment_submissions_studentId_fkey")
   @@map("assignment_submissions")
 }
 

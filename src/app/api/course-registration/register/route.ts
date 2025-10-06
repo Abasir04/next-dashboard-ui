@@ -72,9 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if student is already registered for this course
-    const existingRegistration = await (
-      prisma as any
-    ).courseRegistration.findFirst({
+    const existingRegistration = await prisma.courseRegistration.findFirst({
       where: {
         linkId: linkId,
         matricNumber: matricNumber,
@@ -89,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create registration (auto-approve upon successful submission)
-    const registration = await (prisma as any).courseRegistration.create({
+    const registration = await prisma.courseRegistration.create({
       data: {
         linkId: linkId,
         courseId: registrationLink.courseId,
@@ -109,7 +107,7 @@ export async function POST(request: NextRequest) {
       message: "Registration submitted successfully",
       registration: {
         id: registration.id,
-        courseName: (registration as any).course?.name || "",
+        courseName: registration.course?.name || "",
         level: registration.level,
         status: registration.status,
       },

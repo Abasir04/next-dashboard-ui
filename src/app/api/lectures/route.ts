@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
 import { nanoid } from "nanoid";
+import { getBaseUrl } from "@/lib/urlUtils";
+
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
 
 // POST - Create a new lecture
 export async function POST(request: NextRequest) {
@@ -23,6 +27,15 @@ export async function POST(request: NextRequest) {
     if (!courseId || !startTime || !endTime || !linkExpiry) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate courseId is a valid number
+    const parsedCourseId = parseInt(courseId);
+    if (isNaN(parsedCourseId) || parsedCourseId <= 0) {
+      return NextResponse.json(
+        { error: "Invalid course ID provided" },
         { status: 400 }
       );
     }
@@ -52,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (user.role === "ADMIN") {
       // For admin, we need to get the lecturer ID from the course
       const course = await prisma.course.findUnique({
-        where: { id: parseInt(courseId) },
+        where: { id: parsedCourseId },
         select: { lecturerId: true },
       });
 
@@ -83,7 +96,7 @@ export async function POST(request: NextRequest) {
       // Verify the course belongs to this lecturer
       const course = await prisma.course.findFirst({
         where: {
-          id: parseInt(courseId),
+          id: parsedCourseId,
           lecturerId: lecturerId,
         },
       });
@@ -102,7 +115,7 @@ export async function POST(request: NextRequest) {
     // Create lecture
     const lecture = await prisma.lecture.create({
       data: {
-        courseId: parseInt(courseId),
+        courseId: parsedCourseId,
         lecturerId,
         uniqueCode,
         startTime: start,
@@ -127,9 +140,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate attendance URL
-    const attendanceUrl = `${
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }/student/attendance/${uniqueCode}`;
+    const attendanceUrl = `${getBaseUrl(
+      request
+    )}/student/attendance/${uniqueCode}`;
 
     return NextResponse.json({
       success: true,
@@ -217,9 +230,9 @@ export async function GET(request: NextRequest) {
     // Add attendance counts and URLs
     const lecturesWithCounts = lectures.map((lecture) => ({
       ...lecture,
-      attendanceUrl: `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/student/attendance/${lecture.uniqueCode}`,
+      attendanceUrl: `${getBaseUrl(request)}/student/attendance/${
+        lecture.uniqueCode
+      }`,
       presentCount: lecture.attendances.filter((a) => a.status === "PRESENT")
         .length,
       totalStudents: lecture.attendances.length,
