@@ -38,6 +38,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate courseId is a valid number
+    const parsedCourseId = parseInt(courseId);
+    if (isNaN(parsedCourseId) || parsedCourseId <= 0) {
+      return NextResponse.json(
+        { error: "Invalid course ID provided" },
+        { status: 400 }
+      );
+    }
+
     // Get the lecturer ID for the current user
     const lecturer = await prisma.lecturer.findUnique({
       where: { userId: payload.userId },
@@ -54,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Verify course exists and belongs to lecturer
     const course = await prisma.course.findFirst({
       where: {
-        id: courseId,
+        id: parsedCourseId,
         lecturerId: lecturer.id,
       },
       include: {
@@ -76,7 +85,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const existingActiveLink = await prisma.courseRegistrationLink.findFirst({
       where: {
-        courseId: courseId,
+        courseId: parsedCourseId,
         lecturerId: lecturer.id,
         isActive: true,
         expiresAt: { gt: now },
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     const registrationLink = await prisma.courseRegistrationLink.create({
       data: {
-        courseId: courseId,
+        courseId: parsedCourseId,
         lecturerId: lecturer.id,
         level: course.level,
         expiresAt: expiresAt,
@@ -174,10 +183,19 @@ export async function GET(request: NextRequest) {
 
     // If courseId is provided, return existing registration link for that course
     if (courseId) {
+      // Validate courseId is a valid number
+      const parsedCourseId = parseInt(courseId);
+      if (isNaN(parsedCourseId) || parsedCourseId <= 0) {
+        return NextResponse.json(
+          { error: "Invalid course ID provided" },
+          { status: 400 }
+        );
+      }
+
       const now = new Date();
       const existingLink = await prisma.courseRegistrationLink.findFirst({
         where: {
-          courseId: parseInt(courseId),
+          courseId: parsedCourseId,
           lecturerId: lecturer.id,
           isActive: true,
           expiresAt: { gt: now },

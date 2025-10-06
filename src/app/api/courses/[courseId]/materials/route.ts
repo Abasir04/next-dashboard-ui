@@ -215,6 +215,15 @@ export async function DELETE(
       );
     }
 
+    // Validate materialId is a valid number
+    const parsedMaterialId = parseInt(materialId);
+    if (isNaN(parsedMaterialId) || parsedMaterialId <= 0) {
+      return NextResponse.json(
+        { error: "Invalid material ID provided" },
+        { status: 400 }
+      );
+    }
+
     // Check if user has access to this course
     const course = await prisma.course.findFirst({
       where: {
@@ -239,7 +248,7 @@ export async function DELETE(
     // Find the material
     const material = await prisma.courseMaterial.findFirst({
       where: {
-        id: parseInt(materialId),
+        id: parsedMaterialId,
         courseId: courseId,
       },
     });

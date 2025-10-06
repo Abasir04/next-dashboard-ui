@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
 import { nanoid } from "nanoid";
 
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
+
 // GET - Fetch all assignments for the current lecturer
 export async function GET(request: NextRequest) {
   try {

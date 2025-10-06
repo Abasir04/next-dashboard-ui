@@ -4,6 +4,9 @@ import { getAuthenticatedUser } from "@/lib/serverAuth";
 import { nanoid } from "nanoid";
 import { getBaseUrl } from "@/lib/urlUtils";
 
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
+
 // POST - Create a new lecture
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +27,15 @@ export async function POST(request: NextRequest) {
     if (!courseId || !startTime || !endTime || !linkExpiry) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate courseId is a valid number
+    const parsedCourseId = parseInt(courseId);
+    if (isNaN(parsedCourseId) || parsedCourseId <= 0) {
+      return NextResponse.json(
+        { error: "Invalid course ID provided" },
         { status: 400 }
       );
     }
@@ -53,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (user.role === "ADMIN") {
       // For admin, we need to get the lecturer ID from the course
       const course = await prisma.course.findUnique({
-        where: { id: parseInt(courseId) },
+        where: { id: parsedCourseId },
         select: { lecturerId: true },
       });
 
@@ -84,7 +96,7 @@ export async function POST(request: NextRequest) {
       // Verify the course belongs to this lecturer
       const course = await prisma.course.findFirst({
         where: {
-          id: parseInt(courseId),
+          id: parsedCourseId,
           lecturerId: lecturerId,
         },
       });
@@ -103,7 +115,7 @@ export async function POST(request: NextRequest) {
     // Create lecture
     const lecture = await prisma.lecture.create({
       data: {
-        courseId: parseInt(courseId),
+        courseId: parsedCourseId,
         lecturerId,
         uniqueCode,
         startTime: start,

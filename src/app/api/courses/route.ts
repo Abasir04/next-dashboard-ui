@@ -213,6 +213,15 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Validate courseId is a valid number
+    const parsedCourseId = parseInt(courseId);
+    if (isNaN(parsedCourseId) || parsedCourseId <= 0) {
+      return NextResponse.json(
+        { error: "Invalid course ID provided" },
+        { status: 400 }
+      );
+    }
+
     const { name, code, level } = await request.json();
 
     if (!name || name.trim() === "") {
@@ -238,7 +247,7 @@ export async function PUT(request: NextRequest) {
 
     // Check if course exists
     const existingCourse = await prisma.course.findUnique({
-      where: { id: parseInt(courseId) },
+      where: { id: parsedCourseId },
     });
 
     if (!existingCourse) {
@@ -249,7 +258,7 @@ export async function PUT(request: NextRequest) {
     const duplicateCourseByName = await prisma.course.findFirst({
       where: {
         name: name.trim(),
-        id: { not: parseInt(courseId) },
+        id: { not: parsedCourseId },
       },
     });
 
@@ -264,7 +273,7 @@ export async function PUT(request: NextRequest) {
     const duplicateCourseByCode = await prisma.course.findFirst({
       where: {
         code: code.trim().toUpperCase(),
-        id: { not: parseInt(courseId) },
+        id: { not: parsedCourseId },
       },
     });
 
@@ -276,7 +285,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updatedCourse = await prisma.course.update({
-      where: { id: parseInt(courseId) },
+      where: { id: parsedCourseId },
       data: {
         name: name.trim(),
         code: code.trim().toUpperCase(),
@@ -330,9 +339,18 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Validate courseId is a valid number
+    const parsedCourseId = parseInt(courseId);
+    if (isNaN(parsedCourseId) || parsedCourseId <= 0) {
+      return NextResponse.json(
+        { error: "Invalid course ID provided" },
+        { status: 400 }
+      );
+    }
+
     // Check if course exists
     const course = await prisma.course.findUnique({
-      where: { id: parseInt(courseId) },
+      where: { id: parsedCourseId },
       include: {
         lessons: true,
         exams: true,
@@ -362,7 +380,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await prisma.course.delete({
-      where: { id: parseInt(courseId) },
+      where: { id: parsedCourseId },
     });
 
     return NextResponse.json({ message: "Course deleted successfully" });

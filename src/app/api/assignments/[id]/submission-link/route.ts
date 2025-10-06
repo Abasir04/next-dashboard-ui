@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
 import { getBaseUrl } from "@/lib/urlUtils";
 
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
+
 // GET - Get existing submission link for assignment
 export async function GET(
   request: NextRequest,

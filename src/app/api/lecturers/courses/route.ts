@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
 
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
+
 // GET - Fetch courses for the current lecturer
 export async function GET(request: NextRequest) {
   try {
