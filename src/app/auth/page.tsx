@@ -13,6 +13,7 @@ const AuthContent = () => {
   const [isSliding, setIsSliding] = useState(false);
   const [isContentTransitioning, setIsContentTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const [error, setError] = useState("");
 
   // Update mode when URL changes
