@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-vars */
 import React, { useState } from "react";
 import AuthenticationInput from "@/components/AuthenticationInput";
 import PasswordInput from "@/components/PasswordInput";
@@ -14,9 +15,7 @@ const titleOptions = [
   { label: "Prof", value: "prof" },
 ];
 const roleOptions = [
-  { label: "Admin", value: "admin" },
   { label: "Lecturer", value: "lecturer" },
-  { label: "Student", value: "student" },
 ];
 
 const SignUp = ({

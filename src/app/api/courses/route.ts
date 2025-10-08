@@ -2,10 +2,54 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
-// GET /api/courses - Get all courses with student counts
-export async function GET() {
+// GET /api/courses - Get courses for the current lecturer
+export async function GET(request: NextRequest) {
   try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    // Check if user is lecturer or admin
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { role: true },
+    });
+
+    if (!user || (user.role !== "LECTURER" && user.role !== "ADMIN")) {
+      return NextResponse.json(
+        { error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    let whereClause: any = {};
+
+    if (user.role === "LECTURER") {
+      // For lecturers, only show their own courses
+      const lecturer = await prisma.lecturer.findUnique({
+        where: { userId: payload.userId },
+        select: { id: true },
+      });
+
+      if (!lecturer) {
+        return NextResponse.json(
+          { error: "Lecturer profile not found" },
+          { status: 404 }
+        );
+      }
+
+      whereClause.lecturerId = lecturer.id;
+    }
+    // For admin, show all courses (no whereClause filter)
+
     const courses = await prisma.course.findMany({
+      where: whereClause,
       include: {
         lecturer: {
           select: {
