@@ -14,9 +14,7 @@ const titleOptions = [
 ];
 
 const roleOptions = [
-  { label: "Admin", value: "admin" },
   { label: "Lecturer", value: "lecturer" },
-  { label: "Student", value: "student" },
 ];
 
 interface User {
