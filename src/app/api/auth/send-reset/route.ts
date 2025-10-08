@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, createPasswordResetEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -23,17 +23,12 @@ export async function POST(request: Request) {
       token
     )}`;
 
+    const htmlEmail = createPasswordResetEmail(resetLink);
+
     await sendEmail({
       to: email,
-      subject: "Reset Your Password",
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-          <h2>Password Reset Request</h2>
-          <p>Click the link below to reset your password:</p>
-          <p><a href="${resetLink}" target="_blank" rel="noopener noreferrer">Reset Password</a></p>
-          <p>If you didn’t request this, you can safely ignore this email.</p>
-        </div>
-      `,
+      subject: "🔐 Reset Your Password - Lecturer Dashboard",
+      html: htmlEmail,
     });
 
     return NextResponse.json({ success: true });
