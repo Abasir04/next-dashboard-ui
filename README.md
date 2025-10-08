@@ -1,3 +1,14 @@
+## Email Setup (Resend)
+
+Add the following to your `.env.local`:
+
+```
+RESEND_API_KEY=your_resend_api_key_here
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+Verified sender and domain are required by your provider.
+
 # UI Lecturer Dashboard System
 
 ## Getting Started

@@ -82,6 +82,14 @@ const SignIn = ({
         >
           {isLoading ? "Signing In..." : "Sign In"}
         </button>
+        <div className="mt-3 text-center">
+          <a
+            href="/auth/forgot-password"
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Forgot password?
+          </a>
+        </div>
       </div>
     </form>
   );
