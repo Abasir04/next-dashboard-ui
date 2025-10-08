@@ -5,17 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   FiPlus,
   FiCalendar,
-  FiClock,
   FiUsers,
   FiEye,
   FiCode,
-  FiRefreshCw,
   FiTrash2,
   FiDownload,
   FiX,
   FiEdit,
 } from "react-icons/fi";
-import { toast } from "react-hot-toast";
 import { showError, showSuccess } from "@/lib/toast";
 import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
 import CreateLectureModal from "@/components/modals/CreateLectureModal";

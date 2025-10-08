@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { FiUser, FiBook, FiEye, FiArrowLeft } from "react-icons/fi";
+import { FiUser, FiEye, FiArrowLeft } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { useParams } from "next/navigation";

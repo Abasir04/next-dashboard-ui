@@ -5,7 +5,6 @@ import {
   FiBook,
   FiEye,
   FiArrowLeft,
-  FiUsers,
   FiFileText,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";

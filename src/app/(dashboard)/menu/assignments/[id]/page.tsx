@@ -9,7 +9,6 @@ import {
   FiUsers,
   FiBook,
   FiEdit,
-  FiTrash2,
   FiFileText,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";

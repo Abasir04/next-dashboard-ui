@@ -12,16 +12,14 @@ import {
   FiBookOpen,
   FiFileText,
   FiUserPlus,
-  FiCheckCircle,
   FiClock,
   FiTrendingUp,
   FiRefreshCw,
   FiDownload,
-  FiEye,
   FiMoreVertical,
   FiActivity,
 } from "react-icons/fi";
-import { showError, showSuccess } from "@/lib/toast";
+import { showError } from "@/lib/toast";
 
 interface Activity {
   id: string;

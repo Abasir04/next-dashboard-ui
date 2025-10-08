@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import AuthenticationInput from "@/components/AuthenticationInput";
 import DropSelect from "@/components/DropSelect";
 import { showError, showSuccess } from "@/lib/toast";
-import { paths } from "@/lib/paths";
 
 const titleOptions = [
   { label: "Mr", value: "mr" },

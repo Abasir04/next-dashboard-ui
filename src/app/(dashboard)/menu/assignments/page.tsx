@@ -14,7 +14,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   DeleteConfirmationModal,

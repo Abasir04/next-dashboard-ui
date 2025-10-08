@@ -3,7 +3,6 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import SignIn from "./components/signin";
 import SignUp from "./components/signup";
-import { paths } from "@/lib/paths";
 
 const AuthContent = () => {
   const searchParams = useSearchParams();

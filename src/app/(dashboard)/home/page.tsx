@@ -13,7 +13,6 @@ import {
   FiTarget,
   FiAward,
   FiZap,
-  FiFileText,
   FiRefreshCw,
   FiChevronRight,
   FiArrowRight,
