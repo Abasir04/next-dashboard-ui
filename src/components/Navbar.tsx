@@ -54,22 +54,48 @@ const Navbar = () => {
     return role.charAt(0).toUpperCase() + role.slice(1);
   };
 
+  // Get current academic session (University of Ibadan format)
+  const getCurrentAcademicSession = () => {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth(); // 0-11 (Jan = 0, Dec = 11)
+
+    // Academic year starts in September (month 8) and ends in August (month 7)
+    // We are one session behind, so we show the previous academic year
+    if (currentMonth >= 8) {
+      // September-December: Show previous academic year
+      return `${currentYear - 1}/${currentYear}`;
+    } else {
+      // January-August: Show the academic year that started in previous September
+      return `${currentYear - 1}/${currentYear}`;
+    }
+  };
+
   return (
     <div className="flex items-center justify-between p-4 bg-white">
-      {/* SEARCH BAR */}
-      <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2">
-        <Image src="/search.png" alt="" width={14} height={14} />
-        <input
-          type="text"
-          placeholder="Search..."
-          className="w-[200px] p-2 bg-transparent outline-none"
-        />
+      {/* ACADEMIC SESSION & QUICK ACTIONS */}
+      <div className="flex items-center gap-4">
+        {/* Academic Session Display - Desktop */}
+        <div className="hidden md:flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <span className="text-sm font-medium text-blue-700 whitespace-nowrap">
+            Academic Session: {getCurrentAcademicSession()}
+          </span>
+        </div>
+
+        {/* Academic Session Display - Mobile */}
+        <div className="md:hidden flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md border border-blue-200">
+          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+          <span className="text-xs font-medium text-blue-700 whitespace-nowrap">
+            {getCurrentAcademicSession()}
+          </span>
+        </div>
       </div>
       {/* ICONS AND USER */}
       <div className="flex items-center gap-6 justify-end w-full">
-        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
+        {/* Message icon commented out as requested */}
+        {/* <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
           <Image src="/message.png" alt="" width={20} height={20} />
-        </div>
+        </div> */}
         {/* <div className='bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative'>
           <Image src="/announcement.png" alt="" width={20} height={20}/>
           <div className='absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-purple-500 text-white rounded-full text-xs'>1</div>
