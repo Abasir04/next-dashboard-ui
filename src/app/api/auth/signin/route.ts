@@ -47,12 +47,22 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
-    // Set secure cookie
+    // Set secure cookie (legacy, non-namespaced)
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    // Additionally set a namespaced cookie to support multiple concurrent sessions
+    // Cookie name encodes the userId; middleware will select the right one by URL
+    response.cookies.set(`token_u_${user.id}`, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/", // make available to both pages and API routes
+      maxAge: 7 * 24 * 60 * 60,
     });
 
     return response;

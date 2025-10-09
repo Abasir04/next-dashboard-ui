@@ -20,8 +20,14 @@ export async function sendEmail({
     );
   }
 
-  const fromEmail = process.env.MAILERSEND_FROM || "request@lecturerDashboard.com";
+  const fromEmail = process.env.MAILERSEND_FROM;
   const fromName = process.env.MAILERSEND_FROM_NAME || "Lecturer Dashboard";
+
+  if (!fromEmail) {
+    throw new Error(
+      "Email service not configured. Missing MAILERSEND_FROM (must be a verified domain/sender)."
+    );
+  }
 
   try {
     const sentFrom = new Sender(fromEmail, fromName);
@@ -35,13 +41,79 @@ export async function sendEmail({
       .setHtml(html)
       .setText(html.replace(/<[^>]+>/g, ""));
 
-    await mailerSend.email.send(emailParams);
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    const getErrorCode = (err: unknown): string | undefined => {
+      if (!err || typeof err !== "object") return undefined;
+      const obj = err as Record<string, unknown>;
+      if ("code" in obj && typeof obj.code === "string") {
+        return obj.code as string;
+      }
+      if ("cause" in obj && obj.cause && typeof obj.cause === "object") {
+        const causeObj = obj.cause as Record<string, unknown>;
+        if ("code" in causeObj && typeof causeObj.code === "string") {
+          return causeObj.code as string;
+        }
+      }
+      if ("message" in obj && typeof obj.message === "string") {
+        const msg = obj.message as string;
+        if (msg.includes("EAI_AGAIN")) return "EAI_AGAIN";
+        if (msg.includes("ETIMEDOUT")) return "ETIMEDOUT";
+        if (msg.includes("ECONNRESET")) return "ECONNRESET";
+        if (msg.includes("ENOTFOUND")) return "ENOTFOUND";
+        if (msg.includes("EHOSTUNREACH")) return "EHOSTUNREACH";
+      }
+      return undefined;
+    };
+    const isTransientNetworkError = (err: unknown) => {
+      const code = getErrorCode(err);
+      return (
+        code === "EAI_AGAIN" ||
+        code === "ETIMEDOUT" ||
+        code === "ECONNRESET" ||
+        code === "ENOTFOUND" ||
+        code === "EHOSTUNREACH"
+      );
+    };
+
+    let attempt = 0;
+    const maxAttempts = 3;
+    while (true) {
+      attempt += 1;
+      try {
+        await mailerSend.email.send(emailParams);
+        break;
+      } catch (err) {
+        if (isTransientNetworkError(err) && attempt < maxAttempts) {
+          // eslint-disable-next-line no-console
+          const code = getErrorCode(err) || "UNKNOWN";
+          console.warn(
+            `MailerSend transient error (${code}). Retrying attempt ${
+              attempt + 1
+            }/${maxAttempts}...`
+          );
+          await delay(500 * attempt);
+          continue;
+        }
+        throw err;
+      }
+    }
     // eslint-disable-next-line no-console
     console.log("Email sent to", to);
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error("Email sending failed:", error);
-    throw new Error("Email failed to send");
+    const details =
+      (error as any)?.body ||
+      (error as any)?.response ||
+      (error as any)?.message ||
+      error;
+    console.error("Email sending failed:", details);
+    throw new Error(
+      process.env.NODE_ENV === "production"
+        ? "Email failed to send"
+        : `Email failed to send: ${
+            typeof details === "string" ? details : JSON.stringify(details)
+          }`
+    );
   }
 }
 

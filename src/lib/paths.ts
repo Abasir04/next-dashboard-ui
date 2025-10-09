@@ -13,6 +13,8 @@ export const paths = {
   },
 
   home: "/home",
+  // Namespaced root for multi-session: /u/{userId}
+  userNamespace: (userId: number | string) => `/u/${userId}`,
   // Menu pages
   menu: {
     students: "/menu/students",
@@ -58,6 +60,17 @@ export type AppPaths = typeof paths;
 // Helper function to get auth URL with mode
 export const getAuthUrl = (mode: "sign-in" | "sign-up") =>
   `${paths.auth}?mode=${mode}`;
+
+// Prepend namespace to a path, ensuring double slashes are avoided
+export const withNamespace = (
+  basePath: string,
+  userId?: number | string | null
+) => {
+  if (!userId) return basePath;
+  const ns = paths.userNamespace(userId);
+  if (basePath === "/") return ns;
+  return `${ns}${basePath.startsWith("/") ? basePath : `/${basePath}`}`;
+};
 
 // Helper function to check if a path is a menu page
 export const isMenuPage = (path: string): boolean => {

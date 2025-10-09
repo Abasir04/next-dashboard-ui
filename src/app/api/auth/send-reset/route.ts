@@ -32,10 +32,13 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to send reset email" },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    // eslint-disable-next-line no-console
+    console.error("/api/auth/send-reset error:", error);
+    const message =
+      process.env.NODE_ENV === "production"
+        ? "Failed to send reset email"
+        : `Failed to send reset email: ${error?.message || String(error)}`;
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
