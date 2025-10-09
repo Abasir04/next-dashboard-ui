@@ -2,15 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Define protected routes that require authentication
+// Define protected routes that require authentication (lecturer/admin only)
 const protectedRoutes = [
   "/home",
   "/admin",
   "/lecturer",
-  "/student",
-  "/parent",
   "/profile",
   "/settings",
+  "/menu",
   "/list",
 ];
 
@@ -66,6 +65,18 @@ export async function middleware(request: NextRequest) {
       );
 
       // Clear the invalid token and redirect to auth
+      const response = NextResponse.redirect(new URL("/auth", request.url));
+      response.cookies.set("token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 0,
+      });
+      return response;
+    }
+
+    // Block students from protected dashboard routes
+    if (user.role === "STUDENT") {
       const response = NextResponse.redirect(new URL("/auth", request.url));
       response.cookies.set("token", "", {
         httpOnly: true,
