@@ -1,14 +1,9 @@
-import { Resend } from "resend";
+import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
 
-const apiKey = process.env.RESEND_API_KEY;
+const apiKey = process.env.MAILERSEND_API_KEY;
 
-if (!apiKey) {
-  // We throw in runtime-only paths if someone calls sendEmail without configuring env.
-  // Avoid throwing on import during build to not crash Next.js.
-  // Consumers should handle the thrown error from sendEmail.
-}
-
-const resend = apiKey ? new Resend(apiKey) : null;
+// Lazily construct the client only when the API key exists
+const mailerSend = apiKey ? new MailerSend({ apiKey }) : null;
 
 export async function sendEmail({
   to,
@@ -19,18 +14,28 @@ export async function sendEmail({
   subject: string;
   html: string;
 }) {
-  if (!resend) {
-    throw new Error("Email service not configured. Missing RESEND_API_KEY.");
+  if (!mailerSend) {
+    throw new Error(
+      "Email service not configured. Missing MAILERSEND_API_KEY."
+    );
   }
 
+  const fromEmail = process.env.MAILERSEND_FROM || "request@lecturerDashboard.com";
+  const fromName = process.env.MAILERSEND_FROM_NAME || "Lecturer Dashboard";
+
   try {
-    const from = process.env.RESEND_FROM || "LecturerDashboard@resend.dev";
-    await resend.emails.send({
-      from,
-      to,
-      subject,
-      html,
-    });
+    const sentFrom = new Sender(fromEmail, fromName);
+    const recipients = [new Recipient(to, to)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setReplyTo(sentFrom)
+      .setSubject(subject)
+      .setHtml(html)
+      .setText(html.replace(/<[^>]+>/g, ""));
+
+    await mailerSend.email.send(emailParams);
     // eslint-disable-next-line no-console
     console.log("Email sent to", to);
   } catch (error) {
