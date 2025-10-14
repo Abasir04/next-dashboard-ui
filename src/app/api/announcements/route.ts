@@ -20,10 +20,17 @@ export async function GET(request: NextRequest) {
     let whereClause: any = {};
 
     if (user.role === "LECTURER") {
-      // For lecturers, only show announcements related to their courses
+      // For lecturers, get their associated levels
       const lecturer = await prisma.lecturer.findUnique({
         where: { userId: user.id },
-        select: { id: true },
+        select: {
+          id: true,
+          lecturerLevels: {
+            select: {
+              levelId: true,
+            },
+          },
+        },
       });
 
       if (!lecturer) {
@@ -33,21 +40,12 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Get announcements that are either:
-      // 1. General announcements (no specific lecturer)
-      // 2. Announcements related to this lecturer's courses
+      // Get announcements for levels that this lecturer teaches
+      const levelIds = lecturer.lecturerLevels.map((ll) => ll.levelId);
       whereClause = {
-        OR: [
-          { lecturerId: null }, // General announcements
-          { lecturerId: lecturer.id }, // Lecturer's specific announcements
-          {
-            courses: {
-              some: {
-                lecturerId: lecturer.id,
-              },
-            },
-          }, // Announcements related to lecturer's courses
-        ],
+        levelId: {
+          in: levelIds,
+        },
       };
     }
     // For admin, show all announcements (no whereClause filter)
@@ -56,20 +54,6 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         level: true,
-        lecturer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        courses: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
       },
       orderBy: {
         createdAt: "desc",
