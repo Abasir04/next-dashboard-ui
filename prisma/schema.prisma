@@ -48,6 +48,7 @@ model Lecturer {
   user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessons           Lesson[]
   results           Result[]
+  tests             Test[]
 
   @@map("lecturers")
 }
@@ -66,6 +67,7 @@ model Level {
   lessons        Lesson[]
   results        Result[]
   students       Student[]
+  tests          Test[]
 
   @@map("levels")
 }
@@ -88,6 +90,7 @@ model Course {
   lecturerCourses   LecturerCourse[]
   lessons           Lesson[]
   results           Result[]
+  tests             Test[]
 
   @@map("courses")
 }
@@ -132,6 +135,7 @@ model Student {
   results      Result[]
   attendances  Attendance[]
   assignmentSubmissions AssignmentSubmission[]
+  testResponses TestResponse[]
   level        Level    @relation(fields: [levelId], references: [id])
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -361,6 +365,67 @@ model AssignmentSubmission {
 
   @@unique([assignmentId, studentId])
   @@map("assignment_submissions")
+}
+
+model Test {
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  lecturerId   Int
+  lecturer     Lecturer      @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  courseId     Int
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  levelId      Int
+  level        Level         @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  startDate    DateTime
+  dueDate      DateTime
+  questions    TestQuestion[]
+  responses    TestResponse[]
+  shareToken   String        @unique
+  isPublished  Boolean       @default(false)
+  allowViewScore Boolean     @default(true)
+  timeLimit    Int?          // in minutes
+
+  @@map("tests")
+}
+
+model TestQuestion {
+  id          Int           @id @default(autoincrement())
+  testId      Int
+  test        Test          @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question    String
+  type        QuestionType
+  options     String[]      // JSON array of options for multiple choice/checkbox
+  correct     String[]      // JSON array of correct answers
+  required    Boolean       @default(false)
+  order       Int
+  points      Int           @default(1)
+
+  @@map("test_questions")
+}
+
+model TestResponse {
+  id          Int           @id @default(autoincrement())
+  testId      Int
+  test        Test          @relation(fields: [testId], references: [id], onDelete: Cascade)
+  studentId   Int
+  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers     Json          // { questionId: value }
+  score       Float?
+  submittedAt DateTime      @default(now())
+  timeSpent   Int?          // in minutes
+
+  @@unique([testId, studentId])
+  @@map("test_responses")
+}
+
+enum QuestionType {
+  SHORT_ANSWER
+  PARAGRAPH
+  MULTIPLE_CHOICE
+  CHECKBOX
 }
 
 enum Role {

@@ -15,6 +15,7 @@ import {
   FaCog,
   FaSignOutAlt,
   FaCheckCircle,
+  FaFileAlt,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import LogoutModal from "./LogoutModal";
@@ -58,6 +59,12 @@ const menuItems = [
         href: paths.menu.assignments,
         icon: FaClipboardList,
         visible: ["admin", "lecturer", "student", "parent"],
+      },
+      {
+        label: "Tests",
+        href: paths.menu.tests,
+        icon: FaFileAlt,
+        visible: ["admin", "lecturer"],
       },
       {
         label: "Attendance",

@@ -5,7 +5,6 @@ import { getAuthenticatedUser } from "@/lib/serverAuth";
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
 
-// GET - Fetch courses for the current lecturer
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
@@ -18,77 +17,49 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    let whereClause: any = {};
+    // Get lecturer profile
+    const lecturer = await prisma.lecturer.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
 
-    if (user.role === "LECTURER") {
-      const lecturer = await prisma.lecturer.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      });
-
-      if (!lecturer) {
-        return NextResponse.json(
-          { error: "Lecturer not found" },
-          { status: 404 }
-        );
-      }
-
-      whereClause.lecturerId = lecturer.id;
+    if (!lecturer) {
+      return NextResponse.json(
+        { error: "Lecturer profile not found" },
+        { status: 404 }
+      );
     }
 
+    // Get lecturer's courses
     const courses = await prisma.course.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        name: true,
-        code: true,
-        level: true,
-        createdAt: true,
-        updatedAt: true,
-        lecturer: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
+      where: { lecturerId: lecturer.id },
       orderBy: {
-        createdAt: "desc",
+        name: "asc",
       },
     });
 
-    // Get student counts and materials counts for each course
-    const coursesWithCounts = await Promise.all(
-      courses.map(async (course) => {
-        // Get student count from course registrations
-        const studentCount = await prisma.courseRegistration.count({
-          where: {
-            courseId: course.id,
-            status: "APPROVED",
-          },
-        });
+    // Get all levels to map course levels
+    const levels = await prisma.level.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
 
-        // Get materials count
-        const materialsCount = await prisma.courseMaterial.count({
-          where: {
-            courseId: course.id,
-          },
-        });
+    // Map courses with level information
+    const coursesWithLevels = courses.map((course) => ({
+      ...course,
+      level: levels.find((level) => level.id === course.level) || {
+        id: course.level,
+        name: `Level ${course.level}`,
+      },
+    }));
 
-        return {
-          ...course,
-          studentCount,
-          materialsCount,
-          levels: [`${course.level} Level`], // Convert level to array format
-        };
-      })
-    );
-
-    return NextResponse.json({ courses: coursesWithCounts });
+    return NextResponse.json(coursesWithLevels);
   } catch (error) {
     console.error("Error fetching lecturer courses:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch courses" },
       { status: 500 }
     );
   }
