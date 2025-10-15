@@ -1,16 +1,16 @@
+/* eslint-disable unused-imports/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Define protected routes that require authentication
+// Define protected routes that require authentication (lecturer/admin only)
 const protectedRoutes = [
   "/home",
   "/admin",
   "/lecturer",
-  "/student",
-  "/parent",
   "/profile",
   "/settings",
+  "/menu",
   "/list",
 ];
 
@@ -19,6 +19,11 @@ const publicRoutes = ["/", "/auth"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Try to detect namespaced userId from URL: /u/{userId}/...
+  // Supports both page routes and API routes
+  const namespaceMatch = pathname.match(/^\/(api\/)?u\/(\d+)(\/|$)/);
+  const namespacedUserId = namespaceMatch ? Number(namespaceMatch[2]) : null;
 
   // Check if the current path is a protected route
   const isProtectedRoute = protectedRoutes.some(
@@ -35,8 +40,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Get the token from cookies
-  const token = request.cookies.get("token")?.value;
+  // Get the token from cookies (prefer namespaced token if URL contains /u/{userId})
+  const tokenCookieName = namespacedUserId
+    ? `token_u_${namespacedUserId}`
+    : "token";
+  const token = request.cookies.get(tokenCookieName)?.value;
 
   // If no token, redirect to auth page
   if (!token) {
@@ -72,6 +80,32 @@ export async function middleware(request: NextRequest) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: 0,
+      });
+      return response;
+    }
+
+    // If URL is namespaced, ensure token user matches the namespace
+    if (namespacedUserId && payload.userId !== namespacedUserId) {
+      const response = NextResponse.redirect(new URL("/auth", request.url));
+      response.cookies.set(tokenCookieName, "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 0,
+        path: "/",
+      });
+      return response;
+    }
+
+    // Block students from protected dashboard routes
+    if (user.role === "STUDENT") {
+      const response = NextResponse.redirect(new URL("/auth", request.url));
+      response.cookies.set(tokenCookieName, "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 0,
+        path: "/",
       });
       return response;
     }

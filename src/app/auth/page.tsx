@@ -3,7 +3,6 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import SignIn from "./components/signin";
 import SignUp from "./components/signup";
-import { paths } from "@/lib/paths";
 
 const AuthContent = () => {
   const searchParams = useSearchParams();
@@ -14,6 +13,7 @@ const AuthContent = () => {
   const [isSliding, setIsSliding] = useState(false);
   const [isContentTransitioning, setIsContentTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const [error, setError] = useState("");
 
   // Update mode when URL changes

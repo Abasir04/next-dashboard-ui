@@ -1,10 +1,10 @@
+/* eslint-disable unused-imports/no-unused-vars */
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import AuthenticationInput from "@/components/AuthenticationInput";
 import DropSelect from "@/components/DropSelect";
 import { showError, showSuccess } from "@/lib/toast";
-import { paths } from "@/lib/paths";
 
 const titleOptions = [
   { label: "Mr", value: "mr" },
@@ -15,9 +15,7 @@ const titleOptions = [
 ];
 
 const roleOptions = [
-  { label: "Admin", value: "admin" },
   { label: "Lecturer", value: "lecturer" },
-  { label: "Student", value: "student" },
 ];
 
 interface User {

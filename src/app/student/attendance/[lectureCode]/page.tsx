@@ -250,7 +250,7 @@ const StudentAttendancePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading lecture details...</p>
@@ -261,7 +261,7 @@ const StudentAttendancePage = () => {
 
   if (!lecture) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="text-center">
           <FiXCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -283,7 +283,7 @@ const StudentAttendancePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
+    <div className="min-h-screen bg-transparent flex items-center justify-center py-8">
       <div className="w-full max-w-6xl px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
           {/* Left Side - Lecture Details */}

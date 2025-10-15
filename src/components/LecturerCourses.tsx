@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { FiBook, FiUsers, FiCalendar, FiEdit, FiTrash2 } from "react-icons/fi";
 
 interface Course {

@@ -37,10 +37,8 @@ export default function SessionValidator({
           console.warn(
             `Role mismatch: expected ${expectedRole}, got ${user.role}`
           );
-          toast.error("Session expired. Please log in again.");
-
-          // Clear session and redirect
-          await fetch("/api/auth/logout", { method: "POST" });
+          toast.error("Unauthorized for this area.");
+          // Do not force logout here; rely on middleware to gate access.
           router.push("/auth");
           return;
         }

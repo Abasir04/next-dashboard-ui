@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FiX, FiCalendar, FiClock, FiBookOpen } from "react-icons/fi";
-import { showError, showSuccess } from "@/lib/toast";
+import { showError } from "@/lib/toast";
 
 interface Course {
   id: number;

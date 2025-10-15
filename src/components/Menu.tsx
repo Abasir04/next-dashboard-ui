@@ -10,7 +10,6 @@ import {
   FaChalkboardTeacher,
   FaBook,
   FaClipboardList,
-  FaCalendarAlt,
   FaEnvelope,
   FaUserCircle,
   FaCog,
@@ -54,12 +53,6 @@ const menuItems = [
         icon: FaUsers,
         visible: ["admin", "lecturer"],
       },
-      // {
-      //   label: "Lessons",
-      //   href: paths.menu.lessons,
-      //   icon: FaBook,
-      //   visible: ["admin", "lecturer"],
-      // },
       {
         label: "Assignments",
         href: paths.menu.assignments,

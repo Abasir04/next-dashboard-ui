@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { FiEye, FiUsers, FiBook, FiUser } from "react-icons/fi";
+import { FiUsers, FiBook } from "react-icons/fi";
 import { showError } from "@/lib/toast";
 import Link from "next/link";
 import Table from "@/components/Table";

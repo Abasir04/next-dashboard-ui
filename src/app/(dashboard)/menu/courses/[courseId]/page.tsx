@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { showError, showSuccess } from "@/lib/toast";
+import { showError } from "@/lib/toast";
 import {
   FiArrowLeft,
   FiUsers,
@@ -11,11 +11,7 @@ import {
   FiFileText,
   FiClipboard,
   FiTrendingUp,
-  FiClock,
-  FiCheckCircle,
   FiXCircle,
-  FiEye,
-  FiDownload,
 } from "react-icons/fi";
 
 interface CourseDetails {
