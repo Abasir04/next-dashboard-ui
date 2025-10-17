@@ -114,6 +114,39 @@ export async function PUT(
       levelId,
     } = body;
 
+    // Normalize levelId: frontend may send 100/200/..., but DB expects Level.id (1..6)
+    let normalizedLevelId: number | undefined = undefined;
+    if (levelId !== undefined && levelId !== null && levelId !== "") {
+      const parsedLevelId = parseInt(levelId);
+      if (isNaN(parsedLevelId)) {
+        return NextResponse.json({ error: "Invalid levelId" }, { status: 400 });
+      }
+      if (parsedLevelId >= 100) {
+        // DB stores Level.name as "100", "200", ... and ids 1..6
+        const expectedName = parsedLevelId.toString();
+        let level = await prisma.level.findUnique({
+          where: { name: expectedName },
+          select: { id: true },
+        });
+        if (!level) {
+          const grade = Math.floor(parsedLevelId / 100).toString();
+          level = await prisma.level.findFirst({
+            where: { name: { contains: grade } },
+            select: { id: true },
+          });
+        }
+        if (!level) {
+          return NextResponse.json(
+            { error: `Level not found for name ${expectedName}` },
+            { status: 400 }
+          );
+        }
+        normalizedLevelId = level.id;
+      } else {
+        normalizedLevelId = parsedLevelId;
+      }
+    }
+
     // Get lecturer profile
     const lecturer = await prisma.lecturer.findUnique({
       where: { userId: user.id },
@@ -141,52 +174,90 @@ export async function PUT(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Update test
-    const test = await prisma.test.update({
-      where: { id: testId },
-      data: {
-        title,
-        description,
-        timeLimit: timeLimit ? parseInt(timeLimit) : null,
-        startDate: startDate ? new Date(startDate) : undefined,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-        courseId: courseId ? parseInt(courseId) : undefined,
-        levelId: levelId ? parseInt(levelId) : undefined,
-        allowViewScore: allowViewScore !== false,
-        isPublished: isPublished || false,
-      },
-      include: {
-        lecturer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    // Update test with questions
+    const test = await prisma.$transaction(async (tx) => {
+      // First, delete existing questions
+      await tx.testQuestion.deleteMany({
+        where: { testId: testId },
+      });
+
+      // Update the test
+      await tx.test.update({
+        where: { id: testId },
+        data: {
+          title,
+          description,
+          timeLimit: timeLimit ? parseInt(timeLimit) : null,
+          startDate: startDate ? new Date(startDate) : undefined,
+          dueDate: dueDate ? new Date(dueDate) : undefined,
+          courseId: courseId ? parseInt(courseId) : undefined,
+          levelId:
+            normalizedLevelId !== undefined ? normalizedLevelId : undefined,
+          allowViewScore: allowViewScore !== false,
+          isPublished: isPublished || false,
+        },
+      });
+
+      // Create new questions if provided
+      if (questions && Array.isArray(questions)) {
+        await tx.testQuestion.createMany({
+          data: questions.map((q: any) => ({
+            testId: testId,
+            question: q.question,
+            type: q.type,
+            options: q.options || [],
+            correct: q.correct || [],
+            required: q.required || false,
+            points: q.points || 1,
+            order: q.order || 1,
+          })),
+        });
+      }
+
+      // Return the updated test with all relations
+      return await tx.test.findUnique({
+        where: { id: testId },
+        include: {
+          lecturer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          course: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+          level: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          questions: {
+            orderBy: { order: "asc" },
           },
         },
-        course: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
-        level: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        questions: {
-          orderBy: { order: "asc" },
-        },
-      },
+      });
     });
 
     return NextResponse.json(test);
   } catch (error) {
     console.error("Error updating test:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      testId: params.id,
+    });
     return NextResponse.json(
-      { error: "Failed to update test" },
+      {
+        error: "Failed to update test",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

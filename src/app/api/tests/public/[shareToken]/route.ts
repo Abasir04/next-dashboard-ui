@@ -10,15 +10,9 @@ export async function GET(
   { params }: { params: { shareToken: string } }
 ) {
   try {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is student
-    if (user.role !== "STUDENT") {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
+    // Auth is optional for public test access; if present and a student, we'll
+    // include submission status. Otherwise, serve public test data.
+    const user = await getAuthenticatedUser(request).catch(() => null);
 
     const { shareToken } = params;
 
@@ -63,56 +57,65 @@ export async function GET(
       );
     }
 
-    // Check if test has start date and is available
-    if (test.startDate && new Date() < test.startDate) {
-      return NextResponse.json(
-        { error: "Test is not yet available" },
-        { status: 400 }
-      );
+    // Time-based availability with tolerance for clock skew/timezone differences
+    const nowMs = Date.now();
+    const TOLERANCE_MS = 15 * 60 * 1000; // 15 minutes
+
+    if (test.startDate) {
+      const startMs = new Date(test.startDate).getTime();
+      if (!Number.isFinite(startMs)) {
+        // If invalid date in DB, don't block access
+      } else if (nowMs < startMs - TOLERANCE_MS) {
+        return NextResponse.json(
+          { error: "Test is not yet available" },
+          { status: 400 }
+        );
+      }
     }
 
-    // Check if test has due date and is still open
-    if (test.dueDate && new Date() > test.dueDate) {
-      return NextResponse.json(
-        { error: "Test deadline has passed" },
-        { status: 400 }
-      );
+    if (test.dueDate) {
+      const dueMs = new Date(test.dueDate).getTime();
+      if (Number.isFinite(dueMs) && nowMs > dueMs + TOLERANCE_MS) {
+        return NextResponse.json(
+          { error: "Test deadline has passed" },
+          { status: 400 }
+        );
+      }
     }
 
-    // Get student profile
-    const student = await prisma.student.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    });
+    // If authenticated student, include submission info; otherwise, return public test only
+    if (user && user.role === "STUDENT") {
+      const student = await prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
 
-    if (!student) {
-      return NextResponse.json(
-        { error: "Student profile not found" },
-        { status: 404 }
-      );
+      // If no student profile, still allow viewing test without submission info
+      if (student) {
+        const existingResponse = await prisma.testResponse.findUnique({
+          where: {
+            testId_studentId: {
+              testId: test.id,
+              studentId: student.id,
+            },
+          },
+          select: {
+            id: true,
+            score: true,
+            submittedAt: true,
+            answers: true,
+          },
+        });
+
+        return NextResponse.json({
+          ...test,
+          hasSubmitted: !!existingResponse,
+          previousResponse: existingResponse,
+        });
+      }
     }
 
-    // Check if student has already submitted
-    const existingResponse = await prisma.testResponse.findUnique({
-      where: {
-        testId_studentId: {
-          testId: test.id,
-          studentId: student.id,
-        },
-      },
-      select: {
-        id: true,
-        score: true,
-        submittedAt: true,
-        answers: true,
-      },
-    });
-
-    return NextResponse.json({
-      ...test,
-      hasSubmitted: !!existingResponse,
-      previousResponse: existingResponse,
-    });
+    return NextResponse.json(test);
   } catch (error) {
     console.error("Error fetching public test:", error);
     return NextResponse.json(

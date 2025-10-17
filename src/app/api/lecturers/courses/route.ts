@@ -30,12 +30,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get lecturer's courses
+    // Get lecturer's courses with related counts
     const courses = await prisma.course.findMany({
       where: { lecturerId: lecturer.id },
-      orderBy: {
-        name: "asc",
+      include: {
+        lecturer: {
+          select: { name: true, email: true },
+        },
+        registrations: {
+          where: { status: "APPROVED" },
+          select: { id: true },
+        },
+        _count: {
+          select: { materials: true },
+        },
       },
+      orderBy: { name: "asc" },
     });
 
     // Get all levels to map course levels
@@ -46,14 +56,36 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Map courses with level information
-    const coursesWithLevels = courses.map((course) => ({
-      ...course,
-      level: levels.find((level) => level.id === course.level) || {
-        id: course.level,
-        name: `Level ${course.level}`,
-      },
-    }));
+    // Map courses with level information and computed counts
+    const coursesWithLevels = courses.map((course) => {
+      // Map course.level numeric (e.g., 100) to the actual Level entity
+      // Seed shows Level.name is like "100", not "100 Level"
+      const expectedName = course.level.toString();
+      let levelMatch = levels.find((lvl) => lvl.name === expectedName);
+      if (!levelMatch) {
+        const grade = Math.floor(course.level / 100).toString();
+        levelMatch = levels.find((lvl) => lvl.name.includes(grade));
+      }
+      const levelObj = levelMatch || {
+        id: Math.floor(course.level / 100),
+        name: expectedName,
+      };
+
+      const studentCount = course.registrations.length;
+      const materialsCount = course._count.materials;
+
+      return {
+        id: course.id,
+        name: course.name,
+        code: course.code,
+        level: levelObj,
+        lecturer: course.lecturer,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
+        studentCount,
+        materialsCount,
+      };
+    });
 
     return NextResponse.json(coursesWithLevels);
   } catch (error) {

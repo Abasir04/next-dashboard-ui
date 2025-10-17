@@ -239,7 +239,7 @@ export default function CreateTestPage() {
 
       const test = await response.json();
       toast.success("Test created successfully");
-      router.push(`/menu/tests/${test.id}`);
+      router.push(`/menu/tests`);
     } catch (error) {
       console.error("Error creating test:", error);
       toast.error(
@@ -265,7 +265,7 @@ export default function CreateTestPage() {
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={() => router.push("/menu/tests")}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancel

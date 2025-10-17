@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
+    // Read optional search query
+    const { search } = Object.fromEntries(new URL(request.url).searchParams);
+
     let whereClause: any = {};
 
     if (user.role === "LECTURER") {
@@ -36,7 +39,38 @@ export async function GET(request: NextRequest) {
 
       whereClause = { lecturerId: lecturer.id };
     }
-    // For admin, show all tests (no whereClause filter)
+    // Apply search filter if provided
+    if (search && String(search).trim().length > 0) {
+      const term = String(search).trim();
+      whereClause = {
+        AND: [
+          whereClause,
+          {
+            OR: [
+              { title: { contains: term, mode: "insensitive" } },
+              { description: { contains: term, mode: "insensitive" } },
+              {
+                course: {
+                  is: { name: { contains: term, mode: "insensitive" } },
+                },
+              },
+              {
+                course: {
+                  is: { code: { contains: term, mode: "insensitive" } },
+                },
+              },
+              {
+                level: {
+                  is: { name: { contains: term, mode: "insensitive" } },
+                },
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // For admin, show all tests (no additional whereClause filter)
 
     const tests = await prisma.test.findMany({
       where: whereClause,
@@ -67,6 +101,7 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             responses: true,
+            questions: true,
           },
         },
       },
@@ -108,7 +143,46 @@ export async function POST(request: NextRequest) {
       allowViewScore,
       courseId,
       levelId,
-    } = body;
+    } = body ?? {};
+
+    // Basic validation
+    if (!title || typeof title !== "string" || title.trim().length === 0) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return NextResponse.json(
+        { error: "At least one question is required" },
+        { status: 400 }
+      );
+    }
+
+    const parsedCourseId =
+      typeof courseId === "string" ? parseInt(courseId) : courseId;
+    const parsedLevelId =
+      typeof levelId === "string" ? parseInt(levelId) : levelId;
+    const parsedTimeLimit =
+      timeLimit === undefined || timeLimit === null
+        ? null
+        : typeof timeLimit === "string"
+        ? parseInt(timeLimit)
+        : Number(timeLimit);
+
+    if (!parsedCourseId || !parsedLevelId || !startDate || !dueDate) {
+      return NextResponse.json(
+        { error: "Course, level, start date, and due date are required" },
+        { status: 400 }
+      );
+    }
+
+    const start = new Date(startDate);
+    const due = new Date(dueDate);
+    if (isNaN(start.getTime()) || isNaN(due.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid start or due date" },
+        { status: 400 }
+      );
+    }
 
     // Get lecturer profile
     const lecturer = await prisma.lecturer.findUnique({
@@ -126,11 +200,49 @@ export async function POST(request: NextRequest) {
     // Generate unique share token
     const shareToken = randomUUID();
 
-    // Validate required fields
-    if (!courseId || !levelId || !startDate || !dueDate) {
+    // Verify referenced entities (resolve level by id or by numeric name like "400")
+    const [courseRecord, levelRecord] = await Promise.all([
+      prisma.course.findUnique({
+        where: { id: parsedCourseId },
+        select: { id: true, level: true, lecturerId: true },
+      }),
+      prisma.level.findFirst({
+        where: {
+          OR: [
+            { id: parsedLevelId ?? -1 },
+            {
+              name:
+                typeof levelId === "string" ? levelId : String(parsedLevelId),
+            },
+          ],
+        },
+        select: { id: true, name: true },
+      }),
+    ]);
+
+    if (!courseRecord) {
       return NextResponse.json(
-        { error: "Course, level, start date, and due date are required" },
+        { error: "courseId does not exist" },
         { status: 400 }
+      );
+    }
+    if (!levelRecord) {
+      return NextResponse.json(
+        { error: "levelId does not exist" },
+        { status: 400 }
+      );
+    }
+    // course.level is numeric like 100/200; Level.name is string like "100"
+    if (courseRecord.level !== Number(levelRecord.name)) {
+      return NextResponse.json(
+        { error: "Selected course does not belong to the selected level" },
+        { status: 400 }
+      );
+    }
+    if (courseRecord.lecturerId !== lecturer.id && user.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "You are not assigned to this course" },
+        { status: 403 }
       );
     }
 
@@ -140,22 +252,22 @@ export async function POST(request: NextRequest) {
         title,
         description,
         lecturerId: lecturer.id,
-        courseId: parseInt(courseId),
-        levelId: parseInt(levelId),
-        startDate: new Date(startDate),
-        dueDate: new Date(dueDate),
+        courseId: parsedCourseId,
+        levelId: levelRecord.id,
+        startDate: start,
+        dueDate: due,
         shareToken,
-        timeLimit: timeLimit ? parseInt(timeLimit) : null,
+        timeLimit: parsedTimeLimit,
         allowViewScore: allowViewScore !== false,
         questions: {
           create: questions.map((q: any, index: number) => ({
-            question: q.question,
+            question: String(q.question ?? "").trim(),
             type: q.type,
-            options: q.options || [],
-            correct: q.correct || [],
-            required: q.required || false,
+            options: Array.isArray(q.options) ? q.options : [],
+            correct: Array.isArray(q.correct) ? q.correct : [],
+            required: Boolean(q.required),
             order: index + 1,
-            points: q.points || 1,
+            points: typeof q.points === "number" ? q.points : 1,
           })),
         },
       },
@@ -187,7 +299,24 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(test);
-  } catch (error) {
+  } catch (error: any) {
+    // Prisma known errors mapping
+    const code = error?.code;
+    if (code === "P2002") {
+      return NextResponse.json({ error: "Duplicate value" }, { status: 409 });
+    }
+    if (code === "P2003") {
+      return NextResponse.json(
+        { error: "Invalid reference: courseId or levelId does not exist" },
+        { status: 400 }
+      );
+    }
+    if (code === "P2000" || code === "P2001" || code === "P2009") {
+      return NextResponse.json(
+        { error: "Invalid data provided" },
+        { status: 400 }
+      );
+    }
     console.error("Error creating test:", error);
     return NextResponse.json(
       { error: "Failed to create test" },

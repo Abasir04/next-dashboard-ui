@@ -22,7 +22,7 @@ interface Course {
   id: number;
   name: string;
   code: string;
-  level: number;
+  level: number | { id: number; name: string };
   studentCount: number;
   materialsCount?: number;
   lecturer: {
@@ -85,6 +85,29 @@ const CoursesPage = () => {
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const getLevelLabel = (level: Course["level"]) => {
+    if (typeof level === "number") return `Level ${level}`;
+    if (level && typeof level === "object") {
+      const maybe = level as { id?: number; name?: string };
+      return maybe.name || (maybe.id ? `Level ${maybe.id}` : "Unknown");
+    }
+    return "Unknown";
+  };
+
+  const normalizeCourseForForm = (
+    course: Course | null
+  ): { id: number; name: string; code: string; level: number } | null => {
+    if (!course) return null;
+    const levelValue =
+      typeof course.level === "number" ? course.level : course.level.id;
+    return {
+      id: course.id,
+      name: course.name,
+      code: course.code,
+      level: levelValue,
+    };
+  };
+
   const fetchUserRole = async () => {
     try {
       const response = await fetch("/api/auth/me");
@@ -115,11 +138,13 @@ const CoursesPage = () => {
       }
       const data = await response.json();
 
-      // Handle different response formats
-      if (userRole === "lecturer") {
-        setCourses(data.courses || []);
+      // Handle different response formats (array or { courses: [...] })
+      if (Array.isArray(data)) {
+        setCourses(data);
+      } else if (data && Array.isArray(data.courses)) {
+        setCourses(data.courses);
       } else {
-        setCourses(data || []);
+        setCourses([]);
       }
     } catch (error) {
       showError("Failed to load courses");
@@ -294,7 +319,7 @@ const CoursesPage = () => {
       </td>
       <td className="p-4">
         <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">
-          {course.level} Level
+          {getLevelLabel(course.level)}
         </span>
       </td>
       <td className="p-4">
@@ -408,7 +433,7 @@ const CoursesPage = () => {
       {/* COURSE FORM MODAL */}
       {showCourseForm && (
         <CourseForm
-          course={editingCourse}
+          course={normalizeCourseForForm(editingCourse)}
           onClose={() => {
             setShowCourseForm(false);
             setEditingCourse(null);
@@ -452,7 +477,8 @@ const CoursesPage = () => {
                   {courseToDelete.name}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Code: {courseToDelete.code} | Level: {courseToDelete.level}
+                  Code: {courseToDelete.code} | Level:{" "}
+                  {getLevelLabel(courseToDelete.level)}
                 </p>
               </div>
               <p className="text-red-600 text-sm mt-2">
@@ -547,7 +573,7 @@ const CoursesPage = () => {
                 </p>
                 <p className="text-sm text-gray-600">
                   Code: {courseForRegistration.code} | Level:{" "}
-                  {courseForRegistration.level}
+                  {getLevelLabel(courseForRegistration.level)}
                 </p>
               </div>
             </div>
@@ -555,8 +581,9 @@ const CoursesPage = () => {
             {!registrationLink ? (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  No active registration link found. Generate a new link for
-                  level {courseForRegistration.level} based on the course code.
+                  No active registration link found. Generate a new link for{" "}
+                  {getLevelLabel(courseForRegistration.level)} based on the
+                  course code.
                 </p>
                 <button
                   onClick={generateRegistrationLink}

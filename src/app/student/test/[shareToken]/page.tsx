@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -56,13 +56,48 @@ export default function TakeTestPage({
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
   } = useForm();
+
+  const fetchTest = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/tests/public/${params.shareToken}`);
+      const data = await response.json();
+      if (!response.ok) {
+        const message = data?.error || "Unable to load test";
+        toast.error(
+          message === "Test is not published"
+            ? "This test is not published by the lecturer"
+            : message
+        );
+        setTest(null);
+        return;
+      }
+
+      setTest(data);
+
+      if (data.previousResponse) {
+        // Pre-fill form with previous response
+        Object.entries(data.previousResponse.answers).forEach(
+          ([questionId, answer]: any) => {
+            setValue(questionId, answer);
+          }
+        );
+      } else {
+        setStartTime(new Date());
+      }
+    } catch (error) {
+      console.error("Error fetching test:", error);
+      toast.error("Network error while loading test");
+    } finally {
+      setLoading(false);
+    }
+  }, [params.shareToken, setValue]);
 
   useEffect(() => {
     fetchTest();
-  }, [params.shareToken]);
+  }, [fetchTest]);
 
+  // Timer effect runs after handlers are defined
   useEffect(() => {
     if (test?.timeLimit && startTime) {
       const interval = setInterval(() => {
@@ -81,68 +116,45 @@ export default function TakeTestPage({
     }
   }, [test?.timeLimit, startTime]);
 
-  const fetchTest = async () => {
-    try {
-      const response = await fetch(`/api/tests/public/${params.shareToken}`);
-      if (!response.ok) throw new Error("Failed to fetch test");
+  const onSubmit = useCallback(
+    async (data: any) => {
+      if (!test) return;
 
-      const data = await response.json();
-      setTest(data);
+      try {
+        setSubmitting(true);
+        const timeSpent = startTime
+          ? Math.floor((Date.now() - startTime.getTime()) / 1000 / 60)
+          : null;
 
-      if (data.previousResponse) {
-        // Pre-fill form with previous response
-        Object.entries(data.previousResponse.answers).forEach(
-          ([questionId, answer]) => {
-            setValue(questionId, answer);
-          }
-        );
-      } else {
-        setStartTime(new Date());
+        const response = await fetch(`/api/tests/${test.id}/responses`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            answers: data,
+            timeSpent,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to submit test");
+
+        const result = await response.json();
+        toast.success("Test submitted successfully");
+
+        // Update test state to show submitted
+        setTest({
+          ...test,
+          hasSubmitted: true,
+          previousResponse: result,
+        });
+      } catch (error) {
+        console.error("Error submitting test:", error);
+        toast.error("Failed to submit test");
+      } finally {
+        setSubmitting(false);
       }
-    } catch (error) {
-      console.error("Error fetching test:", error);
-      toast.error("Failed to fetch test");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onSubmit = async (data: any) => {
-    if (!test) return;
-
-    try {
-      setSubmitting(true);
-      const timeSpent = startTime
-        ? Math.floor((Date.now() - startTime.getTime()) / 1000 / 60)
-        : null;
-
-      const response = await fetch(`/api/tests/${test.id}/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          answers: data,
-          timeSpent,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to submit test");
-
-      const result = await response.json();
-      toast.success("Test submitted successfully");
-
-      // Update test state to show submitted
-      setTest({
-        ...test,
-        hasSubmitted: true,
-        previousResponse: result,
-      });
-    } catch (error) {
-      console.error("Error submitting test:", error);
-      toast.error("Failed to submit test");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    },
+    [test, startTime, router]
+  );
 
   if (loading) {
     return (
@@ -152,8 +164,33 @@ export default function TakeTestPage({
 
   if (!test) {
     return (
-      <div className="text-center text-red-600">
-        Test not found or not accessible
+      <div className="max-w-2xl mx-auto py-10">
+        <div className="bg-white shadow rounded-xl p-8 text-center">
+          <div className="mx-auto w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4">
+            !
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Unable to access test
+          </h1>
+          <p className="text-gray-600 mb-6">
+            The test is either not published yet, unavailable at this time, or
+            the link is invalid. Please contact your lecturer for more details.
+          </p>
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={() => router.push("/")}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              Do Nothing
+            </button>
+            <button
+              onClick={fetchTest}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

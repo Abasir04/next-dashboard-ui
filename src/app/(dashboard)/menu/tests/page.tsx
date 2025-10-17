@@ -17,6 +17,7 @@ import {
 import { toast } from "react-hot-toast";
 import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
+import PublishConfirmModal from "@/components/modals/PublishConfirmModal";
 
 interface Test {
   id: number;
@@ -27,6 +28,7 @@ interface Test {
   createdAt: string;
   startDate: string;
   dueDate: string;
+  timeLimit?: number | null;
   course: {
     id: number;
     name: string;
@@ -37,8 +39,8 @@ interface Test {
     name: string;
   };
   _count: {
-    questions: number;
     responses: number;
+    questions: number;
   };
 }
 
@@ -137,8 +139,19 @@ const TestsPage = () => {
 
   const handleShowShare = (test: Test) => {
     setSelectedTest(test);
-    setShareLink(`${window.location.origin}/test/${test.shareToken}`);
+    setShareLink(`${window.location.origin}/student/test/${test.shareToken}`);
     setShowShareModal(true);
+  };
+
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishTarget, setPublishTarget] = useState<Test | null>(null);
+  const openPublish = (test: Test) => {
+    setPublishTarget(test);
+    setPublishOpen(true);
+  };
+  const closePublish = () => {
+    setPublishOpen(false);
+    setPublishTarget(null);
   };
 
   const handleCopyLink = async () => {
@@ -163,7 +176,6 @@ const TestsPage = () => {
   const filteredTests = tests.filter(
     (test) =>
       test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      test.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       test.course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       test.course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       test.level.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -226,7 +238,8 @@ const TestsPage = () => {
                 <th className="pb-3">Level</th>
                 <th className="pb-3">Questions</th>
                 <th className="pb-3">Responses</th>
-                <th className="pb-3">Due Date</th>
+                <th className="pb-3">Start Date</th>
+                <th className="pb-3">Time Limit</th>
                 <th className="pb-3">Status</th>
                 <th className="pb-3">Actions</th>
               </tr>
@@ -242,9 +255,6 @@ const TestsPage = () => {
                       <h3 className="font-medium text-gray-800">
                         {test.title}
                       </h3>
-                      <p className="text-sm text-gray-500">
-                        {test.description || "No description"}
-                      </p>
                     </div>
                   </td>
                   <td className="py-4 text-center">
@@ -283,13 +293,18 @@ const TestsPage = () => {
                       <FiCalendar size={14} className="text-gray-400" />
                       <div className="text-left">
                         <div className="text-gray-600 text-sm">
-                          {new Date(test.dueDate).toLocaleDateString()}
+                          {new Date(test.startDate).toLocaleDateString()}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          {new Date(test.dueDate).toLocaleTimeString()}
+                          {new Date(test.startDate).toLocaleTimeString()}
                         </div>
                       </div>
                     </div>
+                  </td>
+                  <td className="py-4 text-center text-sm text-gray-700">
+                    {test.startDate && test.timeLimit
+                      ? `${test.timeLimit} min`
+                      : "—"}
                   </td>
                   <td className="py-4 text-center">
                     <span
@@ -312,7 +327,7 @@ const TestsPage = () => {
                         <FiEye size={16} />
                       </button>
                       <button
-                        onClick={() => handlePublish(test)}
+                        onClick={() => openPublish(test)}
                         className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
                         title={
                           test.isPublished ? "Unpublish test" : "Publish test"
@@ -440,8 +455,76 @@ const TestsPage = () => {
           </div>
         </div>
       )}
+
+      {/* PUBLISH CONFIRM MODAL */}
+      <PublishConfirmModal
+        isOpen={publishOpen && !!publishTarget}
+        isPublished={!!publishTarget?.isPublished}
+        onClose={closePublish}
+        onConfirm={async () => {
+          if (!publishTarget) return;
+          await handlePublish(publishTarget);
+          closePublish();
+        }}
+      />
     </div>
   );
 };
 
 export default TestsPage;
+
+function PublishConfirmIcon({
+  isPublished,
+  onConfirm,
+}: {
+  isPublished: boolean;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
+        title={isPublished ? "Unpublish test" : "Publish test"}
+      >
+        {isPublished ? <FiX size={16} /> : <FiCheckCircle size={16} />}
+      </button>
+      {open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {isPublished ? "Unpublish Test" : "Publish Test"}
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              {isPublished
+                ? "Are you sure you want to unpublish this test? Students will no longer be able to take it."
+                : "Are you sure you want to publish this test? Students with the link will be able to take it."}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setOpen(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  onConfirm();
+                }}
+                className={`px-4 py-2 rounded-md ${
+                  isPublished
+                    ? "bg-orange-600 hover:bg-orange-700 text-white"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                {isPublished ? "Unpublish" : "Publish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
