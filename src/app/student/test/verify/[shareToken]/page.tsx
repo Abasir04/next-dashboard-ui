@@ -1,3 +1,5 @@
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -463,8 +465,8 @@ const StudentTestVerificationPage = () => {
             Test Not Found
           </h1>
           <p className="text-gray-600 mb-4">
-            The test link you&apos;re trying to access is invalid or has
-            expired.
+            The test link you&apos;re trying to access is invalid, has
+            expired or has not started yet.
           </p>
           <button
             onClick={() => router.push("/")}

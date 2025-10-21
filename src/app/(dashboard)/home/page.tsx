@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   FiUsers,
   FiBookOpen,
-  FiCalendar,
   FiClipboard,
   FiTrendingUp,
   FiActivity,
@@ -18,6 +17,7 @@ import {
   FiArrowRight,
   FiCheckCircle,
   FiClock,
+  FiEdit3,
 } from "react-icons/fi";
 import { CreateAssignmentModal } from "@/components/modals/AssignmentModals";
 
@@ -28,23 +28,25 @@ interface DashboardStats {
   totalAssignments: number;
   pendingAssignments: number;
   completedAssignments: number;
-  upcomingEvents: number;
+  totalTests: number;
+  publishedTests: number;
+  draftTests: number;
   recentAnnouncements: number;
   previousStats?: {
     totalStudents: number;
     totalCourses: number;
     totalAssignments: number;
-    upcomingEvents: number;
+    totalTests: number;
   };
 }
 
 interface RecentActivity {
   id: string;
-  type: "assignment" | "course" | "student" | "event" | "announcement";
+  type: "assignment" | "course" | "student" | "test" | "announcement";
   title: string;
   description: string;
   time: string;
-  status?: "pending" | "completed" | "urgent";
+  status?: "pending" | "completed" | "urgent" | "published" | "draft";
   icon: React.ReactNode;
   color: string;
   timestamp?: string;
@@ -71,7 +73,9 @@ const HomePage = () => {
     totalAssignments: 0,
     pendingAssignments: 0,
     completedAssignments: 0,
-    upcomingEvents: 0,
+    totalTests: 0,
+    publishedTests: 0,
+    draftTests: 0,
     recentAnnouncements: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -125,7 +129,7 @@ const HomePage = () => {
           lecturersRes,
           coursesRes,
           assignmentsRes,
-          eventsRes,
+          testsRes,
           announcementsRes,
           registrationsRes,
         ] = await Promise.all([
@@ -133,7 +137,7 @@ const HomePage = () => {
           fetch("/api/counts/lecturer"),
           fetch("/api/courses"),
           fetch("/api/assignments"),
-          fetch("/api/events"),
+          fetch("/api/tests"),
           fetch("/api/announcements"),
           fetch("/api/course-registration"),
         ]);
@@ -143,7 +147,7 @@ const HomePage = () => {
           lecturers,
           courses,
           assignments,
-          events,
+          tests,
           announcements,
           registrations,
         ] = await Promise.all([
@@ -151,7 +155,7 @@ const HomePage = () => {
           lecturersRes.json(),
           coursesRes.json(),
           assignmentsRes.json(),
-          eventsRes.json(),
+          testsRes.json(),
           announcementsRes.json(),
           registrationsRes.json(),
         ]);
@@ -164,6 +168,12 @@ const HomePage = () => {
           (a: any) => new Date(a.dueDate) <= new Date()
         ).length;
 
+        const testsData = Array.isArray(tests) ? tests : tests?.tests || [];
+        const publishedTests = testsData.filter(
+          (t: any) => t.isPublished
+        ).length;
+        const draftTests = testsData.filter((t: any) => !t.isPublished).length;
+
         setStats({
           totalStudents: students.count || 0,
           totalLecturers: lecturers.count || 0,
@@ -171,7 +181,9 @@ const HomePage = () => {
           totalAssignments: assignmentsData.length || 0,
           pendingAssignments,
           completedAssignments,
-          upcomingEvents: events.length || 0,
+          totalTests: testsData.length || 0,
+          publishedTests,
+          draftTests,
           recentAnnouncements: announcements.length || 0,
         });
 
@@ -245,18 +257,23 @@ const HomePage = () => {
           });
         }
 
-        // Add events
-        if (events) {
-          events.forEach((event: any) => {
+        // Add tests
+        if (testsData) {
+          testsData.forEach((test: any) => {
             allActivities.push({
-              id: `event-${event.id}`,
-              type: "event" as const,
-              title: `Event Created: ${event.title}`,
-              description: `New event "${event.title}" scheduled`,
-              time: formatTimeAgo(event.createdAt),
-              icon: <FiCalendar />,
-              color: "text-pink-600",
-              timestamp: event.createdAt,
+              id: `test-${test.id}`,
+              type: "test" as const,
+              title: `Test Created: ${test.title}`,
+              description: `New test "${test.title}" for ${
+                test.course?.name || "Unknown Course"
+              }`,
+              time: formatTimeAgo(test.createdAt),
+              status: test.isPublished ? "published" : "draft",
+              icon: <FiEdit3 />,
+              color: "text-indigo-600",
+              timestamp: test.createdAt,
+              courseName: test.course?.name,
+              courseCode: test.course?.code,
             });
           });
         }
@@ -299,13 +316,13 @@ const HomePage = () => {
 
   const quickActions: QuickAction[] = [
     {
-      title: "Create Course",
-      description: "Set up new course for students",
-      icon: <FiBookOpen />,
-      href: "/menu/courses",
-      color: "text-green-600",
+      title: "Create Test",
+      description: "Set up new test for students",
+      icon: <FiEdit3 />,
+      href: "/menu/tests/create",
+      color: "text-indigo-600",
       action: () => {
-        router.push("/menu/courses?action=create");
+        router.push("/menu/tests/create");
       },
     },
     {
@@ -378,8 +395,8 @@ const HomePage = () => {
         return "text-orange-600 bg-orange-50";
       case "course":
         return "text-purple-600 bg-purple-50";
-      case "event":
-        return "text-pink-600 bg-pink-50";
+      case "test":
+        return "text-indigo-600 bg-indigo-50";
       case "announcement":
         return "text-cyan-600 bg-cyan-50";
       default:
@@ -395,8 +412,8 @@ const HomePage = () => {
         return <FiClipboard className="h-5 w-5" />;
       case "course":
         return <FiBookOpen className="h-5 w-5" />;
-      case "event":
-        return <FiCalendar className="h-5 w-5" />;
+      case "test":
+        return <FiEdit3 className="h-5 w-5" />;
       case "announcement":
         return <FiUsers className="h-5 w-5" />;
       default:
@@ -449,6 +466,10 @@ const HomePage = () => {
                     ? "text-green-800 bg-green-100"
                     : activity.status === "pending"
                     ? "text-yellow-800 bg-yellow-100"
+                    : activity.status === "published"
+                    ? "text-blue-800 bg-blue-100"
+                    : activity.status === "draft"
+                    ? "text-gray-800 bg-gray-100"
                     : "text-red-800 bg-red-100"
                 }`}
               >
@@ -590,27 +611,27 @@ const HomePage = () => {
             subtitle={`${stats.pendingAssignments} pending`}
           />
           <StatCard
-            title="Upcoming Events"
-            value={stats.upcomingEvents}
-            icon={<FiCalendar className="h-6 w-6" />}
-            color="text-orange-600"
+            title="Tests"
+            value={stats.totalTests}
+            icon={<FiEdit3 className="h-6 w-6" />}
+            color="text-indigo-600"
             trend={
               stats.previousStats
                 ? calculateTrend(
-                    stats.upcomingEvents,
-                    stats.previousStats.upcomingEvents
+                    stats.totalTests,
+                    stats.previousStats.totalTests
                   )
                 : "0%"
             }
             trendValue={
               stats.previousStats
                 ? calculateTrend(
-                    stats.upcomingEvents,
-                    stats.previousStats.upcomingEvents
+                    stats.totalTests,
+                    stats.previousStats.totalTests
                   )
                 : "0%"
             }
-            subtitle="This week"
+            subtitle={`${stats.publishedTests} published`}
           />
         </div>
 
@@ -821,10 +842,10 @@ const HomePage = () => {
               color: "purple",
             },
             {
-              title: "Events",
-              href: "/menu/events",
-              icon: <FiCalendar />,
-              color: "orange",
+              title: "Tests",
+              href: "/menu/tests",
+              icon: <FiEdit3 />,
+              color: "indigo",
             },
           ].map((item, index) => (
             <Link
