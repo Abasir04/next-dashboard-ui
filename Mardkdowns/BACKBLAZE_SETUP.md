@@ -76,6 +76,88 @@ The system automatically:
 3. Generates a presigned download URL
 4. Returns the presigned URL to the frontend
 
+## Download Implementation
+
+This project includes helpers in `src/lib/backblaze.ts` for generating secure download URLs.
+
+### Server-side download endpoint (recommended)
+
+Create an API route that accepts a source file URL and returns a short-lived presigned URL for the client to download. This avoids exposing your credentials and centralizes access control.
+
+Example: `src/app/api/download/route.ts`
+
+```ts
+import { NextRequest, NextResponse } from "next/server";
+import { generateDownloadUrl } from "@/lib/backblaze";
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const fileUrl = searchParams.get("url");
+    const filename = searchParams.get("filename") || undefined;
+
+    if (!fileUrl) {
+      return NextResponse.json({ error: "Missing url" }, { status: 400 });
+    }
+
+    // Optional: Add your own authorization checks here (e.g., user/session/course access)
+
+    const signedUrl = await generateDownloadUrl(fileUrl, filename);
+    return NextResponse.json({ url: signedUrl });
+  } catch (error) {
+    console.error("Download endpoint error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate download link" },
+      { status: 500 }
+    );
+  }
+}
+```
+
+Notes:
+
+- `generateDownloadUrl` will detect Backblaze URLs, extract the S3 key, and return a presigned URL. Non-Backblaze URLs are returned as-is.
+- The `filename` param (optional) sets `Content-Disposition` so browsers prompt with a friendly name.
+
+### Frontend usage
+
+Use the API route to fetch the signed URL, then redirect the browser to start the download.
+
+```ts
+async function handleDownload(fileUrl: string, filename?: string) {
+  const qp = new URLSearchParams({ url: fileUrl });
+  if (filename) qp.set("filename", filename);
+
+  const res = await fetch(`/api/download?${qp.toString()}`);
+  if (!res.ok) throw new Error("Failed to get download link");
+  const { url } = await res.json();
+
+  // Start the download
+  window.location.href = url;
+}
+```
+
+Example button:
+
+```tsx
+<button onClick={() => handleDownload(backblazeFileUrl, "lecture-notes.pdf")}>
+  Download
+</button>
+```
+
+### Direct server-side generation (alternative)
+
+If you already have the S3 key (path inside the bucket), you can call `getPresignedDownloadUrl(key, expiresIn, filename)` directly on the server and return it to the client.
+
+### Testing via cURL
+
+```bash
+curl "http://localhost:3000/api/download?url=https://s3.eu-central-003.backblazeb2.com/your-bucket/path/to/file.pdf&filename=my-file.pdf"
+# -> { "url": "https://s3.eu-central-003.backblazeb2.com/...X-Amz-Signature=..." }
+```
+
+Use the returned `url` in your browser to verify that the file downloads and the filename is respected.
+
 ## Testing
 
 To test the setup:
@@ -97,6 +179,11 @@ To test the setup:
 
 - Check that your application key has the correct permissions
 - Verify the bucket name in the application key settings
+
+### File downloads inline instead of saving
+
+- Pass a `filename` when requesting the signed URL so `Content-Disposition` is set to `attachment` with a name.
+- The helper already sets `attachment` by default; providing `filename` improves UX in the save dialog.
 
 ### 404 Not Found Error
 
