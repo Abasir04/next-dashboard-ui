@@ -18,7 +18,7 @@ async function handler(request: NextRequest) {
     const now = new Date();
 
     // Deactivate all active links that are past their expiry
-    const result = await prisma.courseRegistrationLink.updateMany({
+    const linkResult = await prisma.courseRegistrationLink.updateMany({
       where: {
         isActive: true,
         expiresAt: { lte: now },
@@ -28,9 +28,21 @@ async function handler(request: NextRequest) {
       },
     });
 
+    // Invalidate expired test accesses
+    const testAccessResult = await prisma.testAccess.updateMany({
+      where: {
+        verified: true,
+        expiresAt: { lt: now },
+      },
+      data: {
+        verified: false,
+      },
+    });
+
     return NextResponse.json({
-      message: "Expired registration links deactivated",
-      deactivatedCount: result.count,
+      message: "Expired links deactivated and test accesses invalidated",
+      deactivatedLinksCount: linkResult.count,
+      invalidatedTestAccessesCount: testAccessResult.count,
       runAt: now.toISOString(),
     });
   } catch (error) {

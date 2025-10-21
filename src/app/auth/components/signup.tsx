@@ -14,9 +14,7 @@ const titleOptions = [
   { label: "Dr", value: "dr" },
   { label: "Prof", value: "prof" },
 ];
-const roleOptions = [
-  { label: "Lecturer", value: "lecturer" },
-];
+const roleOptions = [{ label: "Lecturer", value: "lecturer" }];
 
 const SignUp = ({
   isLoading,

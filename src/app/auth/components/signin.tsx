@@ -13,8 +13,8 @@ const SignIn = ({
   onSuccess,
 }: {
   isLoading: boolean;
-  setIsLoading: (v: boolean) => void;
-  setError: (v: string) => void;
+  setIsLoading: (_v: boolean) => void;
+  setError: (_v: string) => void;
   onSuccess?: () => void;
 }) => {
   const router = useRouter();
@@ -22,7 +22,7 @@ const SignIn = ({
     register,
     handleSubmit,
     formState: { errors },
-    reset,
+    // reset,
   } = useForm();
 
   const handleSignIn = async (data: any) => {
@@ -45,8 +45,12 @@ const SignIn = ({
       }
       // After sign in, fetch user profile
       const profileRes = await fetch("/api/auth/me");
-      const profile = await profileRes.json();
-      router.push(paths.home);
+      await profileRes.json();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push(paths.home);
+      }
     } catch (err: any) {
       showError(err.message);
     } finally {

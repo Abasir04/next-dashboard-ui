@@ -15,6 +15,7 @@ import {
   FaCog,
   FaSignOutAlt,
   FaCheckCircle,
+  FaFileAlt,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import LogoutModal from "./LogoutModal";
@@ -64,6 +65,12 @@ const menuItems = [
         href: paths.menu.attendance,
         icon: FaCheckCircle,
         visible: ["admin", "lecturer", "student", "parent"],
+      },
+      {
+        label: "Tests",
+        href: paths.menu.tests,
+        icon: FaFileAlt,
+        visible: ["admin", "lecturer"],
       },
       // {
       //   label: "Events",
@@ -178,14 +185,14 @@ const Menu = () => {
               <Link
                 href={item.href}
                 key={item.label}
-                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
+                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors min-w-0 flex-shrink-0
                   ${
                     isActive(item.href)
                       ? "bg-primary text-white"
                       : "text-black hover:bg-primary hover:text-white"
                   }`}
               >
-                <item.icon size={20} />
+                <item.icon size={20} className="flex-shrink-0" />
                 <span className="hidden lg:block">{item.label}</span>
               </Link>
             ))}
@@ -203,9 +210,9 @@ const Menu = () => {
                 <button
                   key={item.label}
                   onClick={handleLogoutClick}
-                  className="flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors text-black hover:bg-primary hover:text-white w-full"
+                  className="flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors text-black hover:bg-primary hover:text-white w-full min-w-0 flex-shrink-0"
                 >
-                  <item.icon size={20} />
+                  <item.icon size={20} className="flex-shrink-0" />
                   <span className="hidden lg:block">{item.label}</span>
                 </button>
               );
@@ -214,14 +221,14 @@ const Menu = () => {
               <Link
                 href={item.href}
                 key={item.label}
-                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors
+                className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors min-w-0 flex-shrink-0
                   ${
                     isActive(item.href)
                       ? "bg-primary text-white"
                       : "text-black hover:bg-primary hover:text-white"
                   }`}
               >
-                <item.icon size={20} />
+                <item.icon size={20} className="flex-shrink-0" />
                 <span className="hidden lg:block">{item.label}</span>
               </Link>
             );

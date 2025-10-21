@@ -18,14 +18,14 @@ export default function DashboardLayout({
           <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] h-screen flex flex-col bg-white p-2">
             <Link
               href="/"
-              className="flex items-center justify-center lg:justify-start gap-2"
+              className="flex items-center justify-center lg:justify-start gap-3 m-1"
             >
               <Image src="/logo.png" alt="logo" width={32} height={32} />
               <span className="hidden lg:block font-bold">
                 University of Ibadan
               </span>
             </Link>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 py-1">
               <Menu />
             </div>
           </div>

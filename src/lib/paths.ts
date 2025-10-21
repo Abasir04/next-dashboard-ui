@@ -30,6 +30,7 @@ export const paths = {
     announcements: "/menu/announcements",
     attendance: "/menu/attendance",
     messages: "/menu/messages",
+    tests: "/menu/tests",
   },
 
   // Standalone pages
@@ -98,6 +99,7 @@ export const getPageTitle = (path: string): string => {
     [paths.menu.events]: "Events",
     [paths.menu.announcements]: "Announcements",
     [paths.menu.attendance]: "Attendance",
+    [paths.menu.tests]: "Tests",
     [paths.profile]: "Profile",
     [paths.settings]: "Settings",
     [paths.logout]: "Logout",

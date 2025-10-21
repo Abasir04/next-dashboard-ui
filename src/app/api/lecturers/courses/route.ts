@@ -5,7 +5,6 @@ import { getAuthenticatedUser } from "@/lib/serverAuth";
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
 
-// GET - Fetch courses for the current lecturer
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
@@ -18,77 +17,81 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    let whereClause: any = {};
+    // Get lecturer profile
+    const lecturer = await prisma.lecturer.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
 
-    if (user.role === "LECTURER") {
-      const lecturer = await prisma.lecturer.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      });
-
-      if (!lecturer) {
-        return NextResponse.json(
-          { error: "Lecturer not found" },
-          { status: 404 }
-        );
-      }
-
-      whereClause.lecturerId = lecturer.id;
+    if (!lecturer) {
+      return NextResponse.json(
+        { error: "Lecturer profile not found" },
+        { status: 404 }
+      );
     }
 
+    // Get lecturer's courses with related counts
     const courses = await prisma.course.findMany({
-      where: whereClause,
+      where: { lecturerId: lecturer.id },
+      include: {
+        lecturer: {
+          select: { name: true, email: true },
+        },
+        registrations: {
+          where: { status: "APPROVED" },
+          select: { id: true },
+        },
+        _count: {
+          select: { materials: true },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    // Get all levels to map course levels
+    const levels = await prisma.level.findMany({
       select: {
         id: true,
         name: true,
-        code: true,
-        level: true,
-        createdAt: true,
-        updatedAt: true,
-        lecturer: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
       },
     });
 
-    // Get student counts and materials counts for each course
-    const coursesWithCounts = await Promise.all(
-      courses.map(async (course) => {
-        // Get student count from course registrations
-        const studentCount = await prisma.courseRegistration.count({
-          where: {
-            courseId: course.id,
-            status: "APPROVED",
-          },
-        });
+    // Map courses with level information and computed counts
+    const coursesWithLevels = courses.map((course) => {
+      // Map course.level numeric (e.g., 100) to the actual Level entity
+      // Seed shows Level.name is like "100", not "100 Level"
+      const expectedName = course.level.toString();
+      let levelMatch = levels.find((lvl) => lvl.name === expectedName);
+      if (!levelMatch) {
+        const grade = Math.floor(course.level / 100).toString();
+        levelMatch = levels.find((lvl) => lvl.name.includes(grade));
+      }
+      const levelObj = levelMatch || {
+        id: Math.floor(course.level / 100),
+        name: expectedName,
+      };
 
-        // Get materials count
-        const materialsCount = await prisma.courseMaterial.count({
-          where: {
-            courseId: course.id,
-          },
-        });
+      const studentCount = course.registrations.length;
+      const materialsCount = course._count.materials;
 
-        return {
-          ...course,
-          studentCount,
-          materialsCount,
-          levels: [`${course.level} Level`], // Convert level to array format
-        };
-      })
-    );
+      return {
+        id: course.id,
+        name: course.name,
+        code: course.code,
+        level: levelObj,
+        lecturer: course.lecturer,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
+        studentCount,
+        materialsCount,
+      };
+    });
 
-    return NextResponse.json({ courses: coursesWithCounts });
+    return NextResponse.json(coursesWithLevels);
   } catch (error) {
     console.error("Error fetching lecturer courses:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch courses" },
       { status: 500 }
     );
   }
