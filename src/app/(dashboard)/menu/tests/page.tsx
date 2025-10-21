@@ -139,7 +139,10 @@ const TestsPage = () => {
 
   const handleShowShare = (test: Test) => {
     setSelectedTest(test);
-    setShareLink(`${window.location.origin}/student/test/${test.shareToken}`);
+    // Point students to the verification page first
+    setShareLink(
+      `${window.location.origin}/student/test/verify/${test.shareToken}`
+    );
     setShowShareModal(true);
   };
 
@@ -153,6 +156,7 @@ const TestsPage = () => {
     setPublishOpen(false);
     setPublishTarget(null);
   };
+  const [publishing, setPublishing] = useState(false);
 
   const handleCopyLink = async () => {
     if (shareLink) {
@@ -460,11 +464,19 @@ const TestsPage = () => {
       <PublishConfirmModal
         isOpen={publishOpen && !!publishTarget}
         isPublished={!!publishTarget?.isPublished}
-        onClose={closePublish}
+        loading={publishing}
+        onClose={() => {
+          if (!publishing) closePublish();
+        }}
         onConfirm={async () => {
           if (!publishTarget) return;
-          await handlePublish(publishTarget);
-          closePublish();
+          try {
+            setPublishing(true);
+            await handlePublish(publishTarget);
+            closePublish();
+          } finally {
+            setPublishing(false);
+          }
         }}
       />
     </div>

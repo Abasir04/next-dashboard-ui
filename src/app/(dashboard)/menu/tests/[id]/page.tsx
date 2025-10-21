@@ -340,7 +340,7 @@ export default function TestDetailPage({ params }: { params: { id: string } }) {
   ];
 
   const renderResponseRow = (response: TestResponse) => (
-    <tr key={response.id} className="hover:bg-gray-50">
+    <tr key={response.id} className="hover:bg-gray-50 text-center">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm font-medium text-gray-900">
           {response.student.name}
@@ -958,7 +958,7 @@ export default function TestDetailPage({ params }: { params: { id: string } }) {
           </div>
         ) : (
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+            <h2 className="text-lg font-medium text-gray-900 mb-6">
               Student Responses
             </h2>
             {responses.length === 0 ? (

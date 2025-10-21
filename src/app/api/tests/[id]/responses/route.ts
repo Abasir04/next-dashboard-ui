@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/serverAuth";
+import { verifyTestToken, extractTokenFromHeader } from "@/lib/verifyTestToken";
 
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
@@ -85,39 +86,84 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is student
-    if (user.role !== "STUDENT") {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
     const testId = parseInt(params.id);
     if (isNaN(testId)) {
       return NextResponse.json({ error: "Invalid test ID" }, { status: 400 });
     }
 
+    // Try standard authentication first
+    let user = await getAuthenticatedUser(request);
+    let studentId: number | null = null;
+
+    if (user && user.role === "STUDENT") {
+      // Standard authentication - get student profile
+      const student = await prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+
+      if (!student) {
+        return NextResponse.json(
+          { error: "Student profile not found" },
+          { status: 404 }
+        );
+      }
+
+      studentId = student.id;
+    } else {
+      // Try JWT token authentication
+      const authHeader = request.headers.get("authorization");
+      const token = extractTokenFromHeader(authHeader);
+
+      if (!token) {
+        return NextResponse.json(
+          {
+            error: "No authorization token provided",
+          },
+          { status: 401 }
+        );
+      }
+
+      // Verify the JWT token
+      const verification = await verifyTestToken(token);
+      if (!verification.valid || !verification.payload) {
+        return NextResponse.json(
+          {
+            error: verification.error || "Invalid token",
+          },
+          { status: 401 }
+        );
+      }
+
+      const { studentId: tokenStudentId, testId: tokenTestId } =
+        verification.payload;
+
+      // Ensure the token is for the correct test
+      if (parseInt(tokenTestId) !== testId) {
+        return NextResponse.json(
+          {
+            error: "Token does not match test ID",
+          },
+          { status: 403 }
+        );
+      }
+
+      studentId = parseInt(tokenStudentId);
+    }
+
+    if (!studentId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { answers, timeSpent } = body;
 
-    // Get student profile
-    const student = await prisma.student.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    });
+    console.log("Request body:", { answers, timeSpent });
+    console.log("Student ID:", studentId);
 
-    if (!student) {
-      return NextResponse.json(
-        { error: "Student profile not found" },
-        { status: 404 }
-      );
-    }
-
-    // Check if test exists and is published
-    const test = await prisma.test.findUnique({
+    // Get full test details
+    console.log("Fetching test with ID:", testId);
+    const fullTest = await prisma.test.findUnique({
       where: { id: testId },
       include: {
         questions: {
@@ -126,11 +172,15 @@ export async function POST(
       },
     });
 
-    if (!test) {
+    if (!fullTest) {
+      console.log("Test not found for ID:", testId);
       return NextResponse.json({ error: "Test not found" }, { status: 404 });
     }
 
-    if (!test.isPublished) {
+    console.log("Test found:", fullTest.title);
+    console.log("Test questions count:", fullTest.questions.length);
+
+    if (!fullTest.isPublished) {
       return NextResponse.json(
         { error: "Test is not published" },
         { status: 400 }
@@ -138,7 +188,7 @@ export async function POST(
     }
 
     // Check if test has due date and is still open
-    if (test.dueDate && new Date() > test.dueDate) {
+    if (fullTest.dueDate && new Date() > fullTest.dueDate) {
       return NextResponse.json(
         { error: "Test deadline has passed" },
         { status: 400 }
@@ -150,7 +200,7 @@ export async function POST(
       where: {
         testId_studentId: {
           testId,
-          studentId: student.id,
+          studentId: studentId,
         },
       },
     });
@@ -166,26 +216,52 @@ export async function POST(
     let score = 0;
     let totalPoints = 0;
 
-    test.questions.forEach((question) => {
+    console.log("Starting score calculation...");
+    fullTest.questions.forEach((question, index) => {
+      console.log(`Question ${index + 1}:`, {
+        id: question.id,
+        type: question.type,
+        correct: question.correct,
+        points: question.points,
+      });
+
       totalPoints += question.points;
 
       if (question.type === "MULTIPLE_CHOICE" || question.type === "CHECKBOX") {
-        const correctAnswers = question.correct.sort();
-        const studentAnswers = (answers[question.id] || []).sort();
+        // Only score if correct answers are defined
+        if (question.correct && question.correct.length > 0) {
+          const correctAnswers = question.correct.sort();
+          const studentAnswers = (answers[question.id] || []).sort();
 
-        if (JSON.stringify(correctAnswers) === JSON.stringify(studentAnswers)) {
-          score += question.points;
+          if (
+            JSON.stringify(correctAnswers) === JSON.stringify(studentAnswers)
+          ) {
+            score += question.points;
+            console.log(
+              `Question ${index + 1} scored ${question.points} points`
+            );
+          }
         }
+        // For questions without correct answers defined, they are not scored (essay questions, etc.)
       }
     });
 
     const percentage = totalPoints > 0 ? (score / totalPoints) * 100 : 0;
+    console.log("Final score:", { score, totalPoints, percentage });
 
     // Create test response
+    console.log("Creating test response with data:", {
+      testId,
+      studentId,
+      answers,
+      score: percentage,
+      timeSpent: timeSpent ? parseInt(timeSpent) : null,
+    });
+
     const response = await prisma.testResponse.create({
       data: {
         testId,
-        studentId: student.id,
+        studentId: studentId,
         answers,
         score: percentage,
         timeSpent: timeSpent ? parseInt(timeSpent) : null,
@@ -202,9 +278,14 @@ export async function POST(
       },
     });
 
+    console.log("Test response created successfully:", response.id);
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error submitting test response:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       { error: "Failed to submit test response" },
       { status: 500 }

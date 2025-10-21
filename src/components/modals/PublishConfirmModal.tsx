@@ -8,6 +8,7 @@ interface PublishConfirmModalProps {
   isPublished: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  loading?: boolean;
 }
 
 export default function PublishConfirmModal({
@@ -15,6 +16,7 @@ export default function PublishConfirmModal({
   isPublished,
   onClose,
   onConfirm,
+  loading = false,
 }: PublishConfirmModalProps) {
   if (!isOpen) return null;
 
@@ -45,6 +47,7 @@ export default function PublishConfirmModal({
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
             title="Close"
+            disabled={loading}
           >
             <FiX size={20} />
           </button>
@@ -53,19 +56,27 @@ export default function PublishConfirmModal({
         <div className="flex justify-end gap-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            disabled={loading}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className={`px-4 py-2 rounded-md text-white ${
+            className={`px-4 py-2 rounded-md text-white disabled:opacity-50 ${
               isPublished
                 ? "bg-orange-600 hover:bg-orange-700"
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
+            disabled={loading}
           >
-            {isPublished ? "Unpublish" : "Publish"}
+            {loading
+              ? isPublished
+                ? "Unpublishing..."
+                : "Publishing..."
+              : isPublished
+              ? "Unpublish"
+              : "Publish"}
           </button>
         </div>
       </div>

@@ -9,7 +9,7 @@ import { toast } from "react-hot-toast";
 interface Question {
   id: string;
   question: string;
-  type: "SHORT_ANSWER" | "PARAGRAPH" | "MULTIPLE_CHOICE" | "CHECKBOX";
+  type: "MULTIPLE_CHOICE" | "CHECKBOX";
   options: string[];
   correct: string[];
   required: boolean;
@@ -133,10 +133,9 @@ export default function CreateTestPage() {
       id: Date.now().toString(),
       question: "",
       type,
-      options:
-        type === "MULTIPLE_CHOICE" || type === "CHECKBOX" ? ["", ""] : [],
+      options: ["", ""],
       correct: [],
-      required: false,
+      required: true, // Auto-mark as required
       points: 1,
     };
     setQuestions([...questions, newQuestion]);
@@ -203,11 +202,16 @@ export default function CreateTestPage() {
         toast.error("All questions must have text");
         return;
       }
-      if (
-        (question.type === "MULTIPLE_CHOICE" || question.type === "CHECKBOX") &&
-        question.options.some((opt) => !opt.trim())
-      ) {
+      if (question.options.some((opt) => !opt.trim())) {
         toast.error("All options must be filled");
+        return;
+      }
+      if (question.correct.length === 0) {
+        toast.error(
+          `Question ${
+            questions.indexOf(question) + 1
+          }: Please select at least one correct answer`
+        );
         return;
       }
     }
@@ -441,20 +445,6 @@ export default function CreateTestPage() {
               >
                 + Checkbox
               </button>
-              <button
-                type="button"
-                onClick={() => addQuestion("SHORT_ANSWER")}
-                className="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700"
-              >
-                + Short Answer
-              </button>
-              <button
-                type="button"
-                onClick={() => addQuestion("PARAGRAPH")}
-                className="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700"
-              >
-                + Paragraph
-              </button>
             </div>
           </div>
 
@@ -541,51 +531,46 @@ function QuestionEditor({
           />
         </div>
 
-        {(question.type === "MULTIPLE_CHOICE" ||
-          question.type === "CHECKBOX") && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Options
-            </label>
-            <div className="space-y-2">
-              {question.options.map((option, optionIndex) => (
-                <div key={optionIndex} className="flex items-center space-x-2">
-                  <input
-                    type={
-                      question.type === "MULTIPLE_CHOICE" ? "radio" : "checkbox"
-                    }
-                    checked={question.correct.includes(option)}
-                    onChange={() => onToggleCorrect(option)}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                  />
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(e) =>
-                      onUpdateOption(optionIndex, e.target.value)
-                    }
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder={`Option ${optionIndex + 1}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onRemoveOption(optionIndex)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={onAddOption}
-                className="text-indigo-600 hover:text-indigo-800 text-sm"
-              >
-                + Add Option
-              </button>
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Options
+          </label>
+          <div className="space-y-2">
+            {question.options.map((option, optionIndex) => (
+              <div key={optionIndex} className="flex items-center space-x-2">
+                <input
+                  type={
+                    question.type === "MULTIPLE_CHOICE" ? "radio" : "checkbox"
+                  }
+                  checked={question.correct.includes(option)}
+                  onChange={() => onToggleCorrect(option)}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={option}
+                  onChange={(e) => onUpdateOption(optionIndex, e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder={`Option ${optionIndex + 1}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => onRemoveOption(optionIndex)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={onAddOption}
+              className="text-indigo-600 hover:text-indigo-800 text-sm"
+            >
+              + Add Option
+            </button>
           </div>
-        )}
+        </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">

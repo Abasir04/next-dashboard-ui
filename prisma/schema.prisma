@@ -136,6 +136,7 @@ model Student {
   attendances  Attendance[]
   assignmentSubmissions AssignmentSubmission[]
   testResponses TestResponse[]
+  testAccesses TestAccess[]
   level        Level    @relation(fields: [levelId], references: [id])
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -383,6 +384,7 @@ model Test {
   dueDate      DateTime
   questions    TestQuestion[]
   responses    TestResponse[]
+  accesses     TestAccess[]
   shareToken   String        @unique
   isPublished  Boolean       @default(false)
   allowViewScore Boolean     @default(true)
@@ -419,6 +421,22 @@ model TestResponse {
 
   @@unique([testId, studentId])
   @@map("test_responses")
+}
+
+// Grants per-test access to students after verification, until expiresAt
+model TestAccess {
+  id         Int      @id @default(autoincrement())
+  testId     Int
+  studentId  Int
+  verified   Boolean  @default(false) // Whether student has completed verification
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, studentId])
+  @@map("test_access")
 }
 
 enum QuestionType {
