@@ -42,10 +42,10 @@ export async function GET() {
     // Get course statistics for each level
     const levelsWithStats = await Promise.all(
       levels.map(async (level) => {
-        // Count courses for this level (courses have a level field as integer)
+        // Count courses for this level (courses have a level field as integer matching the level name)
         const courseCount = await prisma.course.count({
           where: {
-            level: level.id,
+            level: parseInt(level.name),
           },
         });
 
@@ -54,7 +54,7 @@ export async function GET() {
           where: {
             courses: {
               some: {
-                level: level.id,
+                level: parseInt(level.name),
               },
             },
           },

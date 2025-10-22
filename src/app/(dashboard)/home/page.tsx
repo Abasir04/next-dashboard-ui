@@ -20,6 +20,8 @@ import {
   FiEdit3,
 } from "react-icons/fi";
 import { CreateAssignmentModal } from "@/components/modals/AssignmentModals";
+import CourseForm from "@/components/forms/CourseForm";
+import CreateLectureModal from "@/components/modals/CreateLectureModal";
 
 interface DashboardStats {
   totalStudents: number;
@@ -82,6 +84,9 @@ const HomePage = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showCreateAssignmentModal, setShowCreateAssignmentModal] =
+    useState(false);
+  const [showCreateCourseModal, setShowCreateCourseModal] = useState(false);
+  const [showCreateAttendanceModal, setShowCreateAttendanceModal] =
     useState(false);
 
   // Format time ago
@@ -294,14 +299,14 @@ const HomePage = () => {
           });
         }
 
-        // Sort by timestamp (newest first) and take only the 2 most recent
+        // Sort by timestamp (newest first) and take only the 3 most recent
         const recentActivities = allActivities
           .sort(
             (a, b) =>
               new Date(b.timestamp || 0).getTime() -
               new Date(a.timestamp || 0).getTime()
           )
-          .slice(0, 2);
+          .slice(0, 3);
 
         setRecentActivity(recentActivities);
       } catch (error) {
@@ -316,13 +321,23 @@ const HomePage = () => {
 
   const quickActions: QuickAction[] = [
     {
-      title: "Create Test",
-      description: "Set up new test for students",
-      icon: <FiEdit3 />,
-      href: "/menu/tests/create",
-      color: "text-indigo-600",
+      title: "Create Course",
+      description: "Set up new course for students",
+      icon: <FiBookOpen />,
+      href: "/menu/courses",
+      color: "text-green-600",
       action: () => {
-        router.push("/menu/tests/create");
+        setShowCreateCourseModal(true);
+      },
+    },
+    {
+      title: "Create Attendance",
+      description: "Set up new attendance session",
+      icon: <FiUsers />,
+      href: "/menu/attendance",
+      color: "text-purple-600",
+      action: () => {
+        setShowCreateAttendanceModal(true);
       },
     },
     {
@@ -333,6 +348,16 @@ const HomePage = () => {
       color: "text-blue-600",
       action: () => {
         setShowCreateAssignmentModal(true);
+      },
+    },
+    {
+      title: "Create Test",
+      description: "Set up new test for students",
+      icon: <FiEdit3 />,
+      href: "/menu/tests/create",
+      color: "text-indigo-600",
+      action: () => {
+        router.push("/menu/tests/create");
       },
     },
   ];
@@ -878,6 +903,30 @@ const HomePage = () => {
           onClose={() => setShowCreateAssignmentModal(false)}
           onSuccess={() => {
             setShowCreateAssignmentModal(false);
+            // Refresh the page data
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* Create Course Modal */}
+      {showCreateCourseModal && (
+        <CourseForm
+          onClose={() => setShowCreateCourseModal(false)}
+          onSuccess={() => {
+            setShowCreateCourseModal(false);
+            // Refresh the page data
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* Create Attendance Modal */}
+      {showCreateAttendanceModal && (
+        <CreateLectureModal
+          onClose={() => setShowCreateAttendanceModal(false)}
+          onSuccess={() => {
+            setShowCreateAttendanceModal(false);
             // Refresh the page data
             window.location.reload();
           }}
