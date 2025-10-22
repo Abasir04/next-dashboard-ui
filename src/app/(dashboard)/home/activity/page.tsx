@@ -6,7 +6,6 @@ import {
   FiArrowLeft,
   FiSearch,
   FiFilter,
-  FiCalendar,
   FiUsers,
   FiClipboard,
   FiBookOpen,
@@ -28,9 +27,7 @@ interface Activity {
     | "submission"
     | "course_created"
     | "assignment_created"
-    | "material_uploaded"
-    | "event_created"
-    | "announcement_created";
+    | "material_uploaded";
   title: string;
   description: string;
   timestamp: string;
@@ -39,7 +36,6 @@ interface Activity {
   courseName?: string;
   courseCode?: string;
   assignmentTitle?: string;
-  eventTitle?: string;
   status?: "pending" | "completed" | "overdue";
   priority?: "low" | "medium" | "high";
   metadata?: any;
@@ -89,12 +85,6 @@ const RecentActivityPage = () => {
       label: "Material Uploaded",
       icon: <FiFileText />,
     },
-    { value: "event_created", label: "Event Created", icon: <FiCalendar /> },
-    {
-      value: "announcement_created",
-      label: "Announcement Created",
-      icon: <FiUsers />,
-    },
   ];
 
   const getActivityIcon = (type: string) => {
@@ -109,10 +99,6 @@ const RecentActivityPage = () => {
         return <FiFileText className="h-5 w-5" />;
       case "material_uploaded":
         return <FiFileText className="h-5 w-5" />;
-      case "event_created":
-        return <FiCalendar className="h-5 w-5" />;
-      case "announcement_created":
-        return <FiUsers className="h-5 w-5" />;
       default:
         return <FiActivity className="h-5 w-5" />;
     }
@@ -130,10 +116,6 @@ const RecentActivityPage = () => {
         return "text-orange-600 bg-orange-50";
       case "material_uploaded":
         return "text-indigo-600 bg-indigo-50";
-      case "event_created":
-        return "text-pink-600 bg-pink-50";
-      case "announcement_created":
-        return "text-cyan-600 bg-cyan-50";
       default:
         return "text-gray-600 bg-gray-50";
     }
@@ -166,10 +148,6 @@ const RecentActivityPage = () => {
           return "Assignment Created";
         case "material_uploaded":
           return "Material Uploaded";
-        case "event_created":
-          return "Event Created";
-        case "announcement_created":
-          return "Announcement Created";
         default:
           return groupKey
             .replace(/_/g, " ")
@@ -204,28 +182,17 @@ const RecentActivityPage = () => {
       setLoading(true);
 
       // Fetch all related data
-      const [
-        assignmentsRes,
-        coursesRes,
-        registrationsRes,
-        eventsRes,
-        announcementsRes,
-      ] = await Promise.all([
+      const [assignmentsRes, coursesRes, registrationsRes] = await Promise.all([
         fetch("/api/assignments"),
         fetch("/api/courses"),
         fetch("/api/course-registration"),
-        fetch("/api/events"),
-        fetch("/api/announcements"),
       ]);
 
-      const [assignments, courses, registrations, events, announcements] =
-        await Promise.all([
-          assignmentsRes.json(),
-          coursesRes.json(),
-          registrationsRes.json(),
-          eventsRes.json(),
-          announcementsRes.json(),
-        ]);
+      const [assignments, courses, registrations] = await Promise.all([
+        assignmentsRes.json(),
+        coursesRes.json(),
+        registrationsRes.json(),
+      ]);
 
       const allActivities: Activity[] = [];
 
@@ -283,35 +250,6 @@ const RecentActivityPage = () => {
             courseCode: registration.course?.code,
             status:
               registration.status === "APPROVED" ? "completed" : "pending",
-            priority: "medium",
-          });
-        });
-      }
-
-      // Process events
-      if (events) {
-        events.forEach((event: any) => {
-          allActivities.push({
-            id: `event-${event.id}`,
-            type: "event_created",
-            title: `Event Created: ${event.title}`,
-            description: `New event "${event.title}" scheduled`,
-            timestamp: event.createdAt,
-            eventTitle: event.title,
-            priority: "low",
-          });
-        });
-      }
-
-      // Process announcements
-      if (announcements) {
-        announcements.forEach((announcement: any) => {
-          allActivities.push({
-            id: `announcement-${announcement.id}`,
-            type: "announcement_created",
-            title: `Announcement Created: ${announcement.title}`,
-            description: `New announcement "${announcement.title}" published`,
-            timestamp: announcement.createdAt,
             priority: "medium",
           });
         });
