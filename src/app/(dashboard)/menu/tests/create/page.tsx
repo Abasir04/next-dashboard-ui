@@ -84,7 +84,7 @@ export default function CreateTestPage() {
         const response = await fetch("/api/lecturers/courses");
         if (!response.ok) throw new Error("Failed to fetch courses");
         const data = await response.json();
-        setCourses(data);
+        setCourses(data.courses || []);
       } catch (error) {
         console.error("Error fetching courses:", error);
         toast.error("Failed to fetch courses");
