@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { FiUser, FiEye, FiArrowLeft } from "react-icons/fi";
+import { FiUser, FiArrowLeft } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -59,10 +59,6 @@ const columns = [
   {
     header: "Courses",
     accessor: "courses",
-  },
-  {
-    header: "Actions",
-    accessor: "actions",
   },
 ];
 
@@ -158,16 +154,6 @@ const LevelStudentsPage = () => {
               +{student.courses.length - 2}
             </span>
           )}
-        </div>
-      </td>
-      <td className="p-4">
-        <div className="flex justify-center gap-2">
-          <button
-            className="p-2 text-lamaSky hover:text-lamaSkyDark hover:bg-lamaSky/10 rounded-md transition-colors"
-            title="View student details"
-          >
-            <FiEye size={16} />
-          </button>
         </div>
       </td>
     </tr>
