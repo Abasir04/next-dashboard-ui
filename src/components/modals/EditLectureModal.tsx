@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FiX, FiClock, FiBookOpen, FiUser, FiEdit } from "react-icons/fi";
 import { showError, showSuccess } from "@/lib/toast";
+import { toUTC, toDateTimeLocalFormat } from "@/lib/time";
 
 interface Lecture {
   id: string;
@@ -41,25 +42,11 @@ const EditLectureModal: React.FC<EditLectureModalProps> = ({
 
   useEffect(() => {
     if (lecture) {
-      // Set form data with proper datetime-local format (preserving local timezone)
-      const startTime = new Date(lecture.startTime);
-      const endTime = new Date(lecture.endTime);
-      const linkExpiry = new Date(lecture.linkExpiry);
-
-      // Format for datetime-local input while preserving local timezone
-      const formatForInput = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-      };
-
+      // Convert UTC times from API to local format for datetime-local inputs
       setFormData({
-        startTime: formatForInput(startTime),
-        endTime: formatForInput(endTime),
-        linkExpiry: formatForInput(linkExpiry),
+        startTime: toDateTimeLocalFormat(lecture.startTime),
+        endTime: toDateTimeLocalFormat(lecture.endTime),
+        linkExpiry: toDateTimeLocalFormat(lecture.linkExpiry),
       });
     }
   }, [lecture]);
@@ -82,11 +69,13 @@ const EditLectureModal: React.FC<EditLectureModalProps> = ({
       return;
     }
 
-    // Validate that link expiry is after start time
-    const startTimeDate = new Date(formData.startTime + ":00");
-    const linkExpiryDate = new Date(formData.linkExpiry + ":00");
+    // Convert local times to UTC
+    const startTimeUTC = toUTC(formData.startTime);
+    const endTimeUTC = toUTC(formData.endTime);
+    const linkExpiryUTC = toUTC(formData.linkExpiry);
 
-    if (linkExpiryDate <= startTimeDate) {
+    // Validate that link expiry is after start time
+    if (linkExpiryUTC <= startTimeUTC) {
       showError("Link expiry must be after start time");
       return;
     }
@@ -98,7 +87,11 @@ const EditLectureModal: React.FC<EditLectureModalProps> = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          startTime: startTimeUTC,
+          endTime: endTimeUTC,
+          linkExpiry: linkExpiryUTC,
+        }),
       });
 
       if (!response.ok) {

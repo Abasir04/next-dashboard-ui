@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import PublishConfirmModal from "@/components/modals/PublishConfirmModal";
 import Table from "@/components/Table";
+import { toUTC, toDateTimeLocalFormat } from "@/lib/time";
 
 interface Test {
   id: number;
@@ -200,12 +201,8 @@ export default function TestDetailPage({ params }: { params: { id: string } }) {
         title: data.title,
         description: data.description || "",
         timeLimit: data.timeLimit ? String(data.timeLimit) : "",
-        startDate: data.startDate
-          ? new Date(data.startDate).toISOString().slice(0, 16)
-          : "",
-        dueDate: data.dueDate
-          ? new Date(data.dueDate).toISOString().slice(0, 16)
-          : "",
+        startDate: data.startDate ? toDateTimeLocalFormat(data.startDate) : "",
+        dueDate: data.dueDate ? toDateTimeLocalFormat(data.dueDate) : "",
         allowViewScore: data.allowViewScore,
         courseId: data.course?.id ? String(data.course.id) : "",
         levelId: data.level?.id ? String(data.level.id) : "",
@@ -250,13 +247,15 @@ export default function TestDetailPage({ params }: { params: { id: string } }) {
 
     try {
       setIsSaving(true);
-      // Auto-calc due ISO from start + time limit
-      let dueIso: string | null = null;
+      // Convert local times to UTC and auto-calc due date from start + time limit
+      const startDateUTC = toUTC(data.startDate);
+      let dueDateUTC: string | null = null;
       if (data.startDate && data.timeLimit) {
-        const start = new Date(data.startDate);
         const minutes = parseInt(data.timeLimit);
-        const due = new Date(start.getTime() + minutes * 60000);
-        dueIso = due.toISOString();
+        const due = new Date(
+          new Date(startDateUTC).getTime() + minutes * 60000
+        );
+        dueDateUTC = due.toISOString();
       }
       const response = await fetch(`/api/tests/${test.id}`, {
         method: "PUT",
@@ -266,9 +265,9 @@ export default function TestDetailPage({ params }: { params: { id: string } }) {
           description: data.description,
           courseId: data.courseId,
           levelId: data.levelId,
-          startDate: data.startDate,
+          startDate: startDateUTC,
           timeLimit: data.timeLimit ? parseInt(data.timeLimit) : null,
-          dueDate: dueIso,
+          dueDate: dueDateUTC,
           allowViewScore: data.allowViewScore,
           questions: questions.map((q, index) => ({
             question: q.question,

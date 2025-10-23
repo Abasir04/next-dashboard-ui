@@ -11,6 +11,7 @@ import {
   FiDownload,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { formatLocal } from "@/lib/time";
 
 interface Assignment {
   id: number;
@@ -357,8 +358,7 @@ const AssignmentSubmissionPage = () => {
                     Due Date:
                   </span>
                   <span className="text-gray-800">
-                    {new Date(assignment.dueDate).toLocaleDateString()} at{" "}
-                    {new Date(assignment.dueDate).toLocaleTimeString()}
+                    {formatLocal(assignment.dueDate)}
                   </span>
                 </div>
 

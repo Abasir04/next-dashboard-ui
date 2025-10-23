@@ -14,6 +14,7 @@ import {
   FiFileText,
 } from "react-icons/fi";
 import { showError, showSuccess } from "@/lib/toast";
+import { formatLocal } from "@/lib/time";
 
 interface Test {
   id: number;
@@ -78,7 +79,7 @@ const StudentTestVerificationPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [isAutoSubmit, setIsAutoSubmit] = useState(false); // Track if submission is auto (time expired)
   const [submissionResult, setSubmissionResult] = useState<{
     success: boolean;
     score?: number;
@@ -238,6 +239,10 @@ const StudentTestVerificationPage = () => {
         setTimeLeft(Math.max(0, remaining));
 
         if (remaining <= 0) {
+          // Mark as auto-submit and trigger submission
+          clearInterval(interval);
+          setIsAutoSubmit(true);
+          toast.error("Time's up! Your test is being submitted automatically.");
           handleSubmit(onSubmit)();
         }
       }, 1000);
@@ -332,14 +337,6 @@ const StudentTestVerificationPage = () => {
     }
   };
 
-  const onSubmit = useCallback(
-    (_data: any) => {
-      if (!test) return;
-      setShowSubmitModal(true);
-    },
-    [test]
-  );
-
   const handleConfirmSubmit = useCallback(
     async (data: any) => {
       if (!test) return;
@@ -373,7 +370,18 @@ const StudentTestVerificationPage = () => {
           }),
         });
 
-        if (!response.ok) throw new Error("Failed to submit test");
+        if (!response.ok) {
+          const errorData = await response.json();
+
+          // Handle token expiration specifically
+          if (response.status === 401 && errorData.error?.includes("token")) {
+            throw new Error(
+              "Your session has expired. Please refresh the page and try again."
+            );
+          }
+
+          throw new Error(errorData.error || "Failed to submit test");
+        }
 
         const result = await response.json();
 
@@ -401,10 +409,49 @@ const StudentTestVerificationPage = () => {
         });
       } finally {
         setSubmitting(false);
-        setShowSubmitModal(false);
       }
     },
     [test, startTime, shareToken]
+  );
+
+  const onSubmit = useCallback(
+    (_data: any) => {
+      if (!test) return;
+
+      // Collect all form data and submit directly (no confirmation modal)
+      const formValues: { [key: string]: any } = {};
+      test.questions.forEach((question) => {
+        if (question.type === "CHECKBOX") {
+          const checkboxes = document.querySelectorAll(
+            `[name="${question.id}"]`
+          ) as NodeListOf<HTMLInputElement>;
+          formValues[question.id.toString()] = Array.from(checkboxes)
+            .filter((cb) => cb.checked)
+            .map((cb) => cb.value);
+        } else if (question.type === "MULTIPLE_CHOICE") {
+          const checkedRadio = document.querySelector(
+            `[name="${question.id}"]:checked`
+          ) as HTMLInputElement;
+          if (checkedRadio) {
+            formValues[question.id.toString()] = [checkedRadio.value];
+          } else {
+            formValues[question.id.toString()] = [];
+          }
+        } else {
+          // For SHORT_ANSWER and PARAGRAPH, get value from form
+          const input = document.querySelector(`[name="${question.id}"]`) as
+            | HTMLInputElement
+            | HTMLTextAreaElement;
+          if (input) {
+            formValues[question.id.toString()] = input.value;
+          }
+        }
+      });
+
+      // Submit directly without modal
+      handleConfirmSubmit(formValues);
+    },
+    [test, handleConfirmSubmit]
   );
 
   const handleCancelTest = useCallback(async () => {
@@ -465,8 +512,8 @@ const StudentTestVerificationPage = () => {
             Test Not Found
           </h1>
           <p className="text-gray-600 mb-4">
-            The test link you&apos;re trying to access is invalid, has
-            expired or has not started yet.
+            The test link you&apos;re trying to access is invalid, has expired
+            or has not started yet.
           </p>
           <button
             onClick={() => router.push("/")}
@@ -520,7 +567,7 @@ const StudentTestVerificationPage = () => {
           </h1>
           <p className="text-gray-600 mb-4">
             You have already submitted this test on{" "}
-            {new Date(test.previousResponse!.submittedAt).toLocaleString()}
+            {formatLocal(test.previousResponse!.submittedAt)}
           </p>
           {test.allowViewScore &&
             test.previousResponse?.score !== null &&
@@ -594,7 +641,7 @@ const StudentTestVerificationPage = () => {
                   <div>
                     <p className="text-gray-500">Due Date</p>
                     <p className="font-medium text-gray-900">
-                      {new Date(test.dueDate).toLocaleString()}
+                      {formatLocal(test.dueDate)}
                     </p>
                   </div>
                 </div>
@@ -747,72 +794,6 @@ const StudentTestVerificationPage = () => {
           </form>
         </div>
 
-        {/* Submit Confirmation Modal */}
-        {showSubmitModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="text-center">
-                <div className="mx-auto w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mb-4">
-                  <FiXCircle className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Confirm Test Submission
-                </h3>
-                <p className="text-sm text-gray-600 mb-6">
-                  Are you sure you want to submit your test? This action cannot
-                  be undone.
-                </p>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setShowSubmitModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Get form data from react-hook-form
-                      const formValues: { [key: string]: any } = {};
-                      test?.questions.forEach((question) => {
-                        if (question.type === "CHECKBOX") {
-                          const checkboxes = document.querySelectorAll(
-                            `[name="${question.id}"]`
-                          ) as NodeListOf<HTMLInputElement>;
-                          formValues[question.id.toString()] = Array.from(
-                            checkboxes
-                          )
-                            .filter((cb) => cb.checked)
-                            .map((cb) => cb.value);
-                        } else if (question.type === "MULTIPLE_CHOICE") {
-                          const checkedRadio = document.querySelector(
-                            `[name="${question.id}"]:checked`
-                          ) as HTMLInputElement;
-                          if (checkedRadio) {
-                            formValues[question.id.toString()] = [
-                              checkedRadio.value,
-                            ];
-                          } else {
-                            formValues[question.id.toString()] = [];
-                          }
-                        }
-                      });
-                      handleConfirmSubmit(formValues);
-                    }}
-                    disabled={submitting}
-                    className={`flex-1 px-4 py-2 rounded-md font-medium ${
-                      submitting
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-green-600 text-white hover:bg-green-700"
-                    }`}
-                  >
-                    {submitting ? "Submitting..." : "Confirm Submit"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Cancel Test Confirmation Modal */}
         {showCancelModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -892,7 +873,7 @@ const StudentTestVerificationPage = () => {
                     Due Date:
                   </span>
                   <span className="text-gray-800">
-                    {new Date(test.dueDate).toLocaleString()}
+                    {formatLocal(test.dueDate)}
                   </span>
                 </div>
 

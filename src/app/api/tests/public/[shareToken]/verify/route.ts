@@ -241,9 +241,10 @@ export async function POST(
       );
     }
 
-    // Create or update TestAccess record up to due date
+    // Create or update TestAccess record with 2-minute grace period after due date
+    // This matches the JWT token expiration and verification grace period
     const expiresAtMs = test.dueDate
-      ? new Date(test.dueDate).getTime()
+      ? new Date(test.dueDate).getTime() + 2 * 60 * 1000 // dueDate + 2 minutes
       : Date.now() + 60 * 60 * 1000;
     const expiresAtDate = new Date(expiresAtMs);
     await (prisma as any).testAccess.upsert({

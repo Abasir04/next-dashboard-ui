@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
+import { toUTC } from "@/lib/time";
 
 interface Question {
   id: string;
@@ -216,10 +217,12 @@ export default function CreateTestPage() {
       }
     }
 
-    // Auto-calculate due date
-    const startDate = new Date(data.startDate);
+    // Auto-calculate due date and convert to UTC
+    const startDateUTC = toUTC(data.startDate);
     const minutes = parseInt(data.timeLimit);
-    const dueDate = new Date(startDate.getTime() + minutes * 60000);
+    const dueDateUTC = new Date(
+      new Date(startDateUTC).getTime() + minutes * 60000
+    ).toISOString();
 
     try {
       setLoading(true);
@@ -228,7 +231,8 @@ export default function CreateTestPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          dueDate: dueDate.toISOString(),
+          startDate: startDateUTC,
+          dueDate: dueDateUTC,
           questions: questions.map((q, index) => ({
             ...q,
             order: index + 1,
