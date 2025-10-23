@@ -71,9 +71,10 @@ export async function verifyTestToken(
       };
     }
 
-    // Check if test is still open (due date + 1 minute grace period)
+    // Check if test is still open (due date + 2 minute grace period)
+    // This matches the token expiration time to allow students to submit
     const dueDateWithGrace = new Date(test.dueDate);
-    dueDateWithGrace.setMinutes(dueDateWithGrace.getMinutes() + 1);
+    dueDateWithGrace.setMinutes(dueDateWithGrace.getMinutes() + 2);
 
     if (new Date() > dueDateWithGrace) {
       return {
@@ -139,9 +140,15 @@ export function generateTestToken(
     shareToken,
   };
 
+  // Token should be valid until dueDate + 2 minutes grace period
+  // This gives students enough time to submit even if they start right at the deadline
+  const expirationTime = Math.floor(
+    (dueDate.getTime() + 2 * 60000 - Date.now()) / 1000
+  );
+
   return jwt.sign(payload, process.env.TEST_JWT_SECRET!, {
     algorithm: "HS256",
-    expiresIn: Math.floor((dueDate.getTime() + 60000 - Date.now()) / 1000), // dueDate + 1 minute
+    expiresIn: Math.max(expirationTime, 120), // Minimum 2 minutes validity
     jwtid: `test_${testId}_${studentId}_${Date.now()}`, // Unique token ID
   });
 }

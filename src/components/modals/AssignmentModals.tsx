@@ -1,8 +1,10 @@
+/* eslint-disable unused-imports/no-unused-vars */
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { FiTrash2, FiEdit } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { toUTC, toDateTimeLocalFormat } from "@/lib/time";
 
 interface Assignment {
   id: number;
@@ -138,8 +140,8 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
       setFormData({
         title: assignment.title,
         description: assignment.description || "",
-        startDate: assignment.startDate.split("T")[0], // Convert to YYYY-MM-DD format
-        dueDate: assignment.dueDate.split("T")[0],
+        startDate: toDateTimeLocalFormat(assignment.startDate), // Convert UTC to local datetime-local format
+        dueDate: toDateTimeLocalFormat(assignment.dueDate),
       });
       setSelectedFile(null); // Reset file selection when assignment changes
     }
@@ -187,8 +189,14 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
         lecturerFileName = selectedFile.name;
       }
 
+      // Convert local times to UTC before submitting
+      const startDateUTC = toUTC(formData.startDate);
+      const dueDateUTC = toUTC(formData.dueDate);
+
       onSubmit({
         ...formData,
+        startDate: startDateUTC,
+        dueDate: dueDateUTC,
         lecturerFileUrl,
         lecturerFileName,
       });
@@ -235,10 +243,10 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date *
+                Start Date & Time *
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 value={formData.startDate}
                 onChange={(e) =>
                   setFormData({ ...formData, startDate: e.target.value })
@@ -249,10 +257,10 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Due Date *
+                Due Date & Time *
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 value={formData.dueDate}
                 onChange={(e) =>
                   setFormData({ ...formData, dueDate: e.target.value })
@@ -506,6 +514,10 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         lecturerFileName = selectedFile.name;
       }
 
+      // Convert local times to UTC before sending to API
+      const startDateUTC = toUTC(formData.startDate);
+      const dueDateUTC = toUTC(formData.dueDate);
+
       const response = await fetch("/api/assignments", {
         method: "POST",
         headers: {
@@ -515,8 +527,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           title: formData.title,
           description: formData.description,
           courseId: formData.courseId,
-          startDate: formData.startDate,
-          dueDate: formData.dueDate,
+          startDate: startDateUTC,
+          dueDate: dueDateUTC,
           lecturerFileUrl,
           lecturerFileName,
         }),

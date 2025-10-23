@@ -40,13 +40,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate dates - handle datetime-local format properly
-    // datetime-local inputs provide dates in format "YYYY-MM-DDTHH:MM" without timezone
-    // We need to ensure they're parsed consistently regardless of server timezone
-    const start = new Date(startTime + ":00"); // Add seconds to ensure proper parsing
-    const end = new Date(endTime + ":00");
-    const expiry = new Date(linkExpiry + ":00");
+    // Validate dates - handle ISO UTC strings from time.ts
+    // The frontend now sends properly formatted UTC ISO strings
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const expiry = new Date(linkExpiry);
     const now = new Date();
+
+    // Check if dates are valid
+    if (
+      isNaN(start.getTime()) ||
+      isNaN(end.getTime()) ||
+      isNaN(expiry.getTime())
+    ) {
+      return NextResponse.json(
+        { error: "Invalid date format provided" },
+        { status: 400 }
+      );
+    }
 
     if (start <= now) {
       return NextResponse.json(

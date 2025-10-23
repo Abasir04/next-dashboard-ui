@@ -234,8 +234,34 @@ export async function GET(
       },
     });
 
+    // Remove correct answers from questions before sending to client
+    // The client never needs to see the correct answers - only the server uses them for grading
+    const sanitizedQuestions = test.questions.map((q: any) => ({
+      id: q.id,
+      question: q.question,
+      type: q.type,
+      options: q.options, // Options are sent but correctAnswer is NOT included
+      required: q.required,
+      points: q.points,
+      order: q.order,
+    }));
+
+    // Build response without spreading the original test object
+    // (spreading would include the original questions with correctAnswer)
     return NextResponse.json({
-      ...test,
+      id: test.id,
+      title: test.title,
+      description: test.description,
+      timeLimit: test.timeLimit,
+      startDate: test.startDate,
+      dueDate: test.dueDate,
+      allowViewScore: test.allowViewScore,
+      shareToken: test.shareToken,
+      isPublished: test.isPublished,
+      lecturer: test.lecturer,
+      course: test.course,
+      level: test.level,
+      questions: sanitizedQuestions, // ✅ Sanitized questions (no correct answers)
       hasSubmitted: !!existingResponse,
       previousResponse: existingResponse,
       ...(debug

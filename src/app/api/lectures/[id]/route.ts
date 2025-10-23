@@ -113,9 +113,29 @@ export async function PUT(
       );
     }
 
-    // Validate that link expiry is after start time
-    const startTimeDate = new Date(startTime + ":00");
-    const linkExpiryDate = new Date(linkExpiry + ":00");
+    // Validate dates - handle ISO UTC strings from time.ts
+    const startTimeDate = new Date(startTime);
+    const endTimeDate = new Date(endTime);
+    const linkExpiryDate = new Date(linkExpiry);
+
+    // Check if dates are valid
+    if (
+      isNaN(startTimeDate.getTime()) ||
+      isNaN(endTimeDate.getTime()) ||
+      isNaN(linkExpiryDate.getTime())
+    ) {
+      return NextResponse.json(
+        { error: "Invalid date format provided" },
+        { status: 400 }
+      );
+    }
+
+    if (endTimeDate <= startTimeDate) {
+      return NextResponse.json(
+        { error: "End time must be after start time" },
+        { status: 400 }
+      );
+    }
 
     if (linkExpiryDate <= startTimeDate) {
       return NextResponse.json(
@@ -149,9 +169,9 @@ export async function PUT(
     const updatedLecture = await prisma.lecture.update({
       where: { id: lectureId },
       data: {
-        startTime: new Date(startTime + ":00"),
-        endTime: new Date(endTime + ":00"),
-        linkExpiry: new Date(linkExpiry + ":00"),
+        startTime: startTimeDate,
+        endTime: endTimeDate,
+        linkExpiry: linkExpiryDate,
       },
       include: {
         course: {

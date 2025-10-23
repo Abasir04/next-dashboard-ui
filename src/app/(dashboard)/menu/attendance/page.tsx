@@ -90,7 +90,6 @@ const AttendancePage = () => {
   const handleCreateSuccess = () => {
     setShowCreateModal(false);
     fetchLectures();
-    showSuccess("Lecture created successfully");
   };
 
   const handleViewAttendance = (lectureId: string) => {

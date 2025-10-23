@@ -13,6 +13,7 @@ import {
   FiHash,
 } from "react-icons/fi";
 import { showError, showSuccess } from "@/lib/toast";
+import { formatLocal } from "@/lib/time";
 
 interface Lecture {
   id: string;
@@ -395,7 +396,7 @@ const StudentAttendancePage = () => {
                       </h3>
                       <p className="text-sm text-yellow-700">
                         Attendance will be available at{" "}
-                        {new Date(lecture.startTime).toLocaleString()}
+                        {formatLocal(lecture.startTime)}
                       </p>
                     </div>
                   </div>

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { FiX, FiCalendar, FiClock, FiBookOpen } from "react-icons/fi";
-import { showError } from "@/lib/toast";
+import { showError, showSuccess } from "@/lib/toast";
+import { toUTC, getDefaultTimes, toDateTimeLocalFormat } from "@/lib/time";
 
 interface Course {
   id: number;
@@ -57,23 +58,23 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
       return;
     }
 
-    // Validate dates - ensure they're treated as local time
-    const startTime = new Date(formData.startTime);
-    const endTime = new Date(formData.endTime);
-    const linkExpiry = new Date(formData.linkExpiry);
-    const now = new Date();
+    // Validate dates - convert to UTC for comparison
+    const startTimeUTC = toUTC(formData.startTime);
+    const endTimeUTC = toUTC(formData.endTime);
+    const linkExpiryUTC = toUTC(formData.linkExpiry);
+    const nowUTC = new Date().toISOString();
 
-    if (startTime <= now) {
+    if (startTimeUTC <= nowUTC) {
       showError("Start time must be in the future");
       return;
     }
 
-    if (endTime <= startTime) {
+    if (endTimeUTC <= startTimeUTC) {
       showError("End time must be after start time");
       return;
     }
 
-    if (linkExpiry <= startTime) {
+    if (linkExpiryUTC <= startTimeUTC) {
       showError("Link expiry must be after start time");
       return;
     }
@@ -85,7 +86,12 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          courseId: formData.courseId,
+          startTime: startTimeUTC,
+          endTime: endTimeUTC,
+          linkExpiry: linkExpiryUTC,
+        }),
       });
 
       if (!response.ok) {
@@ -94,6 +100,7 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
       }
 
       const data = await response.json();
+      showSuccess("Lecture attendance created successfully!");
       onSuccess();
     } catch (error) {
       console.error("Error creating lecture:", error);
@@ -115,28 +122,18 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
     }));
   };
 
-  // Set default times
+  // Set default times using the time utility
   const setDefaultTimes = () => {
+    const { startTime, endTime } = getDefaultTimes(1, 2);
     const now = new Date();
-    const startTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
-    const endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000); // 2 hours after start
-    const linkExpiry = new Date(endTime.getTime() + 30 * 60 * 1000); // 30 minutes after end
-
-    // Format for datetime-local input while preserving local timezone
-    const formatForInput = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
-    };
+    const linkExpiryDate = new Date(now.getTime() + 3.5 * 60 * 60 * 1000); // 30 mins after end
+    const linkExpiry = toDateTimeLocalFormat(linkExpiryDate.toISOString());
 
     setFormData((prev) => ({
       ...prev,
-      startTime: formatForInput(startTime),
-      endTime: formatForInput(endTime),
-      linkExpiry: formatForInput(linkExpiry),
+      startTime,
+      endTime,
+      linkExpiry,
     }));
   };
 

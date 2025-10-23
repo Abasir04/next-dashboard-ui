@@ -113,9 +113,20 @@ export async function POST(
     } else {
       // Try JWT token authentication
       const authHeader = request.headers.get("authorization");
+      console.log("Authorization header present:", !!authHeader);
+      console.log(
+        "Authorization header value:",
+        authHeader ? `${authHeader.substring(0, 20)}...` : "null"
+      );
+
       const token = extractTokenFromHeader(authHeader);
+      console.log(
+        "Extracted token:",
+        token ? `${token.substring(0, 20)}...` : "null"
+      );
 
       if (!token) {
+        console.error("No authorization token found in header");
         return NextResponse.json(
           {
             error: "No authorization token provided",
@@ -125,8 +136,16 @@ export async function POST(
       }
 
       // Verify the JWT token
+      console.log("Verifying JWT token for test submission...");
       const verification = await verifyTestToken(token);
+      console.log("Token verification result:", {
+        valid: verification.valid,
+        error: verification.error,
+        hasPayload: !!verification.payload,
+      });
+
       if (!verification.valid || !verification.payload) {
+        console.error("Token verification failed:", verification.error);
         return NextResponse.json(
           {
             error: verification.error || "Invalid token",
@@ -134,6 +153,11 @@ export async function POST(
           { status: 401 }
         );
       }
+
+      console.log(
+        "Token verified successfully for student:",
+        verification.payload.studentId
+      );
 
       const { studentId: tokenStudentId, testId: tokenTestId } =
         verification.payload;
