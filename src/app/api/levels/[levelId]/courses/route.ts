@@ -22,7 +22,7 @@ export async function GET(
     // Get all courses for this level
     const courses = await prisma.course.findMany({
       where: {
-        level: levelId,
+        level: parseInt(level.name),
       },
       include: {
         lecturer: {

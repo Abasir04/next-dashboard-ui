@@ -56,10 +56,6 @@ const columns = [
     accessor: "courses",
   },
   {
-    header: "Events",
-    accessor: "events",
-  },
-  {
     header: "Actions",
     accessor: "actions",
   },
@@ -138,11 +134,6 @@ const LevelsPage = () => {
       <td className="p-4">
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
           {level.courseCount} courses
-        </span>
-      </td>
-      <td className="p-4">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-          {level._count.events} events
         </span>
       </td>
       <td className="p-4">

@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   FiBook,
-  FiEye,
   FiArrowLeft,
-  FiFileText,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
@@ -53,10 +51,6 @@ const columns = [
     header: "Created",
     accessor: "createdAt",
     className: "hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "actions",
   },
 ];
 
@@ -142,22 +136,6 @@ const LevelCoursesPage = () => {
       </td>
       <td className="hidden md:table-cell p-4 text-gray-500">
         {new Date(course.createdAt).toLocaleDateString()}
-      </td>
-      <td className="p-4">
-        <div className="flex justify-center gap-2">
-          <button
-            className="p-2 text-lamaSky hover:text-lamaSkyDark hover:bg-lamaSky/10 rounded-md transition-colors"
-            title="View course details"
-          >
-            <FiEye size={16} />
-          </button>
-          <button
-            className="p-2 text-lamaYellow hover:text-orange-600 hover:bg-lamaYellow/10 rounded-md transition-colors"
-            title="View course materials"
-          >
-            <FiFileText size={16} />
-          </button>
-        </div>
       </td>
     </tr>
   );
