@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json(coursesWithLevels);
+    return NextResponse.json({ courses: coursesWithLevels });
   } catch (error) {
     console.error("Error fetching lecturer courses:", error);
     return NextResponse.json(
