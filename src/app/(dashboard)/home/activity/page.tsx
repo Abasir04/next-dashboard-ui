@@ -27,6 +27,7 @@ interface Activity {
     | "submission"
     | "course_created"
     | "assignment_created"
+    | "test_created"
     | "material_uploaded";
   title: string;
   description: string;
@@ -36,6 +37,7 @@ interface Activity {
   courseName?: string;
   courseCode?: string;
   assignmentTitle?: string;
+  testTitle?: string;
   status?: "pending" | "completed" | "overdue";
   priority?: "low" | "medium" | "high";
   metadata?: any;
@@ -81,6 +83,11 @@ const RecentActivityPage = () => {
       icon: <FiFileText />,
     },
     {
+      value: "test_created",
+      label: "Test Created",
+      icon: <FiClipboard />,
+    },
+    {
       value: "material_uploaded",
       label: "Material Uploaded",
       icon: <FiFileText />,
@@ -97,6 +104,8 @@ const RecentActivityPage = () => {
         return <FiBookOpen className="h-5 w-5" />;
       case "assignment_created":
         return <FiFileText className="h-5 w-5" />;
+      case "test_created":
+        return <FiClipboard className="h-5 w-5" />;
       case "material_uploaded":
         return <FiFileText className="h-5 w-5" />;
       default:
@@ -114,6 +123,8 @@ const RecentActivityPage = () => {
         return "text-purple-600 bg-purple-50";
       case "assignment_created":
         return "text-orange-600 bg-orange-50";
+      case "test_created":
+        return "text-pink-600 bg-pink-50";
       case "material_uploaded":
         return "text-indigo-600 bg-indigo-50";
       default:
@@ -146,6 +157,8 @@ const RecentActivityPage = () => {
           return "Course Created";
         case "assignment_created":
           return "Assignment Created";
+        case "test_created":
+          return "Test Created";
         case "material_uploaded":
           return "Material Uploaded";
         default:
@@ -182,16 +195,19 @@ const RecentActivityPage = () => {
       setLoading(true);
 
       // Fetch all related data
-      const [assignmentsRes, coursesRes, registrationsRes] = await Promise.all([
-        fetch("/api/assignments"),
-        fetch("/api/courses"),
-        fetch("/api/course-registration"),
-      ]);
+      const [assignmentsRes, coursesRes, registrationsRes, testsRes] =
+        await Promise.all([
+          fetch("/api/assignments"),
+          fetch("/api/courses"),
+          fetch("/api/course-registration"),
+          fetch("/api/tests"),
+        ]);
 
-      const [assignments, courses, registrations] = await Promise.all([
+      const [assignments, courses, registrations, tests] = await Promise.all([
         assignmentsRes.json(),
         coursesRes.json(),
         registrationsRes.json(),
+        testsRes.json(),
       ]);
 
       const allActivities: Activity[] = [];
@@ -251,6 +267,25 @@ const RecentActivityPage = () => {
             status:
               registration.status === "APPROVED" ? "completed" : "pending",
             priority: "medium",
+          });
+        });
+      }
+
+      // Process tests
+      if (tests) {
+        tests.forEach((test: any) => {
+          allActivities.push({
+            id: `test-${test.id}`,
+            type: "test_created",
+            title: `Test Created: ${test.title}`,
+            description: `New test created for ${
+              test.course?.name || "Unknown Course"
+            }`,
+            timestamp: test.createdAt,
+            courseName: test.course?.name,
+            courseCode: test.course?.code,
+            testTitle: test.title,
+            priority: "high",
           });
         });
       }
