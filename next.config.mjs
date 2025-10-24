@@ -8,7 +8,20 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
+    serverComponentsExternalPackages: ['@prisma/client', 'jsonwebtoken', 'bcryptjs'],
+  },
+  // Webpack configuration for non-Turbopack builds
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Don't resolve 'crypto' module on the client-side
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+        stream: false,
+        buffer: false,
+      };
+    }
+    return config;
   },
   // Ensure API routes work properly on Vercel
   async headers() {

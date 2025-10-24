@@ -179,10 +179,18 @@ export default function CreateTestPage() {
 
   const toggleCorrectAnswer = (questionId: string, option: string) => {
     const question = questions.find((q) => q.id === questionId)!;
-    const newCorrect = question.correct.includes(option)
-      ? question.correct.filter((c) => c !== option)
-      : [...question.correct, option];
-    updateQuestion(questionId, { correct: newCorrect });
+
+    // For MULTIPLE_CHOICE (radio), only allow one correct answer
+    if (question.type === "MULTIPLE_CHOICE") {
+      const newCorrect = question.correct.includes(option) ? [] : [option];
+      updateQuestion(questionId, { correct: newCorrect });
+    } else {
+      // For CHECKBOX, allow multiple correct answers
+      const newCorrect = question.correct.includes(option)
+        ? question.correct.filter((c) => c !== option)
+        : [...question.correct, option];
+      updateQuestion(questionId, { correct: newCorrect });
+    }
   };
 
   const onSubmit = async (data: TestFormInputs) => {
