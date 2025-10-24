@@ -62,7 +62,6 @@ const RecentActivityPage = () => {
     "newest"
   );
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
 
   const activityTypes = [
     { value: "all", label: "All Activities", icon: <FiTrendingUp /> },

@@ -58,15 +58,12 @@ export async function GET(
     }
 
     // Generate download URL using Backblaze B2
-    console.log("Material file URL:", material.fileUrl);
-    console.log("Original filename:", material.originalFilename);
 
     const downloadUrl = await generateBackblazeUrl(
       material.fileUrl,
       material.originalFilename
     );
 
-    console.log("Generated download URL:", downloadUrl);
 
     return NextResponse.json({ url: downloadUrl });
   } catch (error) {

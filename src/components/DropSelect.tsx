@@ -15,7 +15,7 @@ interface SelectProps {
   options: Option[];
   errors?: FieldErrors;
   disabled?: boolean;
-  onChange?: (value: string | number | undefined) => void;
+  onChange?: (_value: string | number | undefined) => void;
   value?: string | number | null;
   wrapperClassName?: string;
 }

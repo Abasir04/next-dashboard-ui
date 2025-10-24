@@ -43,7 +43,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
     register,
     handleSubmit,
     formState: { errors },
-    control,
     reset,
     setValue,
     watch,

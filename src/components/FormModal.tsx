@@ -17,10 +17,10 @@ const StudentForm = dynamic(() => import("./forms/StudentForm"), {
 });
 
 const forms: {
-  [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
+  [key: string]: (_type: "create" | "update", _data?: any) => JSX.Element;
 } = {
-  lecturer: (type, data) => <LecturerForm type={type} data={data} />,
-  student: (type, data) => <StudentForm type={type} data={data} />,
+  lecturer: (_type, _data) => <LecturerForm type={_type} data={_data} />,
+  student: (_type, _data) => <StudentForm type={_type} data={_data} />,
 };
 
 const FormModal = ({

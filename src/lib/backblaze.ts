@@ -28,9 +28,6 @@ export async function getPresignedDownloadUrl(
   filename?: string
 ): Promise<string> {
   try {
-    console.log("Generating presigned URL for key:", key);
-    console.log("Using bucket:", process.env.S3_BUCKET);
-
     const command = new GetObjectCommand({
       Bucket: process.env.S3_BUCKET!,
       Key: key,
@@ -40,7 +37,6 @@ export async function getPresignedDownloadUrl(
     });
 
     const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
-    console.log("Generated presigned URL:", signedUrl);
     return signedUrl;
   } catch (error) {
     console.error("Error generating presigned URL:", error);
@@ -61,11 +57,6 @@ export function extractS3KeyFromUrl(url: string): string | null {
       .split("/")
       .filter((part) => part.length > 0);
 
-    // Debug logging
-    console.log("URL pathname:", urlObj.pathname);
-    console.log("Path parts:", pathParts);
-    console.log("Expected bucket:", process.env.S3_BUCKET);
-
     // Remove the bucket name (first part) to get the key
     if (pathParts.length > 1) {
       const bucketName = process.env.S3_BUCKET;
@@ -75,10 +66,6 @@ export function extractS3KeyFromUrl(url: string): string | null {
       if (pathParts[0] === "file" && pathParts.length > 2) {
         // Native B2 format: /file/bucket/key
         keyParts = pathParts.slice(2); // Skip "file" and bucket name
-        console.log(
-          "Backblaze B2 native URL format detected, extracted key:",
-          keyParts.join("/")
-        );
         return keyParts.join("/");
       }
 
@@ -91,23 +78,14 @@ export function extractS3KeyFromUrl(url: string): string | null {
       ) {
         // Double bucket name detected, remove both
         keyParts = pathParts.slice(2);
-        console.log(
-          "Double bucket name detected, extracted key:",
-          keyParts.join("/")
-        );
         return keyParts.join("/");
       }
 
       // If the first part matches the bucket name, remove it
       if (bucketName && pathParts[0] === bucketName) {
-        console.log("Extracted key:", keyParts.join("/"));
         return keyParts.join("/");
       } else {
         // If bucket name doesn't match or isn't set, assume the first part is the bucket
-        console.log(
-          "Bucket name mismatch, using all parts after first as key:",
-          keyParts.join("/")
-        );
         return keyParts.join("/");
       }
     }
@@ -138,15 +116,12 @@ export function isBackblazeUrl(url: string): boolean {
  */
 export async function deleteFromBackblaze(key: string): Promise<void> {
   try {
-    console.log("Deleting file from Backblaze B2 with key:", key);
-
     const command = new DeleteObjectCommand({
       Bucket: process.env.S3_BUCKET!,
       Key: key,
     });
 
     await s3Client.send(command);
-    console.log("Successfully deleted file from Backblaze B2:", key);
   } catch (error) {
     console.error("Error deleting file from Backblaze B2:", error);
     throw new Error("Failed to delete file from Backblaze B2");
@@ -202,7 +177,6 @@ export async function generateDownloadUrl(
     }
 
     // For non-Backblaze URLs, return as-is
-    console.log("Non-Backblaze URL, returning as-is:", fileUrl);
     return fileUrl;
   } catch (error) {
     console.error("Error generating download URL:", error);

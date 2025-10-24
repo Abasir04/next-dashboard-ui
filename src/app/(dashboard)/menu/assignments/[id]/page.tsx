@@ -537,8 +537,8 @@ interface GradingModalProps {
   submission: AssignmentSubmission;
   grade: string;
   feedback: string;
-  onGradeChange: (grade: string) => void;
-  onFeedbackChange: (feedback: string) => void;
+  onGradeChange: (_grade: string) => void;
+  onFeedbackChange: (_feedback: string) => void;
   onClose: () => void;
   onSubmit: () => void;
   isGrading: boolean;

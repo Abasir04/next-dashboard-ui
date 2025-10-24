@@ -81,14 +81,11 @@ export async function GET(request: NextRequest) {
 
 // POST - Create a new assignment
 export async function POST(request: NextRequest) {
-  console.log("=== ASSIGNMENTS API POST FUNCTION CALLED ===");
   let body: any = null;
   let user: any = null;
 
   try {
-    console.log("Assignment creation request received");
     user = await getAuthenticatedUser(request);
-    console.log("Authenticated user:", user);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -99,7 +96,6 @@ export async function POST(request: NextRequest) {
     }
 
     body = await request.json();
-    console.log("Request body:", body);
     const {
       title,
       description,
@@ -109,13 +105,6 @@ export async function POST(request: NextRequest) {
       lecturerFileUrl,
       lecturerFileName,
     } = body;
-    console.log("Extracted fields:", {
-      title,
-      description,
-      courseId,
-      startDate,
-      dueDate,
-    });
 
     // Validate required fields
     if (!title || !courseId || !startDate || !dueDate) {
@@ -136,13 +125,11 @@ export async function POST(request: NextRequest) {
     // Parse and validate courseId
     const parsedCourseId = parseInt(courseId);
     if (isNaN(parsedCourseId) || parsedCourseId <= 0) {
-      console.log("Invalid courseId:", courseId);
       return NextResponse.json(
         { error: "Invalid course ID provided" },
         { status: 400 }
       );
     }
-    console.log("Parsed courseId:", parsedCourseId);
 
     let lecturerId: number;
 
@@ -157,14 +144,11 @@ export async function POST(request: NextRequest) {
       lecturerId = body.lecturerId;
     } else {
       // For lecturer, get their lecturer record
-      console.log("Looking for lecturer with userId:", user.id);
       const lecturer = await prisma.lecturer.findUnique({
         where: { userId: user.id },
       });
-      console.log("Found lecturer:", lecturer);
 
       if (!lecturer) {
-        console.log("Lecturer not found for user:", user);
         return NextResponse.json(
           { error: "Lecturer not found" },
           { status: 404 }
@@ -175,22 +159,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify that the lecturer owns the course and get course details
-    console.log(
-      "Looking for course with courseId:",
-      parsedCourseId,
-      "and lecturerId:",
-      lecturerId
-    );
     const course = await prisma.course.findFirst({
       where: {
         id: parsedCourseId,
         lecturerId: lecturerId,
       },
     });
-    console.log("Found course:", course);
 
     if (!course) {
-      console.log("Course not found or permission denied");
       return NextResponse.json(
         {
           error:
@@ -203,11 +179,6 @@ export async function POST(request: NextRequest) {
     // Find the level record based on the course's level number
     // Course levels are 100, 200, 300, 400, 500, 600
     // We need to find a level that corresponds to this course level
-    console.log(
-      "Course level:",
-      course.level,
-      "-> Looking for corresponding level"
-    );
 
     // First try to find a level with the exact course level as name (e.g., "300")
     let level = await prisma.level.findFirst({
@@ -220,7 +191,6 @@ export async function POST(request: NextRequest) {
     // 100->1, 200->2, 300->3, 400->4, 500->5, 600->6
     if (!level) {
       const courseLevelGrade = Math.floor(course.level / 100);
-      console.log("Trying to find level by grade:", courseLevelGrade);
 
       // Since we don't have a grade field, try to find by name patterns
       // Look for levels that might correspond to this grade
@@ -236,7 +206,6 @@ export async function POST(request: NextRequest) {
     // If still not found, try to find any level that might correspond
     // This is a fallback for cases where levels might have different naming
     if (!level) {
-      console.log("Trying to find any level as fallback");
       level = await prisma.level.findFirst({
         orderBy: {
           id: "asc",
@@ -244,13 +213,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log("Found level:", level);
-
     if (!level) {
-      console.log("No levels found in database");
       return NextResponse.json(
         {
-          error: `No levels found in database. Please ensure levels are properly seeded.`,
+          error:
+            "No levels found in database. Please ensure levels are properly seeded.",
         },
         { status: 400 }
       );
@@ -301,26 +268,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Note: Multiple assignments are now allowed per course
-    console.log(
-      "Allowing multiple assignments per course - no restriction check needed"
-    );
 
     // Generate unique linkId for the assignment
     const linkId = nanoid(12);
 
     // Create the assignment
-    console.log("Creating assignment with data:", {
-      title,
-      description,
-      courseId: parsedCourseId,
-      levelId: level.id,
-      lecturerId,
-      startDate: startDateObj,
-      dueDate: dueDateObj,
-      linkId,
-      isActive: true,
-    });
-
     const assignment = await prisma.assignment.create({
       data: {
         title,
@@ -363,7 +315,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log("Assignment created successfully:", assignment);
     return NextResponse.json({ assignment }, { status: 201 });
   } catch (error) {
     console.error("Error creating assignment:", error);

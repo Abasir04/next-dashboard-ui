@@ -188,7 +188,7 @@ const StudentsPage = () => {
               {filteredStudents.map((student) => (
                 <React.Fragment key={student.id}>
                   {student.courses.length > 0 ? (
-                    student.courses.map((course, courseIndex) => (
+                    student.courses.map((course) => (
                       <tr
                         key={`${student.id}-${course.id}`}
                         className="border-b border-gray-200 hover:bg-gray-50"

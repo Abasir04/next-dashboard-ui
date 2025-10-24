@@ -59,7 +59,6 @@ const AssignmentsPage = () => {
   const [deletingAssignment, setDeletingAssignment] =
     useState<Assignment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedAssignments, setSelectedAssignments] = useState<number[]>([]);
   const [showSubmissionLinkModal, setShowSubmissionLinkModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] =
     useState<Assignment | null>(null);

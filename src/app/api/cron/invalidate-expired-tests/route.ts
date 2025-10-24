@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log(`Invalidated ${result.count} expired test access records`);
 
     return NextResponse.json({
       success: true,
