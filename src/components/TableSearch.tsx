@@ -3,7 +3,7 @@ import Image from "next/image";
 
 interface TableSearchProps {
   value?: string;
-  onChange?: (value: string) => void;
+  onChange?: (_value: string) => void;
   placeholder?: string;
 }
 

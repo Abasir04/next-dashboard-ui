@@ -51,14 +51,12 @@ const LecturerCourses = ({ lecturerId, userRole }: LecturerCoursesProps) => {
     fetchCourses();
   }, [fetchCourses]);
 
-  const handleEditCourse = (course: Course) => {
+  const handleEditCourse = (_course: Course) => {
     // TODO: Implement edit functionality
-    console.log("Edit course:", course);
   };
 
-  const handleDeleteCourse = (course: Course) => {
+  const handleDeleteCourse = (_course: Course) => {
     // TODO: Implement delete functionality
-    console.log("Delete course:", course);
   };
 
   if (loading) {

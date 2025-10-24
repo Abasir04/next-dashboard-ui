@@ -4,7 +4,7 @@ import { FiSearch, FiRefreshCw } from "react-icons/fi";
 
 interface TableSearchWithRefreshProps {
   value?: string;
-  onChange?: (value: string) => void;
+  onChange?: (_value: string) => void;
   onRefresh?: () => void;
   placeholder?: string;
   isLoading?: boolean;

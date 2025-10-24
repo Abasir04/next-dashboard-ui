@@ -132,8 +132,7 @@ export async function GET(
     const dueMs = test.dueDate ? new Date(test.dueDate).getTime() : undefined;
 
     if (debug) {
-      console.log(
-        "[PublicTestDebug] nowMs:",
+        console.log("[PublicTestDebug] nowMs:",
         nowMs,
         "startMs:",
         startMs,

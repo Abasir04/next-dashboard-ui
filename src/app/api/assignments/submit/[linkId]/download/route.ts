@@ -64,15 +64,12 @@ export async function GET(
     }
 
     // Generate download URL using Backblaze B2
-    console.log("Assignment file URL:", assignment.lecturerFileUrl);
-    console.log("Original filename:", assignment.lecturerFileName);
 
     const downloadUrl = await generateBackblazeUrl(
       assignment.lecturerFileUrl,
       assignment.lecturerFileName || undefined
     );
 
-    console.log("Generated download URL:", downloadUrl);
 
     return NextResponse.json({ url: downloadUrl });
   } catch (error) {

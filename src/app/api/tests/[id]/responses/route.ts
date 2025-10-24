@@ -113,17 +113,8 @@ export async function POST(
     } else {
       // Try JWT token authentication
       const authHeader = request.headers.get("authorization");
-      console.log("Authorization header present:", !!authHeader);
-      console.log(
-        "Authorization header value:",
-        authHeader ? `${authHeader.substring(0, 20)}...` : "null"
-      );
 
       const token = extractTokenFromHeader(authHeader);
-      console.log(
-        "Extracted token:",
-        token ? `${token.substring(0, 20)}...` : "null"
-      );
 
       if (!token) {
         console.error("No authorization token found in header");
@@ -136,13 +127,7 @@ export async function POST(
       }
 
       // Verify the JWT token
-      console.log("Verifying JWT token for test submission...");
       const verification = await verifyTestToken(token);
-      console.log("Token verification result:", {
-        valid: verification.valid,
-        error: verification.error,
-        hasPayload: !!verification.payload,
-      });
 
       if (!verification.valid || !verification.payload) {
         console.error("Token verification failed:", verification.error);
@@ -153,11 +138,6 @@ export async function POST(
           { status: 401 }
         );
       }
-
-      console.log(
-        "Token verified successfully for student:",
-        verification.payload.studentId
-      );
 
       const { studentId: tokenStudentId, testId: tokenTestId } =
         verification.payload;
@@ -182,11 +162,7 @@ export async function POST(
     const body = await request.json();
     const { answers, timeSpent } = body;
 
-    console.log("Request body:", { answers, timeSpent });
-    console.log("Student ID:", studentId);
-
     // Get full test details
-    console.log("Fetching test with ID:", testId);
     const fullTest = await prisma.test.findUnique({
       where: { id: testId },
       include: {
@@ -197,12 +173,8 @@ export async function POST(
     });
 
     if (!fullTest) {
-      console.log("Test not found for ID:", testId);
       return NextResponse.json({ error: "Test not found" }, { status: 404 });
     }
-
-    console.log("Test found:", fullTest.title);
-    console.log("Test questions count:", fullTest.questions.length);
 
     if (!fullTest.isPublished) {
       return NextResponse.json(
@@ -240,15 +212,7 @@ export async function POST(
     let score = 0;
     let totalPoints = 0;
 
-    console.log("Starting score calculation...");
-    fullTest.questions.forEach((question, index) => {
-      console.log(`Question ${index + 1}:`, {
-        id: question.id,
-        type: question.type,
-        correct: question.correct,
-        points: question.points,
-      });
-
+    fullTest.questions.forEach((question) => {
       totalPoints += question.points;
 
       if (question.type === "MULTIPLE_CHOICE" || question.type === "CHECKBOX") {
@@ -261,9 +225,6 @@ export async function POST(
             JSON.stringify(correctAnswers) === JSON.stringify(studentAnswers)
           ) {
             score += question.points;
-            console.log(
-              `Question ${index + 1} scored ${question.points} points`
-            );
           }
         }
         // For questions without correct answers defined, they are not scored (essay questions, etc.)
@@ -271,17 +232,8 @@ export async function POST(
     });
 
     const percentage = totalPoints > 0 ? (score / totalPoints) * 100 : 0;
-    console.log("Final score:", { score, totalPoints, percentage });
 
     // Create test response
-    console.log("Creating test response with data:", {
-      testId,
-      studentId,
-      answers,
-      score: percentage,
-      timeSpent: timeSpent ? parseInt(timeSpent) : null,
-    });
-
     const response = await prisma.testResponse.create({
       data: {
         testId,
@@ -302,7 +254,6 @@ export async function POST(
       },
     });
 
-    console.log("Test response created successfully:", response.id);
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error submitting test response:", error);

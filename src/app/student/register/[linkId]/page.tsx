@@ -149,11 +149,6 @@ const StudentRegistrationPage = () => {
       }
 
       // Debug: Log the student data structure
-      console.log("Student data received:", studentData);
-      console.log("Student data type:", typeof studentData);
-      console.log("Has user object:", !!studentData?.user);
-      console.log("Has student object:", !!studentData?.student);
-      console.log("Has user.student object:", !!studentData?.user?.student);
 
       // Validate student data structure
       if (!studentData || !studentData.user) {
@@ -173,7 +168,6 @@ const StudentRegistrationPage = () => {
         throw new Error("Student data not found");
       }
 
-      console.log("✅ Basic structure validation passed");
 
       // Additional validation for required user fields
       if (
@@ -185,7 +179,6 @@ const StudentRegistrationPage = () => {
         throw new Error("Invalid user data received");
       }
 
-      console.log("✅ User fields validation passed");
 
       // Additional validation for required student fields
       if (!studentInfo.matricNumber || !studentInfo.name) {
@@ -193,7 +186,6 @@ const StudentRegistrationPage = () => {
         throw new Error("Invalid student data received");
       }
 
-      console.log("✅ Student fields validation passed");
 
       // Use phone number from student profile
       const phoneNumber = studentInfo.phone;

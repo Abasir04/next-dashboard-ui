@@ -60,9 +60,7 @@ const StudentForm = ({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-  });
+  const onSubmit = handleSubmit((_data) => {});
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>

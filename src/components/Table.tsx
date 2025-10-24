@@ -5,7 +5,7 @@ const Table = ({
   emptyMessage = "No data available",
 }: {
   columns: { header: string; accessor: string; className?: string }[];
-  renderRow: (item: any) => React.ReactNode;
+  renderRow: (_item: any) => React.ReactNode;
   data: any[];
   emptyMessage?: string;
 }) => {

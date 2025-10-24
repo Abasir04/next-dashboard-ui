@@ -42,7 +42,6 @@ export async function createUser(userData: {
   role: string;
 }) {
   try {
-    console.log("Creating user:", userData.email);
     const hashedPassword = await hashPassword(userData.password);
 
     const user = await prisma.user.create({
@@ -65,7 +64,6 @@ export async function createUser(userData: {
       },
     });
 
-    console.log("User created successfully:", user.id);
     return user;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -75,7 +73,6 @@ export async function createUser(userData: {
 
 export async function authenticateUser(identifier: string, password: string) {
   try {
-    console.log("Authenticating user:", identifier);
 
     // Try to find user by email first, then by matric number through student table
     let user = await prisma.user.findUnique({
@@ -95,18 +92,15 @@ export async function authenticateUser(identifier: string, password: string) {
     }
 
     if (!user) {
-      console.log("User not found:", identifier);
       return null;
     }
 
     const isValidPassword = await verifyPassword(password, user.password);
 
     if (!isValidPassword) {
-      console.log("Invalid password for user:", identifier);
       return null;
     }
 
-    console.log("User authenticated successfully:", identifier);
     return {
       id: user.id,
       email: user.email,

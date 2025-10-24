@@ -98,7 +98,6 @@ export async function sendEmail({
       }
     }
     // eslint-disable-next-line no-console
-    console.log("Email sent to", to);
   } catch (error) {
     // eslint-disable-next-line no-console
     const details =

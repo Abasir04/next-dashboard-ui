@@ -317,7 +317,6 @@ const StudentTestVerificationPage = () => {
 
       // Store JWT token in sessionStorage
       if (data.token) {
-        console.log("Storing JWT token:", data.token.substring(0, 20) + "...");
         sessionStorage.setItem(`test_token_${shareToken}`, data.token);
       } else {
         console.error("No JWT token received from server");
@@ -349,7 +348,6 @@ const StudentTestVerificationPage = () => {
 
         // Get JWT token from sessionStorage
         const token = sessionStorage.getItem(`test_token_${shareToken}`);
-        console.log("JWT Token:", token ? "Found" : "Not found");
 
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
