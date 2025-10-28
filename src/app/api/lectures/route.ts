@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
     const start = new Date(startTime);
     const end = new Date(endTime);
     const expiry = new Date(linkExpiry);
-    const now = new Date();
 
     // Check if dates are valid
     if (
@@ -59,12 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (start <= now) {
-      return NextResponse.json(
-        { error: "Start time must be in the future" },
-        { status: 400 }
-      );
-    }
+    // Allow creating lectures in the past (removed the start time future check)
 
     if (end <= start) {
       return NextResponse.json(
