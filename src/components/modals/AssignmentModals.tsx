@@ -427,8 +427,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   const fetchCoursesAndLevels = async () => {
     try {
       const [coursesRes, levelsRes] = await Promise.all([
-        fetch("/api/lecturers/courses"), // Fetch only lecturer's courses
-        fetch("/api/levels"),
+        fetch("/api/lecturers/courses", { cache: "no-store" }), // Fetch only lecturer's courses
+        fetch("/api/levels", { cache: "no-store" }),
       ]);
 
       if (coursesRes.ok) {
@@ -454,7 +454,10 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         ...formData,
         courseId,
         courseCode: selectedCourse.code,
-        levelId: selectedCourse.level.toString(),
+        levelId:
+          selectedCourse.level && selectedCourse.level.name
+            ? selectedCourse.level.name.toString()
+            : "",
       });
     }
   };

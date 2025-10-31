@@ -20,6 +20,8 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     register,
@@ -220,7 +222,7 @@ const SettingsPage = () => {
                   <button
                     type="button"
                     onClick={handleCancelPasswordChange}
-                    className="px-6 py-2 bg-gray-400 text-black rounded-md hover:bg-gray-300 transition-colors"
+                    className="px-6 py-2 bg-gray-400 text-black rounded-md hover:b g ray-300 transition-colors"
                     disabled={isSaving}
                   >
                     Cancel
@@ -263,7 +265,6 @@ const SettingsPage = () => {
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
-
             </div>
           </div>
         </div>
@@ -278,12 +279,13 @@ const SettingsPage = () => {
               <div>
                 <h3 className="font-medium text-red-800">Delete Account</h3>
                 <p className="text-sm text-red-600">
-                  Permanently delete your account and all data
+                  This will deactivate your account. Your data will remain
+                  intact, but you will no longer be able to sign in.
                 </p>
               </div>
               <button
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                disabled
+                onClick={() => setShowDeleteModal(true)}
               >
                 Delete Account
               </button>
@@ -291,6 +293,57 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Confirm Deactivation
+            </h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Are you sure you want to deactivate your account? You will be
+              signed out and unable to access the dashboard again.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                onClick={async () => {
+                  try {
+                    setIsDeleting(true);
+                    const res = await fetch("/api/auth/deactivate", {
+                      method: "POST",
+                    });
+                    if (!res.ok) {
+                      const err = await res.json().catch(() => ({}));
+                      throw new Error(
+                        err.error || "Failed to deactivate account"
+                      );
+                    }
+                    showSuccess("Account deactivated. You will be signed out.");
+                    setTimeout(() => {
+                      window.location.href = "/";
+                    }, 800);
+                  } catch (e: any) {
+                    showError(e.message || "Failed to deactivate account");
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deactivating..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

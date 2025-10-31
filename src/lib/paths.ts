@@ -29,7 +29,6 @@ export const paths = {
     events: "/menu/events",
     announcements: "/menu/announcements",
     attendance: "/menu/attendance",
-    messages: "/menu/messages",
     tests: "/menu/tests",
   },
 

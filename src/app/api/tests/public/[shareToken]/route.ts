@@ -131,17 +131,7 @@ export async function GET(
       : undefined;
     const dueMs = test.dueDate ? new Date(test.dueDate).getTime() : undefined;
 
-    if (debug) {
-        console.log("[PublicTestDebug] nowMs:",
-        nowMs,
-        "startMs:",
-        startMs,
-        "dueMs:",
-        dueMs,
-        "tolerance:",
-        TOLERANCE_MS
-      );
-    }
+    // Intentionally no console logging in production or debug response
 
     if (startMs && Number.isFinite(startMs)) {
       if (nowMs < startMs - TOLERANCE_MS) {

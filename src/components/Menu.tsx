@@ -10,7 +10,6 @@ import {
   FaChalkboardTeacher,
   FaBook,
   FaClipboardList,
-  FaEnvelope,
   FaUserCircle,
   FaCog,
   FaSignOutAlt,
@@ -78,12 +77,6 @@ const menuItems = [
       //   icon: FaCalendarAlt,
       //   visible: ["admin", "lecturer", "student", "parent"],
       // },
-      {
-        label: "Messages",
-        href: paths.menu.messages,
-        icon: FaEnvelope,
-        visible: ["admin", "lecturer", "student", "parent"],
-      },
     ],
   },
   {

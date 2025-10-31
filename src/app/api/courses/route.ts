@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/courses - Get courses for the current lecturer
 export async function GET(request: NextRequest) {
@@ -106,7 +109,11 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json(coursesWithStudentCounts);
+    return NextResponse.json(coursesWithStudentCounts, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    });
   } catch (error) {
     console.error("Error fetching courses:", error);
     return NextResponse.json(
@@ -211,7 +218,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(course, { status: 201 });
+    // Revalidate the courses listing page
+    revalidatePath("/menu/courses");
+
+    return NextResponse.json(course, {
+      status: 201,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    });
   } catch (error) {
     console.error("Error creating course:", error);
     return NextResponse.json(

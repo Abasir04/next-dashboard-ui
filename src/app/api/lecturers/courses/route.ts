@@ -87,11 +87,31 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ courses: coursesWithLevels });
+    return NextResponse.json(
+      { courses: coursesWithLevels },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching lecturer courses:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
+
+    // Return more detailed error in development
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to fetch courses";
+    const errorDetails =
+      process.env.NODE_ENV === "production"
+        ? {}
+        : {
+            details: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined,
+          };
+
     return NextResponse.json(
-      { error: "Failed to fetch courses" },
+      { error: "Failed to fetch courses", ...errorDetails },
       { status: 500 }
     );
   }

@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { showError, showSuccess } from "@/lib/toast";
@@ -126,10 +128,10 @@ const CoursesPage = () => {
 
       // If user is a lecturer, fetch only their courses
       if (userRole === "lecturer") {
-        response = await fetch("/api/lecturers/courses");
+        response = await fetch("/api/lecturers/courses", { cache: "no-store" });
       } else {
         // For admins, fetch all courses
-        response = await fetch("/api/courses");
+        response = await fetch("/api/courses", { cache: "no-store" });
       }
 
       if (!response.ok) {

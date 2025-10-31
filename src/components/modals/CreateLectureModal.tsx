@@ -93,7 +93,9 @@ const CreateLectureModal: React.FC<CreateLectureModalProps> = ({
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/lecturers/courses");
+      const response = await fetch("/api/lecturers/courses", {
+        cache: "no-store",
+      });
       if (response.ok) {
         const data = await response.json();
         setCourses(data.courses || []);
