@@ -416,10 +416,9 @@ export async function DELETE(request: NextRequest) {
     const course = await prisma.course.findUnique({
       where: { id: parsedCourseId },
       include: {
-        lessons: true,
-        exams: true,
         assignments: true,
-        results: true,
+        lectures: true,
+        tests: true,
       },
     });
 
@@ -429,15 +428,14 @@ export async function DELETE(request: NextRequest) {
 
     // Check if course has associated data
     if (
-      course.lessons.length > 0 ||
-      course.exams.length > 0 ||
+      course.lectures.length > 0 ||
       course.assignments.length > 0 ||
-      course.results.length > 0
+      course.tests.length > 0
     ) {
       return NextResponse.json(
         {
           error:
-            "Cannot delete course with associated lessons, exams, assignments, or results",
+            "Cannot delete course with associated lecture, assignment, or test",
         },
         { status: 409 }
       );
