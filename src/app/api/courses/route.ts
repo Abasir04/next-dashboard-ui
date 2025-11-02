@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 // GET /api/courses - Get courses for the current lecturer
 export async function GET(request: NextRequest) {
@@ -106,7 +110,13 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json(coursesWithStudentCounts);
+    return NextResponse.json(coursesWithStudentCounts, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error) {
     console.error("Error fetching courses:", error);
     return NextResponse.json(
@@ -211,7 +221,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(course, { status: 201 });
+    // Revalidate the courses listing page
+    revalidatePath("/menu/courses");
+
+    return NextResponse.json(course, {
+      status: 201,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error) {
     console.error("Error creating course:", error);
     return NextResponse.json(
@@ -396,10 +416,9 @@ export async function DELETE(request: NextRequest) {
     const course = await prisma.course.findUnique({
       where: { id: parsedCourseId },
       include: {
-        lessons: true,
-        exams: true,
         assignments: true,
-        results: true,
+        lectures: true,
+        tests: true,
       },
     });
 
@@ -409,15 +428,14 @@ export async function DELETE(request: NextRequest) {
 
     // Check if course has associated data
     if (
-      course.lessons.length > 0 ||
-      course.exams.length > 0 ||
+      course.lectures.length > 0 ||
       course.assignments.length > 0 ||
-      course.results.length > 0
+      course.tests.length > 0
     ) {
       return NextResponse.json(
         {
           error:
-            "Cannot delete course with associated lessons, exams, assignments, or results",
+            "Cannot delete course with associated lecture, assignment, or test",
         },
         { status: 409 }
       );

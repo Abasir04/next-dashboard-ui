@@ -149,7 +149,9 @@ export default function TestDetailPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch("/api/lecturers/courses");
+        const response = await fetch("/api/lecturers/courses", {
+          cache: "no-store",
+        });
         if (!response.ok) throw new Error("Failed to fetch courses");
         const data = await response.json();
         setCourses(data.courses || []);

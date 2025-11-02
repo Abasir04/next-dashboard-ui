@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // Define protected routes that require authentication (lecturer/admin only)
 const protectedRoutes = [
   "/home",

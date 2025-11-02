@@ -1,13 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { showError, showSuccess } from "@/lib/toast";
 import CourseForm from "@/components/forms/CourseForm";
-import Table from "@/components/Table";
 import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
-import Pagination from "@/components/Pagination";
 import {
   FiTrash2,
   FiPlus,
@@ -16,6 +17,7 @@ import {
   FiEdit,
   FiX,
   FiEye,
+  FiBook,
 } from "react-icons/fi";
 
 interface Course {
@@ -33,38 +35,6 @@ interface Course {
   createdAt: string;
   updatedAt: string;
 }
-
-const columns = [
-  {
-    header: "Course Name",
-    accessor: "name",
-  },
-  {
-    header: "Course Code",
-    accessor: "code",
-  },
-  {
-    header: "Level",
-    accessor: "level",
-  },
-  {
-    header: "Students",
-    accessor: "studentCount",
-  },
-  {
-    header: "Materials",
-    accessor: "materialsCount",
-  },
-  {
-    header: "Created",
-    accessor: "createdAt",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "actions",
-  },
-];
 
 const CoursesPage = () => {
   const router = useRouter();
@@ -126,10 +96,10 @@ const CoursesPage = () => {
 
       // If user is a lecturer, fetch only their courses
       if (userRole === "lecturer") {
-        response = await fetch("/api/lecturers/courses");
+        response = await fetch("/api/lecturers/courses", { cache: "no-store" });
       } else {
         // For admins, fetch all courses
-        response = await fetch("/api/courses");
+        response = await fetch("/api/courses", { cache: "no-store" });
       }
 
       if (!response.ok) {
@@ -306,90 +276,12 @@ const CoursesPage = () => {
       course.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const renderRow = (course: Course) => (
-    <tr
-      key={course.id}
-      className="text-center border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="p-4 font-medium">{course.name}</td>
-      <td className="p-4">
-        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-mono bg-gray-100 text-gray-800">
-          {course.code}
-        </span>
-      </td>
-      <td className="p-4">
-        <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">
-          {getLevelLabel(course.level)}
-        </span>
-      </td>
-      <td className="p-4">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          {course.studentCount} students
-        </span>
-      </td>
-      <td className="p-4">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          {course.materialsCount ?? 0} materials
-        </span>
-      </td>
-      <td className="hidden md:table-cell p-4 text-gray-500">
-        {new Date(course.createdAt).toLocaleDateString()}
-      </td>
-      <td className="p-4">
-        <div className="flex justify-center gap-2">
-          {/* View - Green */}
-          <button
-            onClick={() => handleViewCourse(course)}
-            className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
-            title="View course details"
-          >
-            <FiEye size={16} />
-          </button>
-          {(userRole === "admin" || userRole === "lecturer") && (
-            <>
-              {/* Edit - Orange */}
-              <button
-                onClick={() => handleEditCourse(course)}
-                className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
-                title="Edit course"
-              >
-                <FiEdit size={16} />
-              </button>
-              {/* Link - Blue */}
-              <button
-                onClick={() => handleGenerateRegistrationLink(course)}
-                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-                title="Generate registration link"
-              >
-                <FiLink size={16} />
-              </button>
-              {/* Materials - Purple */}
-              <button
-                onClick={() => handleViewMaterials(course)}
-                className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-md transition-colors"
-                title="Course Materials"
-              >
-                <FiFileText size={16} />
-              </button>
-              {/* Delete - Red */}
-              <button
-                onClick={() => handleDeleteCourse(course)}
-                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-                title="Delete course"
-              >
-                <FiTrash2 size={16} />
-              </button>
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading courses...</div>
+      <div className="bg-white p-4 rounded-md flex-1 mt-0">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
       </div>
     );
   }
@@ -398,7 +290,9 @@ const CoursesPage = () => {
     <div className="bg-white p-4 rounded-md flex-1 mt-0">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Courses</h1>
+        <h1 className="text-xl font-semibold text-gray-800">
+          Courses ({filteredCourses.length})
+        </h1>
         <div className="flex items-center gap-4">
           <TableSearchWithRefresh
             value={searchTerm}
@@ -410,7 +304,7 @@ const CoursesPage = () => {
           {(userRole === "admin" || userRole === "lecturer") && (
             <button
               onClick={handleCreateCourse}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-indigo-700 transition-colors"
             >
               <FiPlus size={16} />
               Create Course
@@ -419,16 +313,123 @@ const CoursesPage = () => {
         </div>
       </div>
 
-      {/* COURSES TABLE */}
-      <Table
-        columns={columns}
-        renderRow={renderRow}
-        data={filteredCourses}
-        emptyMessage="No courses found"
-      />
-
-      {/* PAGINATION */}
-      <Pagination />
+      {/* TABLE */}
+      {filteredCourses.length === 0 ? (
+        <div className="text-center py-12">
+          <FiBook size={48} className="mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-500">No courses created yet</p>
+          {(userRole === "admin" || userRole === "lecturer") && (
+            <button
+              onClick={handleCreateCourse}
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              Create Your First Course
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-center text-gray-500 text-sm border-b">
+                <th className="pb-3">Course Name</th>
+                <th className="pb-3">Course Code</th>
+                <th className="pb-3">Level</th>
+                <th className="pb-3">Students</th>
+                <th className="pb-3">Materials</th>
+                <th className="pb-3">Created</th>
+                <th className="pb-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCourses.map((course) => (
+                <tr
+                  key={course.id}
+                  className="border-b border-gray-200 hover:bg-gray-50"
+                >
+                  <td className="py-4 text-center">
+                    <div className="font-medium text-gray-800">
+                      {course.name}
+                    </div>
+                  </td>
+                  <td className="py-4 text-center">
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-mono bg-gray-100 text-gray-800">
+                      {course.code}
+                    </span>
+                  </td>
+                  <td className="py-4 text-center">
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">
+                      {getLevelLabel(course.level)}
+                    </span>
+                  </td>
+                  <td className="py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {course.studentCount} students
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-center">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {course.materialsCount ?? 0} materials
+                    </span>
+                  </td>
+                  <td className="py-4 text-center">
+                    <span className="text-gray-600 text-sm">
+                      {new Date(course.createdAt).toLocaleDateString()}
+                    </span>
+                  </td>
+                  <td className="py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleViewCourse(course)}
+                        className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+                        title="View course details"
+                      >
+                        <FiEye size={16} />
+                      </button>
+                      {(userRole === "admin" || userRole === "lecturer") && (
+                        <>
+                          <button
+                            onClick={() => handleEditCourse(course)}
+                            className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-md transition-colors"
+                            title="Edit course"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleGenerateRegistrationLink(course)
+                            }
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                            title="Generate registration link"
+                          >
+                            <FiLink size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleViewMaterials(course)}
+                            className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-md transition-colors"
+                            title="Course Materials"
+                          >
+                            <FiFileText size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCourse(course)}
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                            title="Delete course"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* COURSE FORM MODAL */}
       {showCourseForm && (
@@ -486,10 +487,10 @@ const CoursesPage = () => {
               </p>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <button
                 onClick={cancelDelete}
-                className="px-6 py-2 bg-gray-400 text-black rounded-md hover:bg-gray-300 transition-colors"
+                className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
                 disabled={isDeleting}
               >
                 Cancel
@@ -497,37 +498,15 @@ const CoursesPage = () => {
               <button
                 onClick={confirmDelete}
                 disabled={isDeleting}
-                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isDeleting ? (
                   <>
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     Deleting...
                   </>
                 ) : (
-                  <>
-                    <FiTrash2 size={16} />
-                    Delete Course
-                  </>
+                  "Delete Course"
                 )}
               </button>
             </div>

@@ -48,6 +48,17 @@ export async function getAuthenticatedUser(
       return null; // Force re-authentication
     }
 
+    // Block deactivated lecturers
+    if (user?.role === "LECTURER") {
+      const lecturer = await prisma.lecturer.findUnique({
+        where: { userId: user.id },
+        select: { role: true },
+      });
+      if (lecturer?.role === "DEACTIVATED") {
+        return null;
+      }
+    }
+
     return user;
   } catch (error) {
     console.error("Error getting authenticated user:", error);

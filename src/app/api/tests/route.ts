@@ -110,7 +110,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(tests);
+    return NextResponse.json(tests, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error) {
     console.error("Error fetching tests:", error);
     return NextResponse.json(
@@ -298,7 +304,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(test);
+    return NextResponse.json(test, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error: any) {
     // Prisma known errors mapping
     const code = error?.code;

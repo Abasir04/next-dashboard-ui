@@ -16,7 +16,6 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import TableSearchWithRefresh from "@/components/TableSearchWithRefresh";
-import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import PublishConfirmModal from "@/components/modals/PublishConfirmModal";
 
 interface Test {
@@ -369,15 +368,62 @@ const TestsPage = () => {
 
       {/* DELETE CONFIRMATION MODAL */}
       {deleteModalOpen && testToDelete && (
-        <DeleteConfirmationModal
-          isOpen={deleteModalOpen}
-          onClose={handleDeleteCancel}
-          onConfirm={confirmDelete}
-          title="Delete Test"
-          message="Are you sure you want to delete this test? This action cannot be undone."
-          itemName={testToDelete.title}
-          isDeleting={isDeleting}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <FiTrash2 className="text-red-600" size={20} />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800">
+                Delete Test
+              </h2>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-600 mb-2">
+                Are you sure you want to delete this test?
+              </p>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="font-medium text-gray-800">{testToDelete.title}</p>
+                <p className="text-sm text-gray-600">
+                  Course: {testToDelete.course.name} ({testToDelete.course.code})
+                </p>
+                <p className="text-sm text-gray-600">
+                  Level: {testToDelete.level.name}
+                </p>
+              </div>
+              <p className="text-sm text-red-600 mt-2">
+                This action cannot be undone. All responses will also be deleted.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Test"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* SHARE LINK MODAL */}
