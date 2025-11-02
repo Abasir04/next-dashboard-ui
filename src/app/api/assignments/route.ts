@@ -69,7 +69,16 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ assignments });
+    return NextResponse.json(
+      { assignments },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching assignments:", error);
     return NextResponse.json(
@@ -315,7 +324,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ assignment }, { status: 201 });
+    return NextResponse.json(
+      { assignment },
+      {
+        status: 201,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error creating assignment:", error);
     console.error("Error details:", {

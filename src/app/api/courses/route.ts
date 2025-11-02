@@ -112,6 +112,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(coursesWithStudentCounts, {
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
   } catch (error) {
@@ -225,6 +227,8 @@ export async function POST(request: NextRequest) {
       status: 201,
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
   } catch (error) {

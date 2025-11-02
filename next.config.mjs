@@ -9,7 +9,13 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'jsonwebtoken', 'bcryptjs'],
+    reactCompiler: false,
   },
+  // Force all routes to render dynamically (bypass ISR/SSG)
+  generateEtags: false,
+  output: 'standalone',
+  revalidate: 0,
+  dynamic: 'force-dynamic',
   // Webpack configuration for non-Turbopack builds
   webpack: (config, { isServer }) => {
     if (!isServer) {
