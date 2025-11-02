@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 // GET /api/courses - Get courses for the current lecturer
 export async function GET(request: NextRequest) {
